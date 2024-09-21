@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: brew install swift-format
+
+      - name: Lint
+        run: |
+          swift-format lint -rs src
+
+  build:
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, macos-13]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          cmake -B build -G Xcode \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/ios.cmake \
+            -DIOS_PLATFORM=SIMULATOR
+          cmake --build build --config Release
+
+      - name: Install
+        run: |
+          xcrun simctl boot "iPhone 15"
+          xcrun simctl install booted build/src/Release-iphonesimulator/Fcitx5.app
+          xcrun simctl launch booted org.fcitx.Fcitx5
+
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
