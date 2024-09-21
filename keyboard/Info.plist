@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>@BUNDLE_IDENTIFIER@.keyboard</string>
+  <key>CFBundleName</key>
+  <string>keyboard</string>
+  <key>CFBundleDisplayName</key>
+  <string>@KEYBOARD_NAME@</string>
+  <key>CFBundleVersion</key>
+  <string>@PROJECT_VERSION@</string>
+  <key>CFBundleShortVersionString</key>
+  <string>@PROJECT_VERSION@</string>
+  <key>CFBundleExecutable</key>
+  <string>keyboard</string>
+  <key>NSExtension</key>
+  <dict>
+    <key>NSExtensionAttributes</key>
+    <dict>
+      <key>IsASCIICapable</key>
+      <true/>
+      <key>PrefersRightToLeft</key>
+      <false/>
+      <key>PrimaryLanguage</key>
+      <string>@KEYBOARD_LANGUAGE@</string>
+      <key>RequestsOpenAccess</key>
+      <true/>
+    </dict>
+    <key>NSExtensionPointIdentifier</key>
+    <string>com.apple.keyboard-service</string>
+    <key>NSExtensionPrincipalClass</key>
+    <string>$(PRODUCT_MODULE_NAME).KeyboardViewController</string>
+  </dict>
+</dict>
+</plist>
