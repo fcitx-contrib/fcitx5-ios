@@ -12,4 +12,8 @@ set(ICON_FILE "icon.icns")
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
+set(KEYBOARD_NAME "Keyboard")
+set(KEYBOARD_LANGUAGE "zh-Hans")
+
+add_subdirectory(keyboard)
 add_subdirectory(src)
