@@ -1,4 +1,8 @@
+import Fcitx
+import OSLog
 import UIKit
+
+let logger = Logger(subsystem: "org.fcitx.Fcitx5", category: "FcitxLog")
 
 class KeyboardViewController: UIInputViewController {
 
@@ -12,6 +16,8 @@ class KeyboardViewController: UIInputViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
+
+    logger.error("\(getName())")
 
     // Perform custom UI setup here
     self.nextKeyboardButton = UIButton(type: .system)
