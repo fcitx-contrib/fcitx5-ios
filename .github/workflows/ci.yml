@@ -33,6 +33,11 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Install dependencies
+        run: |
+          brew install \
+            extra-cmake-modules
+
       - name: Build
         run: |
           IOS_PLATFORM=SIMULATOR ./install-deps.sh
