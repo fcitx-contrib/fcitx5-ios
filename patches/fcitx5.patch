@@ -1,0 +1,164 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index ac1e1dcb..594519ad 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -36,6 +36,7 @@ option(ENABLE_XDGAUTOSTART "Enable xdg autostart desktop file installation" On)
+ option(USE_FLATPAK_ICON "Use flatpak icon name for desktop files" Off)
+ option(ENABLE_EMOJI "Enable emoji module" On)
+ option(ENABLE_LIBUUID "Use libuuid for uuid generation" On)
++option(BUILD_SPELL_DICT "Build en_dict.fscd for English spell check" On)
+ set(NO_PREEDIT_APPS "gvim.*,wps.*,wpp.*,et.*" CACHE STRING "Disable preedit for follwing app by default.")
+ 
+ if (ENABLE_EMOJI)
+@@ -80,7 +81,6 @@ endif()
+ if(${CMAKE_SYSTEM_NAME} MATCHES "BSD|DragonFly")
+     find_package(LibKVM REQUIRED)
+ endif()
+-find_package(DL REQUIRED)
+ 
+ if (NOT TARGET LibIntl::LibIntl)
+     find_package(LibIntl REQUIRED)
+@@ -192,7 +192,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
+ add_subdirectory(src)
+ add_subdirectory(data)
+ add_subdirectory(po)
+-add_subdirectory(testing)
+ 
+ #######################################################################
+ # Test features
+diff --git a/src/lib/fcitx-config/CMakeLists.txt b/src/lib/fcitx-config/CMakeLists.txt
+index 85c9865b..edf51a44 100644
+--- a/src/lib/fcitx-config/CMakeLists.txt
++++ b/src/lib/fcitx-config/CMakeLists.txt
+@@ -28,10 +28,9 @@ ecm_setup_version(PROJECT
+                   PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/Fcitx5ConfigConfigVersion.cmake"
+                   SOVERSION 6)
+ 
+-add_library(Fcitx5Config SHARED ${FCITX_CONFIG_SOURCES})
++add_library(Fcitx5Config STATIC ${FCITX_CONFIG_SOURCES})
+ set_target_properties(Fcitx5Config
+-  PROPERTIES VERSION ${Fcitx5Config_VERSION}
+-  SOVERSION ${Fcitx5Config_SOVERSION}
++  PROPERTIES
+   EXPORT_NAME Config
+   )
+ target_include_directories(Fcitx5Config PUBLIC
+diff --git a/src/lib/fcitx-utils/CMakeLists.txt b/src/lib/fcitx-utils/CMakeLists.txt
+index dd67e07d..2b942b28 100644
+--- a/src/lib/fcitx-utils/CMakeLists.txt
++++ b/src/lib/fcitx-utils/CMakeLists.txt
+@@ -119,23 +119,22 @@ ecm_setup_version(PROJECT
+                   PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/Fcitx5UtilsConfigVersion.cmake"
+                   SOVERSION 2)
+ 
+-add_library(Fcitx5Utils SHARED ${FCITX_UTILS_SOURCES})
++add_library(Fcitx5Utils STATIC ${FCITX_UTILS_SOURCES})
+ set_target_properties(Fcitx5Utils
+-  PROPERTIES VERSION ${Fcitx5Utils_VERSION}
+-  SOVERSION ${Fcitx5Utils_SOVERSION}
++  PROPERTIES
+   EXPORT_NAME Utils
+   )
+ target_include_directories(Fcitx5Utils PUBLIC
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/..>
+     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+     $<INSTALL_INTERFACE:${CMAKE_INSTALL_FULL_INCLUDEDIR}/Fcitx5/Utils>)
+-target_link_libraries(Fcitx5Utils PRIVATE DL::DL LibIntl::LibIntl Pthread::Pthread ${FMT_TARGET})
++target_link_libraries(Fcitx5Utils PRIVATE LibIntl::LibIntl Pthread::Pthread ${FMT_TARGET})
+ if(LIBKVM_FOUND)
+     target_link_libraries(Fcitx5Utils PRIVATE LibKVM::LibKVM)
+ endif()
+ 
+ if (NOT TARGET Systemd::Systemd)
+-    target_link_libraries(Fcitx5Utils PRIVATE ${LIBUV_TARGET})
++    target_link_libraries(Fcitx5Utils PUBLIC ${LIBUV_TARGET})
+     if (ENABLE_DBUS)
+         target_link_libraries(Fcitx5Utils PRIVATE PkgConfig::DBus)
+     endif()
+diff --git a/src/lib/fcitx-utils/misc.cpp b/src/lib/fcitx-utils/misc.cpp
+index e31993cb..bf53b10d 100644
+--- a/src/lib/fcitx-utils/misc.cpp
++++ b/src/lib/fcitx-utils/misc.cpp
+@@ -20,12 +20,11 @@
+ #if defined(__FreeBSD__)
+ #include <sys/user.h>
+ #endif
+-#elif defined(__APPLE__)
+-#include <libproc.h>
+ #endif
+ 
+ namespace fcitx {
+ 
++#if 0
+ void startProcess(const std::vector<std::string> &args,
+                   const std::string &workingDirectory) {
+     /* exec command */
+@@ -126,6 +125,7 @@ std::string getProcessName(pid_t pid) {
+     return {};
+ #endif
+ }
++#endif
+ 
+ ssize_t getline(UniqueCPtr<char> &lineptr, size_t *n, std::FILE *stream) {
+     auto *lineRawPtr = lineptr.release();
+@@ -135,13 +135,7 @@ ssize_t getline(UniqueCPtr<char> &lineptr, size_t *n, std::FILE *stream) {
+ }
+ 
+ bool isInFlatpak() {
+-    static const bool flatpak = []() {
+-        if (checkBoolEnvVar("FCITX_OVERRIDE_FLATPAK")) {
+-            return true;
+-        }
+-        return fs::isreg("/.flatpak-info");
+-    }();
+-    return flatpak;
++    return false;
+ }
+ 
+ } // namespace fcitx
+diff --git a/src/lib/fcitx/CMakeLists.txt b/src/lib/fcitx/CMakeLists.txt
+index df15dd57..3c1d3ff2 100644
+--- a/src/lib/fcitx/CMakeLists.txt
++++ b/src/lib/fcitx/CMakeLists.txt
+@@ -65,10 +65,9 @@ ecm_setup_version(PROJECT
+                   PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/Fcitx5CoreConfigVersion.cmake"
+                   SOVERSION 7)
+ 
+-add_library(Fcitx5Core SHARED ${FCITX_CORE_SOURCES})
++add_library(Fcitx5Core STATIC ${FCITX_CORE_SOURCES})
+ set_target_properties(Fcitx5Core
+-  PROPERTIES VERSION ${Fcitx5Core_VERSION}
+-  SOVERSION ${Fcitx5Core_SOVERSION}
++  PROPERTIES
+   EXPORT_NAME Core
+   )
+ target_include_directories(Fcitx5Core PUBLIC
+diff --git a/src/lib/fcitx/instance.cpp b/src/lib/fcitx/instance.cpp
+index d2e9aa23..72f82213 100644
+--- a/src/lib/fcitx/instance.cpp
++++ b/src/lib/fcitx/instance.cpp
+@@ -1921,7 +1921,6 @@ std::string Instance::addonForInputMethod(const std::string &imName) {
+ }
+ 
+ void Instance::configure() {
+-    startProcess({StandardPath::fcitxPath("bindir", "fcitx5-configtool")});
+ }
+ 
+ void Instance::configureAddon(const std::string &) {}
+diff --git a/src/modules/spell/CMakeLists.txt b/src/modules/spell/CMakeLists.txt
+index 094e1a58..ab1ce4df 100644
+--- a/src/modules/spell/CMakeLists.txt
++++ b/src/modules/spell/CMakeLists.txt
+@@ -17,6 +17,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/spell.conf" DESTINATION "${FCITX_INST
+         COMPONENT config)
+ fcitx5_export_module(Spell TARGET spell BUILD_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}" HEADERS spell_public.h INSTALL)
+ 
++if (BUILD_SPELL_DICT)
+  set(DICT_COMP_SRC
+   comp_spell_dict.cpp
+   )
+@@ -46,3 +47,4 @@ add_custom_command(
+   "${SPELL_EN_DICT_SRC}" "${SPELL_EN_DICT}")
+ add_custom_target(spell_en_dict ALL DEPENDS "${SPELL_EN_DICT}")
+ install(FILES "${SPELL_EN_DICT}" DESTINATION "${FCITX_INSTALL_PKGDATADIR}/spell")
++endif()

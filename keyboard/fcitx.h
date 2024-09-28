@@ -1,3 +1,1 @@
-#include <string>
-
-std::string getName();
+void startFcitx();
