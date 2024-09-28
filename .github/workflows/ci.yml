@@ -37,10 +37,10 @@ jobs:
         run: |
           brew install \
             extra-cmake-modules
+          IOS_PLATFORM=SIMULATOR ./install-deps.sh
 
       - name: Build
         run: |
-          IOS_PLATFORM=SIMULATOR ./install-deps.sh
           git apply --directory=fcitx5 patches/fcitx5.patch
           PKG_CONFIG_PATH=build/sysroot/usr/lib/pkgconfig cmake -B build -G Xcode \
             -DCMAKE_TOOLCHAIN_FILE=cmake/ios.cmake \
