@@ -5,7 +5,13 @@ set_target_properties(keyboard PROPERTIES
     XCODE_PRODUCT_TYPE "com.apple.product-type.app-extension"
 )
 
-target_include_directories(keyboard PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(keyboard PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${CMAKE_CURRENT_BINARY_DIR}/../fcitx5"
+)
+
 target_compile_options(keyboard PUBLIC
     "$<$<COMPILE_LANGUAGE:Swift>:-cxx-interoperability-mode=default>"
 )
+
+target_link_libraries(keyboard PRIVATE Fcitx5::Core)

@@ -14,6 +14,17 @@ set (CMAKE_AR ar CACHE FILEPATH "" FORCE)
 set (CMAKE_CXX_COMPILER_WORKS TRUE)
 set (CMAKE_C_COMPILER_WORKS TRUE)
 
+# Touch the toolchain variable to suppress the "unused variable" warning.
+# This happens if CMake is invoked with the same command line the second time.
+if(CMAKE_TOOLCHAIN_FILE)
+endif()
+
+# Fix for PThread library not in path
+set(CMAKE_THREAD_LIBS_INIT "-lpthread")
+set(CMAKE_HAVE_THREADS_LIBRARY 1)
+set(CMAKE_USE_WIN32_THREADS_INIT 0)
+set(CMAKE_USE_PTHREADS_INIT 1)
+
 # All iOS/Darwin specific settings - some may be redundant
 set (CMAKE_SHARED_LIBRARY_PREFIX "lib")
 set (CMAKE_SHARED_LIBRARY_SUFFIX ".dylib")

@@ -13,10 +13,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: brew install swift-format
+        run: brew install clang-format swift-format
 
       - name: Lint
         run: |
+          find src keyboard -name '*.cpp' -o -name '*.h' | xargs clang-format -Werror --dry-run
           swift-format lint -rs src keyboard
 
   build:
@@ -29,10 +30,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          brew install \
+            extra-cmake-modules
+          IOS_PLATFORM=SIMULATOR ./install-deps.sh
 
       - name: Build
         run: |
-          cmake -B build -G Xcode \
+          git apply --directory=fcitx5 patches/fcitx5.patch
+          PKG_CONFIG_PATH=build/sysroot/usr/lib/pkgconfig cmake -B build -G Xcode \
             -DCMAKE_TOOLCHAIN_FILE=cmake/ios.cmake \
             -DIOS_PLATFORM=SIMULATOR
           cmake --build build --config Release
