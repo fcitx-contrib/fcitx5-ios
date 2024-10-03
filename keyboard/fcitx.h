@@ -1,1 +1,1 @@
-void startFcitx();
+void startFcitx(const char *bundlePath);

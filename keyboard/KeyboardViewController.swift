@@ -17,7 +17,7 @@ class KeyboardViewController: UIInputViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    startFcitx()
+    startFcitx(Bundle.main.bundlePath)
 
     // Perform custom UI setup here
     self.nextKeyboardButton = UIButton(type: .system)

@@ -1,0 +1,7 @@
+[Addon]
+Name=iOS Frontend
+Type=StaticLibrary
+Library=libiosfrontend
+Category=Frontend
+Version=@PROJECT_VERSION@
+Configurable=True

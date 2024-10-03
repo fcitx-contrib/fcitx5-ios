@@ -14,4 +14,7 @@ target_compile_options(keyboard PUBLIC
     "$<$<COMPILE_LANGUAGE:Swift>:-cxx-interoperability-mode=default>"
 )
 
-target_link_libraries(keyboard PRIVATE Fcitx5::Core)
+target_link_libraries(keyboard PRIVATE
+    Fcitx5::Core
+    iosfrontend
+)
