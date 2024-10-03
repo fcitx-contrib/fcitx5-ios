@@ -52,5 +52,7 @@ find_host_package(Gettext)
 
 add_subdirectory(fcitx5)
 
+add_subdirectory(iosfrontend)
+
 add_subdirectory(keyboard)
 add_subdirectory(src)
