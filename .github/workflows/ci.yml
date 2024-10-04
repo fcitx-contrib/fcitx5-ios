@@ -47,6 +47,10 @@ jobs:
             -DIOS_PLATFORM=SIMULATOR
           cmake --build build --config Release
 
+      - name: Check validity
+        run: |
+          ./check-validity.sh
+
       - name: Install
         run: |
           xcrun simctl boot "iPhone 15"
