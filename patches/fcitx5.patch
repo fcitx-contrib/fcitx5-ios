@@ -147,6 +147,18 @@ index 49d8c6e4..f6acad08 100644
  }
  
  AddonCategory AddonInfo::category() const {
+diff --git a/src/lib/fcitx/addonmanager.cpp b/src/lib/fcitx/addonmanager.cpp
+index 55269f33..5e7b8d27 100644
+--- a/src/lib/fcitx/addonmanager.cpp
++++ b/src/lib/fcitx/addonmanager.cpp
+@@ -250,7 +250,6 @@ void AddonManager::unregisterLoader(const std::string &name) {
+ }
+ 
+ void AddonManager::registerDefaultLoader(StaticAddonRegistry *registry) {
+-    registerLoader(std::make_unique<SharedLibraryLoader>());
+     if (registry) {
+         registerLoader(std::make_unique<StaticLibraryLoader>(registry));
+     }
 diff --git a/src/lib/fcitx/instance.cpp b/src/lib/fcitx/instance.cpp
 index d2e9aa23..72f82213 100644
 --- a/src/lib/fcitx/instance.cpp
