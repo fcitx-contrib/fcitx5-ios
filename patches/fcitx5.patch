@@ -133,6 +133,20 @@ index df15dd57..3c1d3ff2 100644
    EXPORT_NAME Core
    )
  target_include_directories(Fcitx5Core PUBLIC
+diff --git a/src/lib/fcitx/addoninfo.cpp b/src/lib/fcitx/addoninfo.cpp
+index 49d8c6e4..f6acad08 100644
+--- a/src/lib/fcitx/addoninfo.cpp
++++ b/src/lib/fcitx/addoninfo.cpp
+@@ -109,7 +109,8 @@ const I18NString &AddonInfo::comment() const {
+ 
+ const std::string &AddonInfo::type() const {
+     FCITX_D();
+-    return d->addon->type.value();
++    static const std::string t = "StaticLibrary";
++    return t;
+ }
+ 
+ AddonCategory AddonInfo::category() const {
 diff --git a/src/lib/fcitx/instance.cpp b/src/lib/fcitx/instance.cpp
 index d2e9aa23..72f82213 100644
 --- a/src/lib/fcitx/instance.cpp
@@ -146,19 +160,88 @@ index d2e9aa23..72f82213 100644
  
  void Instance::configureAddon(const std::string &) {}
 diff --git a/src/modules/spell/CMakeLists.txt b/src/modules/spell/CMakeLists.txt
-index 094e1a58..ab1ce4df 100644
+index 094e1a58..106a010c 100644
 --- a/src/modules/spell/CMakeLists.txt
 +++ b/src/modules/spell/CMakeLists.txt
-@@ -17,6 +17,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/spell.conf" DESTINATION "${FCITX_INST
+@@ -5,7 +5,7 @@ if (TARGET PkgConfig::Enchant)
+     set(SPELL_SOURCES ${SPELL_SOURCES} spell-enchant.cpp)
+ endif()
+ 
+-add_library(spell MODULE ${SPELL_SOURCES})
++add_library(spell STATIC ${SPELL_SOURCES})
+ target_link_libraries(spell Fcitx5::Core)
+ if (TARGET PkgConfig::Enchant)
+     target_link_libraries(spell PkgConfig::Enchant)
+@@ -17,6 +17,17 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/spell.conf" DESTINATION "${FCITX_INST
          COMPONENT config)
  fcitx5_export_module(Spell TARGET spell BUILD_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}" HEADERS spell_public.h INSTALL)
  
++add_custom_command(
++    TARGET spell
++    POST_BUILD COMMAND /bin/sh -c
++    \"
++    ${CMAKE_COMMAND} -E copy
++        ${CMAKE_CURRENT_BINARY_DIR}/spell.conf
++        ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/fcitx5/addon/spell.conf
++    \"
++)
++
 +if (BUILD_SPELL_DICT)
   set(DICT_COMP_SRC
    comp_spell_dict.cpp
    )
-@@ -46,3 +47,4 @@ add_custom_command(
+@@ -46,3 +57,4 @@ add_custom_command(
    "${SPELL_EN_DICT_SRC}" "${SPELL_EN_DICT}")
  add_custom_target(spell_en_dict ALL DEPENDS "${SPELL_EN_DICT}")
  install(FILES "${SPELL_EN_DICT}" DESTINATION "${FCITX_INSTALL_PKGDATADIR}/spell")
 +endif()
+diff --git a/src/modules/spell/spell.cpp b/src/modules/spell/spell.cpp
+index cc3d951f..a4229234 100644
+--- a/src/modules/spell/spell.cpp
++++ b/src/modules/spell/spell.cpp
+@@ -7,7 +7,6 @@
+ 
+ #include "spell.h"
+ #include "fcitx-config/iniparser.h"
+-#include "fcitx/addonmanager.h"
+ #include "config.h"
+ #include "spell-custom.h"
+ #ifdef ENABLE_ENCHANT
+@@ -110,12 +109,6 @@ Spell::hintForDisplay(const std::string &language, SpellProvider provider,
+ 
+     return iter->second->hint(language, word, limit);
+ }
+-
+-class SpellModuleFactory : public AddonFactory {
+-    AddonInstance *create(AddonManager *manager) override {
+-        return new Spell(manager->instance());
+-    }
+-};
+ } // namespace fcitx
+ 
+ FCITX_ADDON_FACTORY(fcitx::SpellModuleFactory)
+diff --git a/src/modules/spell/spell.h b/src/modules/spell/spell.h
+index 60778962..3cfa2db5 100644
+--- a/src/modules/spell/spell.h
++++ b/src/modules/spell/spell.h
+@@ -13,6 +13,7 @@
+ #include "fcitx-utils/i18n.h"
+ #include "fcitx/addonfactory.h"
+ #include "fcitx/addoninstance.h"
++#include "fcitx/addonmanager.h"
+ #include "fcitx/instance.h"
+ #include "spell_public.h"
+ 
+@@ -104,6 +105,12 @@ public:
+ private:
+     Spell *parent_;
+ };
++
++class SpellModuleFactory : public AddonFactory {
++    AddonInstance *create(AddonManager *manager) override {
++        return new Spell(manager->instance());
++    }
++};
+ } // namespace fcitx
+ 
+ #endif // _FCITX_MODULES_SPELL_SPELL_H_

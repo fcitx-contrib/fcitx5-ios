@@ -16,5 +16,6 @@ target_compile_options(keyboard PUBLIC
 
 target_link_libraries(keyboard PRIVATE
     Fcitx5::Core
+    spell
     iosfrontend
 )
