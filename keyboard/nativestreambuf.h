@@ -8,6 +8,7 @@
 #ifndef FCITX5_IOS_NATIVESTREAMBUF_H
 #define FCITX5_IOS_NATIVESTREAMBUF_H
 
+#include <TargetConditionals.h>
 #include <array>
 #include <iostream>
 #include <os/log.h>
@@ -85,7 +86,12 @@ class native_streambuf : public std::streambuf {
     void update_log_priority(const char_type first) {
         switch (first) {
         case 'D':
+            // https://stackoverflow.com/questions/57509909/swift-oslog-os-log-not-showing-up-in-console-app
+#if TARGET_IPHONE_SIMULATOR == 1
+            prio = OS_LOG_TYPE_INFO;
+#else
             prio = OS_LOG_TYPE_DEBUG;
+#endif
             break;
         case 'I':
             prio = OS_LOG_TYPE_INFO;
