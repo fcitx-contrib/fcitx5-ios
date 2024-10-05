@@ -62,6 +62,6 @@ void startFcitx(const char *bundlePath) {
     return;
 }
 
-void focusIn() {
-    return with_fcitx([] { frontend->focusIn(); });
+void focusIn(id client) {
+    return with_fcitx([client] { frontend->focusIn(client); });
 }

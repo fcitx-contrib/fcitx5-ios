@@ -1,5 +1,6 @@
 #pragma once
 
+#include <objc/objc.h>
 #include <fcitx-config/configuration.h>
 #include <fcitx/addonfactory.h>
 #include <fcitx/addoninstance.h>
@@ -23,7 +24,7 @@ class IosFrontend : public AddonInstance {
 
     void createInputContext();
     bool keyEvent(const Key &key, bool isRelease);
-    void focusIn();
+    void focusIn(id client);
     void focusOut();
 
   private:
@@ -50,8 +51,10 @@ class IosInputContext : public InputContext {
     void deleteSurroundingTextImpl(int offset, unsigned int size) override {}
     void forwardKeyImpl(const ForwardKeyEvent &key) override {}
     void updatePreeditImpl() override;
+    void setClient(id client) { client_ = client; }
 
   private:
     IosFrontend *frontend_;
+    id client_;
 };
 } // namespace fcitx

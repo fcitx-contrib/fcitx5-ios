@@ -1,4 +1,5 @@
 #include "iosfrontend.h"
+#include "iosfrontend-swift.h"
 
 namespace fcitx {
 
@@ -19,7 +20,10 @@ bool IosFrontend::keyEvent(const Key &key, bool isRelease) {
     return event.accepted();
 }
 
-void IosFrontend::focusIn() { ic_->focusIn(); }
+void IosFrontend::focusIn(id client) {
+    ic_->setClient(client);
+    ic_->focusIn();
+}
 
 void IosFrontend::focusOut() { ic_->focusOut(); }
 
@@ -34,7 +38,7 @@ IosInputContext::IosInputContext(IosFrontend *frontend,
 IosInputContext::~IosInputContext() { destroy(); }
 
 void IosInputContext::commitStringImpl(const std::string &text) {
-    FCITX_ERROR() << text;
+    SwiftFrontend::commitStringAsync(client_, text);
 }
 
 void IosInputContext::updatePreeditImpl() {
