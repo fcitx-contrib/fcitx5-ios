@@ -1,3 +1,6 @@
 [submodule "fcitx5"]
 	path = fcitx5
 	url = https://github.com/fcitx/fcitx5
+[submodule "engines/fcitx5-hallelujah"]
+	path = engines/fcitx5-hallelujah
+	url = https://github.com/fcitx-contrib/fcitx5-hallelujah

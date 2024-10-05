@@ -1,0 +1,88 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 02daeea..bcc8397 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -12,8 +12,6 @@ option(ENABLE_TEST "Build Test" On)
+ option(BUILD_DATA "Build data" On)
+ 
+ find_package(Gettext REQUIRED)
+-find_package(Fcitx5Core 5.0.0 REQUIRED)
+-find_package(Fcitx5Module REQUIRED COMPONENTS Spell TestFrontend)
+ find_package(PkgConfig REQUIRED)
+ 
+ if (NOT TARGET fmt::fmt)
+@@ -33,7 +31,7 @@ endif()
+ add_definitions(-DFCITX_GETTEXT_DOMAIN=\"fcitx5-hallelujah\")
+ fcitx5_add_i18n_definition()
+ 
+-include("${FCITX_INSTALL_CMAKECONFIG_DIR}/Fcitx5Utils/Fcitx5CompilerSettings.cmake")
++include("../../fcitx5/cmake/Fcitx5CompilerSettings.cmake")
+ 
+ add_subdirectory(src)
+ if (ENABLE_TEST)
+diff --git a/data/CMakeLists.txt b/data/CMakeLists.txt
+index 4e8b3f7..eef37ec 100644
+--- a/data/CMakeLists.txt
++++ b/data/CMakeLists.txt
+@@ -5,3 +5,21 @@ add_custom_target(google ALL
+ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/google_227800_words.bin" DESTINATION ${DEST_DIR} COMPONENT config)
+ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/words.json" DESTINATION ${DEST_DIR} COMPONENT config)
+ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cedict.json" DESTINATION ${DEST_DIR} COMPONENT config)
++
++add_custom_command(
++    TARGET google
++    POST_BUILD COMMAND /bin/zsh -c
++    \"
++    ${CMAKE_COMMAND} -E copy
++        ${CMAKE_CURRENT_BINARY_DIR}/google_227800_words.bin
++        ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/hallelujah/google_227800_words.bin
++    \;
++    ${CMAKE_COMMAND} -E copy
++        ${CMAKE_CURRENT_SOURCE_DIR}/words.json
++        ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/hallelujah/words.json
++    \;
++    ${CMAKE_COMMAND} -E copy
++        ${CMAKE_CURRENT_SOURCE_DIR}/cedict.json
++        ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/hallelujah/cedict.json
++    \"
++)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index dcbd627..6b0f00d 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-add_library(hallelujah MODULE hallelujah.cpp)
++add_library(hallelujah STATIC hallelujah.cpp)
+ target_link_libraries(hallelujah Fcitx5::Core Fcitx5::Module::Spell fmt::fmt ${MARISA_TARGET} ${JSONC_TARGET})
+ install(TARGETS hallelujah DESTINATION "${FCITX_INSTALL_LIBDIR}/fcitx5")
+ fcitx5_translate_desktop_file(hallelujah.conf.in hallelujah.conf)
+@@ -6,3 +6,17 @@ configure_file(hallelujah-addon.conf.in.in hallelujah-addon.conf.in)
+ fcitx5_translate_desktop_file("${CMAKE_CURRENT_BINARY_DIR}/hallelujah-addon.conf.in" hallelujah-addon.conf)
+ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/hallelujah.conf" DESTINATION "${FCITX_INSTALL_PKGDATADIR}/inputmethod" COMPONENT config)
+ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/hallelujah-addon.conf" RENAME hallelujah.conf DESTINATION "${FCITX_INSTALL_PKGDATADIR}/addon" COMPONENT config)
++
++add_custom_command(
++    TARGET hallelujah
++    POST_BUILD COMMAND /bin/sh -c
++    \"
++    ${CMAKE_COMMAND} -E copy
++        ${CMAKE_CURRENT_BINARY_DIR}/hallelujah-addon.conf
++        ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/fcitx5/addon/hallelujah.conf
++    \;
++    ${CMAKE_COMMAND} -E copy
++        ${CMAKE_CURRENT_BINARY_DIR}/hallelujah.conf
++        ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/fcitx5/inputmethod/hallelujah.conf
++    \"
++)
+diff --git a/src/hallelujah.h b/src/hallelujah.h
+index 115ad79..c35bd7e 100644
+--- a/src/hallelujah.h
++++ b/src/hallelujah.h
+@@ -71,7 +71,6 @@ private:
+ class HallelujahFactory : public AddonFactory {
+ public:
+     AddonInstance *create(AddonManager *manager) override {
+-        registerDomain("fcitx5-hallelujah", FCITX_INSTALL_LOCALEDIR);
+         return new HallelujahEngine(manager->instance());
+     }
+ };

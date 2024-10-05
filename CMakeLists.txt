@@ -26,6 +26,12 @@ include(AddSwift)
 set(KEYBOARD_NAME "Keyboard")
 set(KEYBOARD_LANGUAGE "zh-Hans")
 
+set(ENGINE "" CACHE STRING "fcitx5 engine to bundle")
+
+if (ENGINE STREQUAL "hallelujah")
+    add_definitions(-DHALLELUJAH)
+endif()
+
 # For dependencies not to be find via pkg-config
 set(LibIntl_DIR "build/sysroot/usr/lib/cmake")
 find_package(LibIntl)
@@ -53,6 +59,8 @@ find_host_package(Gettext)
 add_subdirectory(fcitx5)
 
 add_subdirectory(iosfrontend)
+
+add_subdirectory(engines)
 
 add_subdirectory(keyboard)
 add_subdirectory(src)

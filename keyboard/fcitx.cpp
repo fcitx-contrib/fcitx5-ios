@@ -10,6 +10,15 @@
 #include "fcitx.h"
 #include "util.h"
 
+#if defined(HALLELUJAH)
+
+#include "../engines/fcitx5-hallelujah/src/hallelujah.h"
+#define ENGINE_ADDON "hallelujah"
+fcitx::HallelujahFactory
+
+#endif
+    EngineFactory;
+
 namespace fs = std::filesystem;
 
 fcitx::SpellModuleFactory SpellModuleFactory;
@@ -20,6 +29,8 @@ fcitx::StaticAddonRegistry addons = {
                                                        &SpellModuleFactory),
     std::make_pair<std::string, fcitx::AddonFactory *>("iosfrontend",
                                                        &IosFrontendFactory),
+    std::make_pair<std::string, fcitx::AddonFactory *>(ENGINE_ADDON,
+                                                       &EngineFactory),
 };
 
 native_streambuf log_streambuf;
@@ -64,4 +75,9 @@ void startFcitx(const char *bundlePath) {
 
 void focusIn(id client) {
     return with_fcitx([client] { frontend->focusIn(client); });
+}
+
+bool processKey(const char *key) {
+    return with_fcitx(
+        [key] { return frontend->keyEvent(fcitx::Key{key}, false); });
 }
