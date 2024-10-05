@@ -18,7 +18,7 @@ class KeyboardViewController: UIInputViewController {
     super.viewDidLoad()
 
     startFcitx(Bundle.main.bundlePath)
-    focusIn()
+    focusIn(self.textDocumentProxy)
 
     // Perform custom UI setup here
     self.nextKeyboardButton = UIButton(type: .system)
