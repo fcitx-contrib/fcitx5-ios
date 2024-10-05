@@ -38,6 +38,8 @@ jobs:
           brew install \
             extra-cmake-modules
           IOS_PLATFORM=SIMULATOR ./install-deps.sh
+          wget https://github.com/fcitx-contrib/fcitx5-macos-prebuilder/releases/download/latest/marisa-$(uname -m).tar.bz2
+          sudo tar xjvf marisa-$(uname -m).tar.bz2 -C /usr/local bin/marisa-build
 
       - name: Build
         run: |
