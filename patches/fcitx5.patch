@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index ac1e1dcb..594519ad 100644
+index ac1e1dcb..b721b612 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -36,6 +36,7 @@ option(ENABLE_XDGAUTOSTART "Enable xdg autostart desktop file installation" On)
@@ -18,9 +18,11 @@ index ac1e1dcb..594519ad 100644
  
  if (NOT TARGET LibIntl::LibIntl)
      find_package(LibIntl REQUIRED)
-@@ -192,7 +192,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
+@@ -190,9 +190,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DI
+ include_directories(${CMAKE_CURRENT_BINARY_DIR})
+ 
  add_subdirectory(src)
- add_subdirectory(data)
+-add_subdirectory(data)
  add_subdirectory(po)
 -add_subdirectory(testing)
  
