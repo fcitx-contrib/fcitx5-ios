@@ -1,5 +1,6 @@
 #include "../fcitx5/src/modules/spell/spell.h"
 #include "../iosfrontend/iosfrontend.h"
+#include "../uipanel/uipanel.h"
 #include "nativestreambuf.h"
 #include <fcitx-utils/event.h>
 #include <fcitx-utils/eventdispatcher.h>
@@ -23,12 +24,15 @@ namespace fs = std::filesystem;
 
 fcitx::SpellModuleFactory SpellModuleFactory;
 fcitx::IosFrontendFactory IosFrontendFactory;
+fcitx::UIPanelFactory UIPanelFactory;
 
 fcitx::StaticAddonRegistry addons = {
     std::make_pair<std::string, fcitx::AddonFactory *>("spell",
                                                        &SpellModuleFactory),
     std::make_pair<std::string, fcitx::AddonFactory *>("iosfrontend",
                                                        &IosFrontendFactory),
+    std::make_pair<std::string, fcitx::AddonFactory *>("uipanel",
+                                                       &UIPanelFactory),
     std::make_pair<std::string, fcitx::AddonFactory *>(ENGINE_ADDON,
                                                        &EngineFactory),
 };
