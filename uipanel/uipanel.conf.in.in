@@ -1,0 +1,7 @@
+[Addon]
+Name=UIPanel
+Type=StaticLibrary
+Library=libuipanel
+Category=UI
+Version=@PROJECT_VERSION@
+Configurable=True

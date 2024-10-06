@@ -4,8 +4,7 @@
 namespace fcitx {
 
 IosFrontend::IosFrontend(Instance *instance)
-    : instance_(instance),
-      focusGroup_("ios", instance->inputContextManager()) {
+    : instance_(instance), focusGroup_("ios", instance->inputContextManager()) {
     createInputContext();
 }
 
@@ -28,7 +27,7 @@ void IosFrontend::focusIn(id client) {
 void IosFrontend::focusOut() { ic_->focusOut(); }
 
 IosInputContext::IosInputContext(IosFrontend *frontend,
-                                   InputContextManager &inputContextManager)
+                                 InputContextManager &inputContextManager)
     : InputContext(inputContextManager, ""), frontend_(frontend) {
     CapabilityFlags flags = CapabilityFlag::Preedit;
     setCapabilityFlags(flags);

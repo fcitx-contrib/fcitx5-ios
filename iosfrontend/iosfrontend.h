@@ -1,12 +1,12 @@
 #pragma once
 
-#include <objc/objc.h>
 #include <fcitx-config/configuration.h>
 #include <fcitx/addonfactory.h>
 #include <fcitx/addoninstance.h>
 #include <fcitx/addonmanager.h>
 #include <fcitx/focusgroup.h>
 #include <fcitx/instance.h>
+#include <objc/objc.h>
 
 namespace fcitx {
 
@@ -43,7 +43,7 @@ class IosFrontendFactory : public AddonFactory {
 class IosInputContext : public InputContext {
   public:
     IosInputContext(IosFrontend *frontend,
-                     InputContextManager &inputContextManager);
+                    InputContextManager &inputContextManager);
     ~IosInputContext();
 
     const char *frontend() const override { return "ios"; }
