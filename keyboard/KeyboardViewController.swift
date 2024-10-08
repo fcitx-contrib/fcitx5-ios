@@ -36,7 +36,6 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     ])
 
     startFcitx(Bundle.main.bundlePath)
-    focusIn(self)
 
     // Perform custom UI setup here
     self.nextKeyboardButton = UIButton(type: .system)
@@ -53,6 +52,16 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
     self.nextKeyboardButton.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
     self.nextKeyboardButton.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+  }
+
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    focusIn(self)
+  }
+
+  override func viewWillDisappear(_ animated: Bool) {
+    super.viewWillDisappear(animated)
+    focusOut()
   }
 
   override func viewWillLayoutSubviews() {

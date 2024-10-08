@@ -82,6 +82,10 @@ void focusIn(id client) {
     return with_fcitx([client] { frontend->focusIn(client); });
 }
 
+void focusOut() {
+    return with_fcitx([] { frontend->focusOut(); });
+}
+
 bool processKey(const char *key) {
     return with_fcitx(
         [key] { return frontend->keyEvent(fcitx::Key{key}, false); });

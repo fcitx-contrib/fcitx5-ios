@@ -24,7 +24,10 @@ void IosFrontend::focusIn(id client) {
     ic_->focusIn();
 }
 
-void IosFrontend::focusOut() { ic_->focusOut(); }
+void IosFrontend::focusOut() {
+    ic_->setClient(nil);
+    ic_->focusOut();
+}
 
 IosInputContext::IosInputContext(IosFrontend *frontend,
                                  InputContextManager &inputContextManager)
