@@ -58,6 +58,7 @@ find_host_package(Gettext)
 
 add_subdirectory(fcitx5)
 
+add_subdirectory(protocol)
 add_subdirectory(iosfrontend)
 add_subdirectory(uipanel)
 

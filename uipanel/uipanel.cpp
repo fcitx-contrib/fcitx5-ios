@@ -1,12 +1,19 @@
 #include <fcitx/inputpanel.h>
 
+#include "../iosfrontend/iosfrontend.h"
+#include "keyboardui-swift.h"
 #include "uipanel.h"
 
 namespace fcitx {
 
 UIPanel::UIPanel(Instance *instance) : instance_(instance) {}
 
-void UIPanel::showVirtualKeyboard() {}
+void UIPanel::showVirtualKeyboard() {
+    if (auto ic = dynamic_cast<IosInputContext *>(
+            instance_->mostRecentInputContext())) {
+        KeyboardUI::showKeyboardAsync(ic->getClient());
+    }
+}
 
 void UIPanel::update(UserInterfaceComponent component,
                      InputContext *inputContext) {
