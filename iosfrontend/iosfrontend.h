@@ -52,6 +52,7 @@ class IosInputContext : public InputContext {
     void forwardKeyImpl(const ForwardKeyEvent &key) override {}
     void updatePreeditImpl() override;
     void setClient(id client) { client_ = client; }
+    id getClient() { return client_; }
 
   private:
     IosFrontend *frontend_;

@@ -18,6 +18,7 @@ target_link_libraries(keyboard PRIVATE
     spell
     iosfrontend
     SwiftFrontend
+    KeyboardUI
     uipanel
     "${ENGINE}"
 )
