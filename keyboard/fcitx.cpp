@@ -66,6 +66,7 @@ void startFcitx(const char *bundlePath) {
     setupEnv(bundlePath);
 
     instance = std::make_unique<fcitx::Instance>(0, nullptr);
+    instance->setInputMethodMode(fcitx::InputMethodMode::OnScreenKeyboard);
     auto &addonMgr = instance->addonManager();
     addonMgr.registerDefaultLoader(&addons);
     instance->initialize();

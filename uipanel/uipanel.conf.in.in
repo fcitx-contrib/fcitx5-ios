@@ -5,3 +5,4 @@ Library=libuipanel
 Category=UI
 Version=@PROJECT_VERSION@
 Configurable=True
+UIType=OnScreenKeyboard

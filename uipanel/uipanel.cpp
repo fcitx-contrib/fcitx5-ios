@@ -6,6 +6,8 @@ namespace fcitx {
 
 UIPanel::UIPanel(Instance *instance) : instance_(instance) {}
 
+void UIPanel::showVirtualKeyboard() {}
+
 void UIPanel::update(UserInterfaceComponent component,
                      InputContext *inputContext) {
     switch (component) {

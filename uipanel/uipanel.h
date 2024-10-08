@@ -7,7 +7,7 @@
 
 namespace fcitx {
 
-class UIPanel final : public UserInterface {
+class UIPanel final : public VirtualKeyboardUserInterface {
   public:
     UIPanel(Instance *);
     virtual ~UIPanel() = default;
@@ -25,6 +25,9 @@ class UIPanel final : public UserInterface {
     void resume() override {}
     void update(UserInterfaceComponent component,
                 InputContext *inputContext) override;
+    bool isVirtualKeyboardVisible() const override { return true; }
+    void showVirtualKeyboard() override;
+    void hideVirtualKeyboard() override {}
 
   private:
     Instance *instance_;
