@@ -25,11 +25,9 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     mainStackView.alignment = .fill
     mainStackView.spacing = 10
 
-    // 将主 stack view 添加到视图中
     mainStackView.translatesAutoresizingMaskIntoConstraints = false
     view.addSubview(mainStackView)
 
-    // 设置主 stack view 的布局约束，使其占据整个视图
     NSLayoutConstraint.activate([
       mainStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
       mainStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
