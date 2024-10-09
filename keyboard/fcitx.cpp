@@ -4,7 +4,6 @@
 #include "nativestreambuf.h"
 #include <fcitx-utils/event.h>
 #include <fcitx-utils/eventdispatcher.h>
-#include <fcitx/instance.h>
 #include <filesystem>
 #include <thread>
 
