@@ -1,12 +1,12 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 02daeea..bcc8397 100644
+index 7ffcf34..a57a061 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -12,8 +12,6 @@ option(ENABLE_TEST "Build Test" On)
  option(BUILD_DATA "Build data" On)
  
  find_package(Gettext REQUIRED)
--find_package(Fcitx5Core 5.0.0 REQUIRED)
+-find_package(Fcitx5Core 5.1.9 REQUIRED)
 -find_package(Fcitx5Module REQUIRED COMPONENTS Spell TestFrontend)
  find_package(PkgConfig REQUIRED)
  
@@ -75,7 +75,7 @@ index dcbd627..6b0f00d 100644
 +    \"
 +)
 diff --git a/src/hallelujah.h b/src/hallelujah.h
-index 115ad79..c35bd7e 100644
+index ace78e7..2a371b8 100644
 --- a/src/hallelujah.h
 +++ b/src/hallelujah.h
 @@ -71,7 +71,6 @@ private:
