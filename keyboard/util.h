@@ -1,7 +1,10 @@
+#pragma once
 
 #include <fcitx-utils/eventdispatcher.h>
+#include <fcitx/instance.h>
 #include <future>
 
+extern std::unique_ptr<fcitx::Instance> instance;
 extern std::unique_ptr<fcitx::EventDispatcher> dispatcher;
 
 template <class F, class T = std::invoke_result_t<F>>

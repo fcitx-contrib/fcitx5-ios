@@ -1,7 +1,10 @@
 #include <fcitx/inputpanel.h>
 
 #include "../iosfrontend/iosfrontend.h"
+#include "../keyboard/fcitx.h"
+#include "../keyboard/util.h"
 #include "keyboardui-swift.h"
+#include "uipanel-public.h"
 #include "uipanel.h"
 
 namespace fcitx {
@@ -40,3 +43,18 @@ void UIPanel::update(UserInterfaceComponent component,
 }
 
 } // namespace fcitx
+
+void selectCandidate(int index) {
+    with_fcitx([index] {
+        auto ic = instance->mostRecentInputContext();
+        const auto &list = ic->inputPanel().candidateList();
+        if (!list)
+            return;
+        try {
+            // Engine is responsible for updating UI
+            list->candidate(index).select(ic);
+        } catch (const std::invalid_argument &e) {
+            FCITX_ERROR() << "select candidate index out of range";
+        }
+    });
+}

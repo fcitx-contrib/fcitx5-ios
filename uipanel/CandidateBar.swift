@@ -1,4 +1,5 @@
 import UIKit
+import UIPanel
 
 class CandidateCollectionView: UIView {
 
@@ -70,6 +71,7 @@ extension CandidateCollectionView: UICollectionViewDataSource {
 
 extension CandidateCollectionView: UICollectionViewDelegate {
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    selectCandidate(Int32(indexPath.item))
   }
 }
 
