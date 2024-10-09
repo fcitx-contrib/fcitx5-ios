@@ -1,0 +1,79 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1a1637a..92a41e0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -10,8 +10,6 @@ include(ECMSetupVersion)
+ include(ECMUninstallTarget)
+ 
+ find_package(Gettext REQUIRED)
+-find_package(Fcitx5Core 5.1.11 REQUIRED)
+-find_package(Fcitx5Module REQUIRED COMPONENTS Notifications)
+ find_package(PkgConfig REQUIRED)
+ find_package(Pthread REQUIRED)
+ 
+@@ -45,7 +43,7 @@ add_definitions(-DFCITX_GETTEXT_DOMAIN=\"fcitx5-rime\")
+ add_definitions(-DFCITX_RIME_VERSION=\"${PROJECT_VERSION}\")
+ fcitx5_add_i18n_definition()
+ 
+-include("${FCITX_INSTALL_CMAKECONFIG_DIR}/Fcitx5Utils/Fcitx5CompilerSettings.cmake")
++include("../../fcitx5/cmake/Fcitx5CompilerSettings.cmake")
+ 
+ add_subdirectory(po)
+ add_subdirectory(src)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 0854a9a..9e6aea8 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -22,7 +22,7 @@ else()
+     add_definitions(-DFCITX_RIME_NO_DBUS)
+ endif()
+ 
+-add_library(rime MODULE ${RIME_SOURCES})
++add_library(rime STATIC ${RIME_SOURCES})
+ target_link_libraries(rime ${RIME_LINK_LIBRARIES})
+ install(TARGETS rime DESTINATION "${CMAKE_INSTALL_LIBDIR}/fcitx5")
+ fcitx5_translate_desktop_file(rime.conf.in rime.conf)
+@@ -31,3 +31,31 @@ fcitx5_translate_desktop_file("${CMAKE_CURRENT_BINARY_DIR}/rime-addon.conf.in" r
+ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/rime.conf" DESTINATION "${FCITX_INSTALL_PKGDATADIR}/inputmethod" COMPONENT config)
+ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/rime-addon.conf" RENAME rime.conf DESTINATION "${FCITX_INSTALL_PKGDATADIR}/addon" COMPONENT config)
+ 
++
++add_custom_command(
++    TARGET rime
++    POST_BUILD COMMAND /bin/sh -c
++    \"
++    ${CMAKE_COMMAND} -E copy
++        ${CMAKE_CURRENT_BINARY_DIR}/rime-addon.conf
++        ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/fcitx5/addon/rime.conf
++    \;
++    ${CMAKE_COMMAND} -E copy
++        ${CMAKE_CURRENT_BINARY_DIR}/rime.conf
++        ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/fcitx5/inputmethod/rime.conf
++    \;
++    mkdir -p ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/rime-data
++    \;
++    cp ${CMAKE_SOURCE_DIR}/data/rime-prelude/*.yaml ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/rime-data
++    \;
++    cp ${CMAKE_SOURCE_DIR}/data/rime-essay/essay.txt ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/rime-data
++    \;
++    cp ${CMAKE_SOURCE_DIR}/data/rime-luna-pinyin/*.yaml ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/rime-data
++    \;
++    cp ${CMAKE_SOURCE_DIR}/data/rime-stroke/*.yaml ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/rime-data
++    \;
++    ${CMAKE_COMMAND} -E copy
++        ${CMAKE_SOURCE_DIR}/data/default.yaml
++        ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/rime-data/default.yaml
++    \"
++)
+diff --git a/src/rimeengine.h b/src/rimeengine.h
+index 6bec003..10940c8 100644
+--- a/src/rimeengine.h
++++ b/src/rimeengine.h
+@@ -238,7 +238,6 @@ private:
+ class RimeEngineFactory : public AddonFactory {
+ public:
+     AddonInstance *create(AddonManager *manager) override {
+-        registerDomain("fcitx5-rime", FCITX_INSTALL_LOCALEDIR);
+         return new RimeEngine(manager->instance());
+     }
+ };

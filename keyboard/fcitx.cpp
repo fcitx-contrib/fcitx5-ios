@@ -1,3 +1,6 @@
+#include "../engines/fcitx5-hallelujah/src/hallelujah.h"
+#include "../engines/fcitx5-rime/src/rimeengine.h"
+
 #include "../fcitx5/src/modules/spell/spell.h"
 #include "../iosfrontend/iosfrontend.h"
 #include "../uipanel/uipanel.h"
@@ -10,14 +13,12 @@
 #include "fcitx.h"
 #include "util.h"
 
-#if defined(HALLELUJAH)
-
-#include "../engines/fcitx5-hallelujah/src/hallelujah.h"
-#define ENGINE_ADDON "hallelujah"
-fcitx::HallelujahFactory
-
+#ifdef HALLELUJAH
+fcitx::HallelujahFactory HallelujahFactory;
 #endif
-    EngineFactory;
+#ifdef RIME
+fcitx::RimeEngineFactory RimeFactory;
+#endif
 
 namespace fs = std::filesystem;
 
@@ -32,8 +33,13 @@ fcitx::StaticAddonRegistry addons = {
                                                        &IosFrontendFactory),
     std::make_pair<std::string, fcitx::AddonFactory *>("uipanel",
                                                        &UIPanelFactory),
-    std::make_pair<std::string, fcitx::AddonFactory *>(ENGINE_ADDON,
-                                                       &EngineFactory),
+#ifdef HALLELUJAH
+    std::make_pair<std::string, fcitx::AddonFactory *>("hallelujah",
+                                                       &HallelujahFactory),
+#endif
+#ifdef RIME
+    std::make_pair<std::string, fcitx::AddonFactory *>("rime", &RimeFactory),
+#endif
 };
 
 native_streambuf log_streambuf;
@@ -51,10 +57,17 @@ void setupLog() {
 
 void setupEnv(const char *bundlePath) {
     fs::path bundle = bundlePath;
+    fs::path home = getenv("HOME");
     std::string xdg_data_dirs = bundle / "share";
-    std::string fcitx_data_home = bundle / "share/fcitx5";
+    std::string xdg_data_home = home / "Documents";
+    std::string fcitx_config_home = home / "Library/config";
     setenv("XDG_DATA_DIRS", xdg_data_dirs.c_str(), 1);
-    setenv("FCITX_DATA_HOME", fcitx_data_home.c_str(), 1);
+    setenv("XDG_DATA_HOME", xdg_data_home.c_str(), 1);
+    // By default FCITX_DATA_HOME is XDG_DATA_HOME/fcitx5. Flatten it like f5a.
+    setenv("FCITX_DATA_HOME", xdg_data_home.c_str(), 1);
+    // By default FCITX_CONFIG_HOME is XDG_CONFIG_HOME/fcitx5. Move it from
+    // ~/.config/fcitx5 to ~/Library/config.
+    setenv("FCITX_CONFIG_HOME", fcitx_config_home.c_str(), 1);
 }
 
 void startFcitx(const char *bundlePath) {
