@@ -21,15 +21,17 @@ void UIPanel::update(UserInterfaceComponent component,
     case UserInterfaceComponent::InputPanel: {
         const InputPanel &inputPanel = inputContext->inputPanel();
         int size = 0;
+        auto candidates = swift::Array<swift::String>::init();
         if (const auto &list = inputPanel.candidateList()) {
             size = list->size();
             for (int i = 0; i < size; i++) {
                 const auto &candidate = list->candidate(i);
-                FCITX_INFO()
-                    << instance_->outputFilter(inputContext, candidate.text())
-                           .toString();
+                candidates.append(
+                    instance_->outputFilter(inputContext, candidate.text())
+                        .toString());
             }
         }
+        KeyboardUI::setCandidatesAsync(candidates);
         break;
     }
     case UserInterfaceComponent::StatusArea:
