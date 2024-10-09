@@ -70,7 +70,6 @@ extension CandidateCollectionView: UICollectionViewDataSource {
 
 extension CandidateCollectionView: UICollectionViewDelegate {
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-    logger.error("Selected word: \(words[indexPath.item])")
   }
 }
 
