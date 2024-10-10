@@ -26,16 +26,12 @@ include(AddSwift)
 set(KEYBOARD_NAME "Keyboard")
 set(KEYBOARD_LANGUAGE "zh-Hans")
 
-set(ENGINE "" CACHE STRING "fcitx5 engine to bundle")
-
-if (ENGINE STREQUAL "hallelujah")
-    add_definitions(-DHALLELUJAH)
-endif()
+set(PREBUILDER_LIB_DIR "${PROJECT_BINARY_DIR}/sysroot/usr/lib")
 
 # For dependencies not to be find via pkg-config
-set(LibIntl_DIR "build/sysroot/usr/lib/cmake")
+set(LibIntl_DIR "${PREBUILDER_LIB_DIR}/cmake")
 find_package(LibIntl)
-set(fmt_DIR "build/sysroot/usr/lib/cmake/fmt")
+set(fmt_DIR "${PREBUILDER_LIB_DIR}/cmake/fmt")
 find_package(fmt)
 
 option(ENABLE_TEST "" OFF)
@@ -62,7 +58,25 @@ add_subdirectory(protocol)
 add_subdirectory(iosfrontend)
 add_subdirectory(uipanel)
 
-add_subdirectory(engines)
+option(HALLELUJAH "" OFF)
+option(RIME "" OFF)
+
+set(ENGINES)
+
+if (HALLELUJAH)
+    add_definitions(-DHALLELUJAH)
+    add_subdirectory(engines/fcitx5-hallelujah)
+    list(APPEND ENGINES hallelujah)
+endif()
+if (RIME)
+    # RIME_DATA_DIR is not actually used but must exist.
+    set(RIME_DATA_DIR "/usr/share/rime-data")
+    set(RIME_TARGET "${PREBUILDER_LIB_DIR}/librime.a" "-L${PREBUILDER_LIB_DIR}" leveldb yaml-cpp marisa opencc glog)
+    set(Rime_VERSION "1.11.2")
+    add_definitions(-DRIME)
+    add_subdirectory(engines/fcitx5-rime)
+    list(APPEND ENGINES rime)
+endif()
 
 add_subdirectory(keyboard)
 add_subdirectory(src)

@@ -4,3 +4,18 @@
 [submodule "engines/fcitx5-hallelujah"]
 	path = engines/fcitx5-hallelujah
 	url = https://github.com/fcitx-contrib/fcitx5-hallelujah
+[submodule "engines/fcitx5-rime"]
+	path = engines/fcitx5-rime
+	url = https://github.com/fcitx/fcitx5-rime
+[submodule "data/rime-essay"]
+	path = data/rime-essay
+	url = https://github.com/rime/rime-essay
+[submodule "data/rime-prelude"]
+	path = data/rime-prelude
+	url = https://github.com/rime/rime-prelude
+[submodule "data/rime-luna-pinyin"]
+	path = data/rime-luna-pinyin
+	url = https://github.com/rime/rime-luna-pinyin
+[submodule "data/rime-stroke"]
+	path = data/rime-stroke
+	url = https://github.com/rime/rime-stroke
