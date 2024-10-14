@@ -19,5 +19,8 @@
   <!-- A random string makes it fullscreen. -->
   <key>UILaunchScreen</key>
   <string>foo</string>
+  <!-- Show Documents direcotry (when it's not empty) in Files.app. -->
+  <key>UISupportsDocumentBrowser</key>
+  <true/>
 </dict>
 </plist>
