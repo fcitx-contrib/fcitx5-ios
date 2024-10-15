@@ -4,6 +4,8 @@ add_library(KeyboardUI STATIC
     Keyboard.swift
     Candidate.swift
     CandidateBar.swift
+    Toolbar.swift
+    ui.swift
 )
 set_target_properties(KeyboardUI PROPERTIES Swift_MODULE_NAME KeyboardUI)
 target_compile_options(KeyboardUI PUBLIC "$<$<COMPILE_LANGUAGE:Swift>:-cxx-interoperability-mode=default>")

@@ -38,7 +38,7 @@ class CandidateCollectionView: UIView {
       collectionView.trailingAnchor.constraint(equalTo: trailingAnchor),
       collectionView.topAnchor.constraint(equalTo: topAnchor),
       collectionView.bottomAnchor.constraint(equalTo: bottomAnchor),
-      collectionView.heightAnchor.constraint(equalToConstant: 35),
+      collectionView.heightAnchor.constraint(equalToConstant: barHeight),
     ])
   }
 
