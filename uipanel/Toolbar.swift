@@ -9,6 +9,7 @@ struct Toolbar: View {
           .frame(width: barHeight, height: barHeight)
       }.background(lightBackground)
       Button {
+        toggleStatusArea(true)
       } label: {
         Image(systemName: "ellipsis")
           .frame(width: barHeight, height: barHeight)

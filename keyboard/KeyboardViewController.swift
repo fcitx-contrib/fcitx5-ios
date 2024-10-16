@@ -23,16 +23,16 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     mainStackView = UIStackView()
     mainStackView.axis = .vertical
     mainStackView.alignment = .fill
-    mainStackView.spacing = 10
 
     mainStackView.translatesAutoresizingMaskIntoConstraints = false
     view.addSubview(mainStackView)
 
+    // fill parent with no padding
     NSLayoutConstraint.activate([
-      mainStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
-      mainStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
-      mainStackView.topAnchor.constraint(equalTo: view.topAnchor, constant: 10),
-      mainStackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -10),
+      mainStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
+      mainStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
+      mainStackView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0),
+      mainStackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0),
     ])
 
     startFcitx(Bundle.main.bundlePath)

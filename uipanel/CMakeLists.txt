@@ -5,6 +5,7 @@ add_library(KeyboardUI STATIC
     Candidate.swift
     CandidateBar.swift
     Toolbar.swift
+    StatusArea.swift
     ui.swift
 )
 set_target_properties(KeyboardUI PROPERTIES Swift_MODULE_NAME KeyboardUI)

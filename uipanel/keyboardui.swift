@@ -9,8 +9,13 @@ let candidateCollectionView = CandidateCollectionView()
 
 let toolbarHostingController = UIHostingController(rootView: Toolbar())
 
+var keyboardView: Keyboard? = nil
+
+let statusAreaHostingController = UIHostingController(rootView: StatusArea())
+
 private func setupMainLayout(_ client: FcitxProtocol) {
   client.addChild(toolbarHostingController)
+  client.addChild(statusAreaHostingController)
 
   let mainStackView = client.getView()
 
@@ -21,9 +26,13 @@ private func setupMainLayout(_ client: FcitxProtocol) {
   candidateCollectionView.isHidden = true
   mainStackView.addArrangedSubview(candidateCollectionView)
 
-  let keyboardView = Keyboard(client)
-  keyboardView.translatesAutoresizingMaskIntoConstraints = false
-  mainStackView.addArrangedSubview(keyboardView)
+  keyboardView = Keyboard(client)
+  keyboardView!.translatesAutoresizingMaskIntoConstraints = false
+  mainStackView.addArrangedSubview(keyboardView!)
+
+  statusAreaHostingController.view.backgroundColor = UIColor.clear
+  statusAreaHostingController.view.isHidden = true
+  mainStackView.addArrangedSubview(statusAreaHostingController.view)
 }
 
 public func showKeyboardAsync(_ clientPtr: UnsafeMutableRawPointer) {
@@ -42,4 +51,16 @@ public func setCandidatesAsync(_ candidates: [String]) {
     toolbarHostingController.view.isHidden = !candidates.isEmpty
     candidateCollectionView.isHidden = candidates.isEmpty
   }
+}
+
+func toggleStatusArea(_ show: Bool) {
+  if show {
+    NSLayoutConstraint.activate([
+      statusAreaHostingController.view.heightAnchor.constraint(
+        equalToConstant: keyboardView!.frame.height + toolbarHostingController.view.frame.height)
+    ])
+  }
+  keyboardView!.isHidden = show
+  toolbarHostingController.view.isHidden = show
+  statusAreaHostingController.view.isHidden = !show
 }
