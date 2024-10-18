@@ -27,6 +27,7 @@ set(KEYBOARD_NAME "Keyboard")
 set(KEYBOARD_LANGUAGE "zh-Hans")
 
 set(PREBUILDER_LIB_DIR "${PROJECT_BINARY_DIR}/sysroot/usr/lib")
+set(PREBUILDER_SHARE_DIR "${PROJECT_BINARY_DIR}/sysroot/usr/share")
 
 # For dependencies not to be find via pkg-config
 set(LibIntl_DIR "${PREBUILDER_LIB_DIR}/cmake")

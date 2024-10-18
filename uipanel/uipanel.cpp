@@ -1,4 +1,8 @@
+#include <fcitx/action.h>
 #include <fcitx/inputpanel.h>
+#include <fcitx/menu.h>
+#include <fcitx/statusarea.h>
+#include <fcitx/userinterfacemanager.h>
 
 #include "../iosfrontend/iosfrontend.h"
 #include "../keyboard/fcitx.h"
@@ -38,8 +42,34 @@ void UIPanel::update(UserInterfaceComponent component,
         break;
     }
     case UserInterfaceComponent::StatusArea:
+        updateStatusArea(inputContext);
         break;
     }
+}
+
+KeyboardUI::StatusAreaAction convertAction(Action *action, InputContext *ic) {
+    auto children = swift::Array<KeyboardUI::StatusAreaAction>::init();
+    if (auto *menu = action->menu()) {
+        for (auto *subAction : menu->actions()) {
+            children.append(convertAction(subAction, ic));
+        }
+    }
+    return KeyboardUI::StatusAreaAction::init(
+        action->id(), action->shortText(ic), action->isChecked(ic),
+        action->isSeparator(), children);
+}
+
+void UIPanel::updateStatusArea(InputContext *ic) {
+    auto actions = swift::Array<KeyboardUI::StatusAreaAction>::init();
+    auto &statusArea = ic->statusArea();
+    for (auto *action : statusArea.allActions()) {
+        if (!action->id()) {
+            // Not registered with UI manager.
+            continue;
+        }
+        actions.append(convertAction(action, ic));
+    }
+    KeyboardUI::setStatusAreaActionsAsync(actions);
 }
 
 } // namespace fcitx
@@ -55,6 +85,16 @@ void selectCandidate(int index) {
             list->candidate(index).select(ic);
         } catch (const std::invalid_argument &e) {
             FCITX_ERROR() << "select candidate index out of range";
+        }
+    });
+}
+
+void activateStatusAreaAction(int id) {
+    with_fcitx([id] {
+        if (auto *ic = instance->mostRecentInputContext()) {
+            auto *action =
+                instance->userInterfaceManager().lookupActionById(id);
+            action->activate(ic);
         }
     });
 }

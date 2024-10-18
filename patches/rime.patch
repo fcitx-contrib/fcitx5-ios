@@ -21,7 +21,7 @@ index 1a1637a..92a41e0 100644
  add_subdirectory(po)
  add_subdirectory(src)
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 0854a9a..9e6aea8 100644
+index 0854a9a..4f43f2b 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -22,7 +22,7 @@ else()
@@ -33,7 +33,7 @@ index 0854a9a..9e6aea8 100644
  target_link_libraries(rime ${RIME_LINK_LIBRARIES})
  install(TARGETS rime DESTINATION "${CMAKE_INSTALL_LIBDIR}/fcitx5")
  fcitx5_translate_desktop_file(rime.conf.in rime.conf)
-@@ -31,3 +31,31 @@ fcitx5_translate_desktop_file("${CMAKE_CURRENT_BINARY_DIR}/rime-addon.conf.in" r
+@@ -31,3 +31,35 @@ fcitx5_translate_desktop_file("${CMAKE_CURRENT_BINARY_DIR}/rime-addon.conf.in" r
  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/rime.conf" DESTINATION "${FCITX_INSTALL_PKGDATADIR}/inputmethod" COMPONENT config)
  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/rime-addon.conf" RENAME rime.conf DESTINATION "${FCITX_INSTALL_PKGDATADIR}/addon" COMPONENT config)
  
@@ -63,6 +63,10 @@ index 0854a9a..9e6aea8 100644
 +    ${CMAKE_COMMAND} -E copy
 +        ${CMAKE_SOURCE_DIR}/data/default.yaml
 +        ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/rime-data/default.yaml
++    \;
++    ${CMAKE_COMMAND} -E copy_directory
++        ${PREBUILDER_SHARE_DIR}/opencc
++        ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/rime-data/opencc
 +    \"
 +)
 diff --git a/src/rimeengine.h b/src/rimeengine.h

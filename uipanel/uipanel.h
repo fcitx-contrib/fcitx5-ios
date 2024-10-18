@@ -31,6 +31,8 @@ class UIPanel final : public VirtualKeyboardUserInterface {
 
   private:
     Instance *instance_;
+
+    void updateStatusArea(InputContext *ic);
 };
 
 class UIPanelFactory : public AddonFactory {
