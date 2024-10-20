@@ -46,7 +46,7 @@ jobs:
           git apply --directory=fcitx5 patches/fcitx5.patch
           git apply --directory=engines/fcitx5-hallelujah patches/hallelujah.patch
           git apply --directory=engines/fcitx5-rime patches/rime.patch
-          PKG_CONFIG_PATH=build/sysroot/usr/lib/pkgconfig cmake -B build -G Xcode \
+          cmake -B build -G Xcode \
             -DHALLELUJAH=ON \
             -DRIME=ON \
             -DCMAKE_TOOLCHAIN_FILE=cmake/ios.cmake \

@@ -21,6 +21,8 @@ set_target_properties(${BUNDLE_NAME} PROPERTIES
     XCODE_EMBED_APP_EXTENSIONS keyboard
 )
 
+set_xcode_property(${BUNDLE_NAME} CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/assets/app.entitlements)
+
 add_custom_command(
     TARGET ${BUNDLE_NAME}
     POST_BUILD COMMAND /bin/sh -c

@@ -35,7 +35,10 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       mainStackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0),
     ])
 
-    startFcitx(Bundle.main.bundlePath)
+    startFcitx(
+      Bundle.main.bundlePath,
+      FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "org.fcitx.Fcitx5")!
+        .path)
 
     // Perform custom UI setup here
     self.nextKeyboardButton = UIButton(type: .system)
