@@ -25,8 +25,11 @@ void IosFrontend::focusIn(id client) {
 }
 
 void IosFrontend::focusOut() {
-    ic_->setClient(nil);
     ic_->focusOut();
+    // Extracting client from nil crashes on Swift, so it has to be put after
+    // ic_->focusOut, although commit on focus out doesn't work on iOS (even if
+    // commit inside viewWillDisappear)
+    ic_->setClient(nil);
 }
 
 IosInputContext::IosInputContext(IosFrontend *frontend,
