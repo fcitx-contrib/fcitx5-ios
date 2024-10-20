@@ -29,6 +29,8 @@ set(KEYBOARD_LANGUAGE "zh-Hans")
 set(PREBUILDER_LIB_DIR "${PROJECT_BINARY_DIR}/sysroot/usr/lib")
 set(PREBUILDER_SHARE_DIR "${PROJECT_BINARY_DIR}/sysroot/usr/share")
 
+set(ENV{PKG_CONFIG_PATH} "${PREBUILDER_LIB_DIR}/pkgconfig")
+
 # For dependencies not to be find via pkg-config
 set(LibIntl_DIR "${PREBUILDER_LIB_DIR}/cmake")
 find_package(LibIntl)
