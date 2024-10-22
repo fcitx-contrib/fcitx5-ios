@@ -3,6 +3,7 @@ add_executable(
     MACOSX_BUNDLE
     ContentView.swift
     App.swift
+    util.swift
 )
 
 add_custom_command(
