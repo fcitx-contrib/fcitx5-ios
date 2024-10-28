@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "Debug App",
+            "program": "Fcitx5", // WARNING: Fcitx5 macOS also has this name
+            "waitFor": true
+        },
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "Debug keyboard",
+            "program": "keyboard",
+            "waitFor": true
+        }
+    ]
+}
