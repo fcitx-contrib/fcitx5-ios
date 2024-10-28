@@ -9,7 +9,7 @@ but Xcode is needed for iOS SDK.
 ### Install dependencies
 ```sh
 brew install cmake extra-cmake-modules gettext
-IOS_PLATFORM=SIMULATOR ./install-deps.sh
+IOS_PLATFORM=SIMULATOR ./scripts/install-deps.sh
 ```
 
 ### Apply patches
@@ -26,6 +26,8 @@ cmake -B build -G Xcode \
   -DIOS_PLATFORM=SIMULATOR
 cmake --build build --config Debug
 ```
+
+You can also use `Cmd+Shift+B` in VSCode to execute a task.
 
 ### Play with simulator
 ```sh

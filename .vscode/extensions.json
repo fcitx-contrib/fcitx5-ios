@@ -1,0 +1,6 @@
+{
+    "recommendations": [
+        "llvm-vs-code-extensions.lldb-dap",
+        "sswg.swift-lang"
+    ]
+}
