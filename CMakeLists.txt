@@ -20,6 +20,10 @@ else()
     set(F5I_TARGET "${CMAKE_OSX_ARCHITECTURES}-apple-ios${CMAKE_OSX_DEPLOYMENT_TARGET}")
 endif()
 
+if (NOT URL_SCHEME)
+    message(FATAL_ERROR "Must provide URL_SCHEME")
+endif()
+
 include(InitializeSwift)
 include(AddSwift)
 

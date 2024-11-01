@@ -4,6 +4,8 @@ add_executable(
     ContentView.swift
     App.swift
     util.swift
+    AppDelegate.swift
+    SceneDelegate.swift
 )
 
 add_custom_command(

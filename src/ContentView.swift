@@ -1,14 +1,25 @@
 import SwiftUI
 
+private class ViewModel: ObservableObject {
+  @Published var url: URL?
+}
+
 struct ContentView: View {
   @Environment(\.scenePhase) private var scenePhase
+  @ObservedObject private var viewModel = ViewModel()
+
+  func handleURL(_ url: URL) {
+    viewModel.url = url
+  }
 
   var body: some View {
     VStack {
       Image(systemName: "globe")
         .imageScale(.large)
         .foregroundStyle(.tint)
-      Text("Hello, world!")
+      if let url = viewModel.url {
+        Text("\(url)")
+      }
     }
     .padding()
     .onAppear {
