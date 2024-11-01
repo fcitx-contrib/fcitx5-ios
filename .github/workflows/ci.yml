@@ -45,6 +45,7 @@ jobs:
           git apply --directory=engines/fcitx5-hallelujah patches/hallelujah.patch
           git apply --directory=engines/fcitx5-rime patches/rime.patch
           cmake -B build -G Xcode \
+            -DURL_SCHEME=fcitx \
             -DHALLELUJAH=ON \
             -DRIME=ON \
             -DCMAKE_TOOLCHAIN_FILE=cmake/ios.cmake \

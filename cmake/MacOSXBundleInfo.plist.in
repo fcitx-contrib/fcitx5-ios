@@ -16,6 +16,36 @@
   <string>@BUNDLE_NAME@</string>
   <key>CFBundleIconFile</key>
   <string>@ICON_FILE@</string>
+  <!-- Register fcitx:// scheme. -->
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>@BUNDLE_IDENTIFIER@</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>@URL_SCHEME@</string>
+      </array>
+    </dict>
+  </array>
+  <!-- Recognize fcitx:// scheme. -->
+  <key>UIApplicationSceneManifest</key>
+  <dict>
+    <key>UIApplicationSupportsMultipleScenes</key>
+    <false/>
+    <key>UISceneConfigurations</key>
+    <dict>
+      <key>UIWindowSceneSessionRoleApplication</key>
+      <array>
+        <dict>
+          <key>UISceneConfigurationName</key>
+          <string>Default Configuration</string>
+          <key>UISceneDelegateClassName</key>
+          <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+        </dict>
+      </array>
+    </dict>
+  </dict>
   <!-- A random string makes it fullscreen. -->
   <key>UILaunchScreen</key>
   <string>foo</string>
