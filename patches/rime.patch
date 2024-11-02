@@ -21,19 +21,21 @@ index 1a1637a..92a41e0 100644
  add_subdirectory(po)
  add_subdirectory(src)
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 0854a9a..4f43f2b 100644
+index 0854a9a..14c1cd1 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -22,7 +22,7 @@ else()
+@@ -22,7 +22,9 @@ else()
      add_definitions(-DFCITX_RIME_NO_DBUS)
  endif()
  
 -add_library(rime MODULE ${RIME_SOURCES})
 +add_library(rime STATIC ${RIME_SOURCES})
++target_include_directories(rime PRIVATE "${CMAKE_BINARY_DIR}/ipc/include")
++add_dependencies(rime FcitxIpc)
  target_link_libraries(rime ${RIME_LINK_LIBRARIES})
  install(TARGETS rime DESTINATION "${CMAKE_INSTALL_LIBDIR}/fcitx5")
  fcitx5_translate_desktop_file(rime.conf.in rime.conf)
-@@ -31,3 +31,35 @@ fcitx5_translate_desktop_file("${CMAKE_CURRENT_BINARY_DIR}/rime-addon.conf.in" r
+@@ -31,3 +33,35 @@ fcitx5_translate_desktop_file("${CMAKE_CURRENT_BINARY_DIR}/rime-addon.conf.in" r
  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/rime.conf" DESTINATION "${FCITX_INSTALL_PKGDATADIR}/inputmethod" COMPONENT config)
  install(FILES "${CMAKE_CURRENT_BINARY_DIR}/rime-addon.conf" RENAME rime.conf DESTINATION "${FCITX_INSTALL_PKGDATADIR}/addon" COMPONENT config)
  
@@ -69,6 +71,66 @@ index 0854a9a..4f43f2b 100644
 +        ${CMAKE_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/rime-data/opencc
 +    \"
 +)
+diff --git a/src/rimeengine.cpp b/src/rimeengine.cpp
+index 090ee37..3b72655 100644
+--- a/src/rimeengine.cpp
++++ b/src/rimeengine.cpp
+@@ -47,6 +47,8 @@
+ #include <utility>
+ #include <vector>
+ 
++#include "fcitxipc-swift.h"
++
+ FCITX_DEFINE_LOG_CATEGORY(rime, "rime");
+ 
+ namespace fcitx {
+@@ -197,11 +199,17 @@ RimeEngine::RimeEngine(Instance *instance)
+     deployAction_.setIcon("fcitx_rime_deploy");
+     deployAction_.setShortText(_("Deploy"));
+     deployAction_.connect<SimpleAction::Activated>([this](InputContext *ic) {
++#if 0
+         deploy();
+         auto *state = this->state(ic);
+         if (state && ic->hasFocus()) {
+             state->updateUI(ic, false);
+         }
++#endif
++        std::string f5iEnv = getenv("F5I_ENV");
++        if (f5iEnv == "keyboard") {
++            FcitxIpc::openURL("fcitx://config/addon/rime/deploy");
++        }
+     });
+     instance_->userInterfaceManager().registerAction("fcitx-rime-deploy",
+                                                      &deployAction_);
+@@ -210,11 +218,17 @@ RimeEngine::RimeEngine(Instance *instance)
+     syncAction_.setShortText(_("Synchronize"));
+ 
+     syncAction_.connect<SimpleAction::Activated>([this](InputContext *ic) {
++#if 0
+         sync();
+         auto *state = this->state(ic);
+         if (state && ic->hasFocus()) {
+             state->updateUI(ic, false);
+         }
++#endif
++        std::string f5iEnv = getenv("F5I_ENV");
++        if (f5iEnv == "keyboard") {
++            FcitxIpc::openURL("fcitx://config/addon/rime/sync");
++        }
+     });
+     instance_->userInterfaceManager().registerAction("fcitx-rime-sync",
+                                                      &syncAction_);
+@@ -305,7 +319,10 @@ void RimeEngine::rimeStart(bool fullcheck) {
+     }
+     api_->initialize(&fcitx_rime_traits);
+     api_->set_notification_handler(&rimeNotificationHandler, this);
++    // Don't deploy on start in keyboard.
++    if (fullcheck) {
+     api_->start_maintenance(fullcheck);
++    }
+ 
+     if (!api_->is_maintenance_mode()) {
+         updateAppOptions();
 diff --git a/src/rimeengine.h b/src/rimeengine.h
 index 6bec003..10940c8 100644
 --- a/src/rimeengine.h

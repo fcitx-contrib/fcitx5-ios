@@ -68,6 +68,8 @@ void setupEnv(const char *bundlePath, const char *appGroupPath) {
     // By default FCITX_CONFIG_HOME is XDG_CONFIG_HOME/fcitx5. Move it from
     // ~/.config/fcitx5 to appGroupPath/config.
     setenv("FCITX_CONFIG_HOME", fcitx_config_home.c_str(), 1);
+    // Distinguish with main app.
+    setenv("F5I_ENV", "keyboard", 1);
 }
 
 void startFcitx(const char *bundlePath, const char *appGroupPath) {
