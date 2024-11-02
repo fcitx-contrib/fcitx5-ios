@@ -64,6 +64,7 @@ add_subdirectory(fcitx5)
 add_subdirectory(protocol)
 add_subdirectory(iosfrontend)
 add_subdirectory(uipanel)
+add_subdirectory(ipc)
 
 option(HALLELUJAH "" OFF)
 option(RIME "" OFF)
