@@ -6,6 +6,19 @@ add_executable(
     util.swift
     AppDelegate.swift
     SceneDelegate.swift
+    fcitx.cpp
+)
+
+target_include_directories(${BUNDLE_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+
+target_link_libraries(${BUNDLE_NAME} PRIVATE
+    iosfrontend
+    SwiftFrontend
+    KeyboardUI
+    uipanel
+    FcitxIpc
+    FcitxCommon
+    ${ADDONS}
 )
 
 add_custom_command(
@@ -33,5 +46,20 @@ add_custom_command(
     ${CMAKE_COMMAND} -E copy_directory
         ${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex
         ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app/PlugIns/keyboard.appex
+    \"
+)
+
+# Embed keyboard.appex in app and copy share directory.
+add_custom_command(
+    TARGET ${BUNDLE_NAME}
+    POST_BUILD COMMAND /bin/sh -c
+    \"
+    ${CMAKE_COMMAND} -E copy_directory
+        ${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex
+        ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app/PlugIns/keyboard.appex
+    \;
+    ${CMAKE_COMMAND} -E copy_directory
+        ${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share
+        ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app/share
     \"
 )
