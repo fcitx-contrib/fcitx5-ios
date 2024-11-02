@@ -4,9 +4,9 @@
 #include <fcitx/statusarea.h>
 #include <fcitx/userinterfacemanager.h>
 
+#include "../common/util.h"
 #include "../iosfrontend/iosfrontend.h"
 #include "../keyboard/fcitx.h"
-#include "../keyboard/util.h"
 #include "keyboardui-swift.h"
 #include "uipanel-public.h"
 #include "uipanel.h"

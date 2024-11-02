@@ -17,11 +17,11 @@ target_compile_options(keyboard PUBLIC
 )
 
 target_link_libraries(keyboard PRIVATE
-    spell
     iosfrontend
     SwiftFrontend
     KeyboardUI
     uipanel
     FcitxIpc
-    ${ENGINES}
+    FcitxCommon
+    ${ADDONS}
 )

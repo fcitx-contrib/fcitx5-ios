@@ -1,3 +1,4 @@
+import Fcitx
 import SwiftUI
 
 private class ViewModel: ObservableObject {
@@ -10,6 +11,7 @@ struct ContentView: View {
 
   func handleURL(_ url: URL) {
     viewModel.url = url
+    setConfig(url.absoluteString, "{}")
   }
 
   var body: some View {
