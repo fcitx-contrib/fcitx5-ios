@@ -72,7 +72,7 @@ index 0854a9a..14c1cd1 100644
 +    \"
 +)
 diff --git a/src/rimeengine.cpp b/src/rimeengine.cpp
-index 090ee37..3b72655 100644
+index 090ee37..bc4ffaf 100644
 --- a/src/rimeengine.cpp
 +++ b/src/rimeengine.cpp
 @@ -47,6 +47,8 @@
@@ -131,6 +131,29 @@ index 090ee37..3b72655 100644
  
      if (!api_->is_maintenance_mode()) {
          updateAppOptions();
+@@ -582,12 +599,13 @@ void RimeEngine::notify(RimeSessionId session, const std::string &messageType,
+     bool blockMessage = false;
+     if (messageType == "deploy") {
+         tipId = "fcitx-rime-deploy";
+-        icon = "fcitx_rime_deploy";
+         if (messageValue == "start") {
+             message = _("Rime is under maintenance. It may take a few "
+                         "seconds. Please wait until it is finished...");
++            icon = "running";
+         } else if (messageValue == "success") {
+             message = _("Rime is ready.");
++            icon = "success";
+             if (!api_->is_maintenance_mode()) {
+                 if (needRefreshAppOption_) {
+                     api_->deploy_config_file("fcitx5.yaml", "config_version");
+@@ -602,6 +620,7 @@ void RimeEngine::notify(RimeSessionId session, const std::string &messageType,
+             needRefreshAppOption_ = false;
+             message = _("Rime has encountered an error. "
+                         "See log for details.");
++            icon = "error";
+             blockMessage = true;
+         }
+     } else if (messageType == "option") {
 diff --git a/src/rimeengine.h b/src/rimeengine.h
 index 6bec003..10940c8 100644
 --- a/src/rimeengine.h

@@ -20,7 +20,9 @@ void Notifications::showTip(const std::string &tipId,
                             const std::string &appIcon,
                             const std::string &summary, const std::string &body,
                             int32_t timeout) {
-    NotifySwift::showTip(body, timeout);
+    // For f5i appIcon is replaced with running/success/error to show icons for
+    // different message type.
+    NotifySwift::showTip(appIcon, body, timeout);
 }
 
 void Notifications::closeNotification(uint64_t internalId) {
