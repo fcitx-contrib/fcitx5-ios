@@ -3,6 +3,7 @@
 #include "../engines/fcitx5-rime/src/rimeengine.h"
 #include "../fcitx5/src/modules/spell/spell.h"
 #include "../iosfrontend/iosfrontend.h"
+#include "../iosnotifications/iosnotifications.h"
 #include "../uipanel/uipanel.h"
 #include "nativestreambuf.h"
 #include <filesystem>
@@ -19,16 +20,19 @@ fcitx::RimeEngineFactory RimeFactory;
 
 namespace fs = std::filesystem;
 
-fcitx::IosFrontendFactory IosFrontendFactory;
-fcitx::UIPanelFactory UIPanelFactory;
+static fcitx::IosFrontendFactory IosFrontendFactory;
+static fcitx::IosNotificationsFactory IosNotificationsFactory;
+static fcitx::UIPanelFactory UIPanelFactory;
 
-fcitx::StaticAddonRegistry addons = {
+static fcitx::StaticAddonRegistry addons = {
 #ifdef HALLELUJAH
     std::make_pair<std::string, fcitx::AddonFactory *>("spell",
                                                        &SpellModuleFactory),
 #endif
     std::make_pair<std::string, fcitx::AddonFactory *>("iosfrontend",
                                                        &IosFrontendFactory),
+    std::make_pair<std::string, fcitx::AddonFactory *>(
+        "notifications", &IosNotificationsFactory),
     std::make_pair<std::string, fcitx::AddonFactory *>("uipanel",
                                                        &UIPanelFactory),
 #ifdef HALLELUJAH
@@ -43,10 +47,10 @@ fcitx::StaticAddonRegistry addons = {
 std::unique_ptr<fcitx::Instance> instance;
 std::unique_ptr<fcitx::EventDispatcher> dispatcher;
 
-native_streambuf log_streambuf;
-std::ostream stream(&log_streambuf);
+static native_streambuf log_streambuf;
+static std::ostream stream(&log_streambuf);
 
-std::thread fcitx_thread;
+static std::thread fcitx_thread;
 
 void setupLog() {
     fcitx::Log::setLogStream(stream);

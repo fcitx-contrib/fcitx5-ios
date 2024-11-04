@@ -33,6 +33,7 @@ You can also use `Cmd+Shift+B` in VSCode to execute a task.
 ```sh
 xcrun simctl list devices
 xcrun simctl boot UUID
+open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
 xcrun simctl install booted build/src/Debug-iphonesimulator/Fcitx5.app
 ```
 After the first time you execute `xcrun simctl install`,

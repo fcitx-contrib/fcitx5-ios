@@ -19,3 +19,6 @@
 [submodule "data/rime-stroke"]
 	path = data/rime-stroke
 	url = https://github.com/rime/rime-stroke
+[submodule "deps/AlertToast"]
+	path = deps/AlertToast
+	url = https://github.com/fcitx-contrib/AlertToast
