@@ -41,6 +41,8 @@ find_package(LibIntl)
 set(fmt_DIR "${PREBUILDER_LIB_DIR}/cmake/fmt")
 find_package(fmt)
 
+add_subdirectory(deps)
+
 option(ENABLE_TEST "" OFF)
 option(ENABLE_COVERAGE "" OFF)
 option(ENABLE_ENCHANT "" OFF)
@@ -63,6 +65,7 @@ add_subdirectory(fcitx5)
 
 add_subdirectory(protocol)
 add_subdirectory(iosfrontend)
+add_subdirectory(iosnotifications)
 add_subdirectory(uipanel)
 add_subdirectory(ipc)
 

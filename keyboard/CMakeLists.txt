@@ -21,6 +21,8 @@ target_link_libraries(keyboard PRIVATE
     SwiftFrontend
     KeyboardUI
     uipanel
+    iosnotifications
+    NotifySwift
     FcitxIpc
     FcitxCommon
     ${ADDONS}

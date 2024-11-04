@@ -1,0 +1,7 @@
+[Addon]
+Name=iOS Notification
+Type=StaticLibrary
+Library=libiosnotifications
+Category=Module
+Version=@PROJECT_VERSION@
+Configurable=True
