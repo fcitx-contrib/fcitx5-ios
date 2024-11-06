@@ -1,16 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index ac1e1dcb..b721b612 100644
+index aa90bad4..b721b612 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -36,6 +36,7 @@ option(ENABLE_XDGAUTOSTART "Enable xdg autostart desktop file installation" On)
- option(USE_FLATPAK_ICON "Use flatpak icon name for desktop files" Off)
- option(ENABLE_EMOJI "Enable emoji module" On)
- option(ENABLE_LIBUUID "Use libuuid for uuid generation" On)
-+option(BUILD_SPELL_DICT "Build en_dict.fscd for English spell check" On)
- set(NO_PREEDIT_APPS "gvim.*,wps.*,wpp.*,et.*" CACHE STRING "Disable preedit for follwing app by default.")
- 
- if (ENABLE_EMOJI)
-@@ -80,7 +81,6 @@ endif()
+@@ -81,7 +81,6 @@ endif()
  if(${CMAKE_SYSTEM_NAME} MATCHES "BSD|DragonFly")
      find_package(LibKVM REQUIRED)
  endif()
@@ -18,7 +10,7 @@ index ac1e1dcb..b721b612 100644
  
  if (NOT TARGET LibIntl::LibIntl)
      find_package(LibIntl REQUIRED)
-@@ -190,9 +190,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DI
+@@ -191,9 +190,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DI
  include_directories(${CMAKE_CURRENT_BINARY_DIR})
  
  add_subdirectory(src)
@@ -174,7 +166,7 @@ index d2e9aa23..72f82213 100644
  
  void Instance::configureAddon(const std::string &) {}
 diff --git a/src/modules/spell/CMakeLists.txt b/src/modules/spell/CMakeLists.txt
-index 094e1a58..106a010c 100644
+index ab1ce4df..106a010c 100644
 --- a/src/modules/spell/CMakeLists.txt
 +++ b/src/modules/spell/CMakeLists.txt
 @@ -5,7 +5,7 @@ if (TARGET PkgConfig::Enchant)
@@ -186,7 +178,7 @@ index 094e1a58..106a010c 100644
  target_link_libraries(spell Fcitx5::Core)
  if (TARGET PkgConfig::Enchant)
      target_link_libraries(spell PkgConfig::Enchant)
-@@ -17,6 +17,17 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/spell.conf" DESTINATION "${FCITX_INST
+@@ -17,6 +17,16 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/spell.conf" DESTINATION "${FCITX_INST
          COMPONENT config)
  fcitx5_export_module(Spell TARGET spell BUILD_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}" HEADERS spell_public.h INSTALL)
  
@@ -200,15 +192,9 @@ index 094e1a58..106a010c 100644
 +    \"
 +)
 +
-+if (BUILD_SPELL_DICT)
+ if (BUILD_SPELL_DICT)
   set(DICT_COMP_SRC
    comp_spell_dict.cpp
-   )
-@@ -46,3 +57,4 @@ add_custom_command(
-   "${SPELL_EN_DICT_SRC}" "${SPELL_EN_DICT}")
- add_custom_target(spell_en_dict ALL DEPENDS "${SPELL_EN_DICT}")
- install(FILES "${SPELL_EN_DICT}" DESTINATION "${FCITX_INSTALL_PKGDATADIR}/spell")
-+endif()
 diff --git a/src/modules/spell/spell.cpp b/src/modules/spell/spell.cpp
 index cc3d951f..a4229234 100644
 --- a/src/modules/spell/spell.cpp
