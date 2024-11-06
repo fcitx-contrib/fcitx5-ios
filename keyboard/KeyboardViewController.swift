@@ -1,9 +1,7 @@
 import Fcitx
 import FcitxProtocol
-import OSLog
+import SwiftUtil
 import UIKit
-
-let logger = Logger(subsystem: "org.fcitx.Fcitx5", category: "FcitxLog")
 
 class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
@@ -35,10 +33,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       mainStackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0),
     ])
 
-    startFcitx(
-      Bundle.main.bundlePath,
-      FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "org.fcitx.Fcitx5")!
-        .path)
+    startFcitx(Bundle.main.bundlePath, appGroup.path)
 
     // Perform custom UI setup here
     self.nextKeyboardButton = UIButton(type: .system)
@@ -59,6 +54,10 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
+    if removeFile(appGroupTmp.appendingPathComponent("reload")) {
+      logger.info("Reload accepted")
+      reload()
+    }
     focusIn(self)
   }
 

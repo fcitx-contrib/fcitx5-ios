@@ -1,4 +1,7 @@
-add_executable(keyboard MACOSX_BUNDLE KeyboardViewController.swift fcitx.cpp)
+add_executable(keyboard MACOSX_BUNDLE
+    KeyboardViewController.swift
+    fcitx.cpp
+)
 
 set_target_properties(keyboard PROPERTIES
     MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
@@ -10,6 +13,7 @@ set_xcode_property(keyboard CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/assets/
 target_include_directories(keyboard PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_BINARY_DIR}/../fcitx5"
+    "${PROJECT_BINARY_DIR}/common/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
 )
 
 target_compile_options(keyboard PUBLIC
@@ -25,5 +29,6 @@ target_link_libraries(keyboard PRIVATE
     NotifySwift
     FcitxIpc
     FcitxCommon
+    SwiftUtil
     ${ADDONS}
 )

@@ -1,9 +1,14 @@
 import CryptoKit
 import Foundation
+import OSLog
 
-let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-let appGroupData = FileManager.default.containerURL(
-  forSecurityApplicationGroupIdentifier: "org.fcitx.Fcitx5")!.appendingPathComponent("data")
+public let logger = Logger(subsystem: "org.fcitx.Fcitx5", category: "FcitxLog")
+
+public let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+public let appGroup = FileManager.default.containerURL(
+  forSecurityApplicationGroupIdentifier: "org.fcitx.Fcitx5")!
+public let appGroupTmp = appGroup.appendingPathComponent("tmp")
+public let appGroupData = appGroup.appendingPathComponent("data")
 
 extension URL {
   var isDirectory: Bool {
@@ -34,7 +39,7 @@ func md5Hash(_ url: URL) -> String {
 }
 
 // Remove if different type, then copy if different content.
-func sync(_ src: URL, _ dst: URL) -> Bool {
+public func sync(_ src: URL, _ dst: URL) -> Bool {
   if !src.exists() {
     return false
   }
@@ -64,6 +69,22 @@ func sync(_ src: URL, _ dst: URL) -> Bool {
   }
   do {
     try FileManager.default.copyItem(at: src, to: dst)
+    return true
+  } catch {
+    return false
+  }
+}
+
+public func mkdirP(_ path: String) {
+  do {
+    try FileManager.default.createDirectory(
+      atPath: path, withIntermediateDirectories: true, attributes: nil)
+  } catch {}
+}
+
+public func removeFile(_ file: URL) -> Bool {
+  do {
+    try FileManager.default.removeItem(at: file)
     return true
   } catch {
     return false

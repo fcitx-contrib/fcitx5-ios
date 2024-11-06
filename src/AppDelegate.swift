@@ -1,4 +1,5 @@
 import Fcitx
+import SwiftUtil
 import UIKit
 
 class AppDelegate: NSObject, UIApplicationDelegate {
@@ -6,10 +7,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    startFcitx(
-      Bundle.main.bundlePath,
-      FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "org.fcitx.Fcitx5")!
-        .path)
+    startFcitx(Bundle.main.bundlePath, appGroup.path)
     return true
   }
 

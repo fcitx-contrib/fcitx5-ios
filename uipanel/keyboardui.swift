@@ -1,9 +1,6 @@
 import FcitxProtocol
-import OSLog
 import SwiftUI
 import UIKit
-
-let logger = Logger(subsystem: "org.fcitx.Fcitx5", category: "FcitxLog")
 
 let candidateCollectionView = CandidateCollectionView()
 
