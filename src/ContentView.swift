@@ -2,6 +2,7 @@ import AlertToast
 import Fcitx
 import NotifySwift
 import SwiftUI
+import SwiftUtil
 
 private class ViewModel: ObservableObject {
   @Published var url: URL?

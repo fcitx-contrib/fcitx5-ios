@@ -44,5 +44,7 @@ you need to add Fcitx5 in Settings -> General -> Keyboard -> Keyboards -> Add Ne
 
 ## Credits
 * [fcitx5](https://github.com/fcitx/fcitx5): LGPL-2.1-or-later
+* [fcitx5-android](https://github.com/fcitx5-android/fcitx5-android): LGPL-2.1-or-later
 * [ios-cmake](https://github.com/sheldonth/ios-cmake): MIT
 * [swift-cmake-examples](https://github.com/apple/swift-cmake-examples): Apache-2.0
+* [AlertToast](https://github.com/elai950/AlertToast): MIT

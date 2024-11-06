@@ -29,3 +29,20 @@ bool processKey(const char *key) {
     return with_fcitx(
         [key] { return frontend->keyEvent(fcitx::Key{key}, false); });
 }
+
+void reload() {
+    with_fcitx([] {
+        instance->reloadConfig();
+        instance->refresh();
+        auto &addonManager = instance->addonManager();
+        for (const auto category :
+             {fcitx::AddonCategory::InputMethod, fcitx::AddonCategory::Frontend,
+              fcitx::AddonCategory::Loader, fcitx::AddonCategory::Module,
+              fcitx::AddonCategory::UI}) {
+            const auto names = addonManager.addonNames(category);
+            for (const auto &name : names) {
+                instance->reloadAddonConfig(name);
+            }
+        }
+    });
+}

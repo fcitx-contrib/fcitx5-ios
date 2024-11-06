@@ -3,7 +3,6 @@ add_executable(
     MACOSX_BUNDLE
     ContentView.swift
     App.swift
-    util.swift
     AppDelegate.swift
     SceneDelegate.swift
     fcitx.cpp
@@ -11,6 +10,7 @@ add_executable(
 
 target_include_directories(${BUNDLE_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${PROJECT_BINARY_DIR}/common/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
     "${PROJECT_BINARY_DIR}/iosnotifications/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
     "${PROJECT_BINARY_DIR}/deps/AlertToast/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
 )
@@ -25,6 +25,7 @@ target_link_libraries(${BUNDLE_NAME} PRIVATE
     NotifySwift
     FcitxIpc
     FcitxCommon
+    SwiftUtil
     ${ADDONS}
 )
 
