@@ -31,16 +31,6 @@ target_link_libraries(${BUNDLE_NAME} PRIVATE
     ${ADDONS}
 )
 
-add_custom_command(
-    TARGET ${BUNDLE_NAME}
-    POST_BUILD COMMAND /bin/sh -c
-    \"
-    ${CMAKE_COMMAND} -E copy
-        ${PROJECT_SOURCE_DIR}/assets/${ICON_FILE}
-        ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app
-    \"
-)
-
 add_dependencies(${BUNDLE_NAME} keyboard)
 
 set_target_properties(${BUNDLE_NAME} PROPERTIES
@@ -59,7 +49,8 @@ add_custom_command(
     \"
 )
 
-# Embed keyboard.appex in app and copy share directory.
+# Embed keyboard.appex in app.
+# Copy share directory, icon and profile.
 add_custom_command(
     TARGET ${BUNDLE_NAME}
     POST_BUILD COMMAND /bin/sh -c
@@ -71,5 +62,13 @@ add_custom_command(
     ${CMAKE_COMMAND} -E copy_directory
         ${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share
         ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app/share
+    \;
+    ${CMAKE_COMMAND} -E copy
+        ${PROJECT_SOURCE_DIR}/assets/${ICON_FILE}
+        ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app
+    \;
+    ${CMAKE_COMMAND} -E copy
+        ${PROJECT_BINARY_DIR}/profile
+        ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app/profile
     \"
 )

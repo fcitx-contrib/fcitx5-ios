@@ -74,11 +74,13 @@ option(HALLELUJAH "" OFF)
 option(RIME "" OFF)
 
 set(ADDONS)
+set(DEFAULT_INPUT_METHODS)
 
 if (HALLELUJAH)
     add_definitions(-DHALLELUJAH)
     add_subdirectory(engines/fcitx5-hallelujah)
     list(APPEND ADDONS hallelujah)
+    list(APPEND DEFAULT_INPUT_METHODS hallelujah)
 endif()
 if (RIME)
     # RIME_DATA_DIR is not actually used but must exist.
@@ -88,7 +90,17 @@ if (RIME)
     add_definitions(-DRIME)
     add_subdirectory(engines/fcitx5-rime)
     list(APPEND ADDONS rime)
+    list(APPEND DEFAULT_INPUT_METHODS rime)
 endif()
+
+add_custom_command(
+    OUTPUT "${PROJECT_BINARY_DIR}/profile"
+    COMMAND python scripts/configure.py ${DEFAULT_INPUT_METHODS}
+    DEPENDS "${PROJECT_SOURCE_DIR}/default"
+    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+    COMMENT "Generating profile"
+)
+add_custom_target(gen_profile DEPENDS "${PROJECT_BINARY_DIR}/profile")
 
 if (HALLELUJAH)
     list(APPEND ADDONS spell)
