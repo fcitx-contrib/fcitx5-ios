@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
@@ -24,7 +24,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14, macos-13]
+        os: [macos-15, macos-13]
+        include:
+          - { os: macos-15, simulator: "iPhone 16" }
+          - { os: macos-13, simulator: "iPhone 15" }
 
     steps:
       - uses: actions/checkout@v4
@@ -59,7 +62,7 @@ jobs:
 
       - name: Install
         run: |
-          xcrun simctl boot "iPhone 15"
+          xcrun simctl boot "${{ matrix.simulator }}"
           xcrun simctl install booted build/src/Release-iphonesimulator/Fcitx5.app
           xcrun simctl launch booted org.fcitx.Fcitx5
 
