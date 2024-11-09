@@ -1,15 +1,27 @@
 import AlertToast
 import Fcitx
+import FcitxCommon
 import NotifySwift
 import SwiftUI
 import SwiftUtil
 
+struct InputMethod: Codable {
+  let name: String
+  let displayName: String
+  let languageCode: String
+}
+
 private class ViewModel: ObservableObject {
   @Published var url: URL?
+  @Published var inputMethods = [InputMethod]()
+
+  func refresh() {
+    inputMethods = try! JSONDecoder().decode(
+      [InputMethod].self, from: String(getInputMethods()).data(using: .utf8)!)
+  }
 }
 
 struct ContentView: View {
-  @Environment(\.scenePhase) private var scenePhase
   @ObservedObject private var viewModel = ViewModel()
 
   // AlertToast fields
@@ -25,15 +37,18 @@ struct ContentView: View {
   }
 
   var body: some View {
-    VStack {
-      Image(systemName: "globe")
-        .imageScale(.large)
-        .foregroundStyle(.tint)
-      if let url = viewModel.url {
-        Text("\(url)")
+    NavigationView {
+      List {
+        Section(header: Text("Input Methods")) {
+          ForEach(viewModel.inputMethods, id: \.name) { inputMethod in
+            NavigationLink(destination: ConfigView(inputMethod: inputMethod)) {
+              Text(inputMethod.displayName)
+            }
+          }
+        }
       }
+      .navigationTitle("Fcitx5")
     }
-    .padding()
     .toast(isPresenting: $showToast, duration: duration) {
       AlertToast(
         displayMode: .alert,
@@ -71,11 +86,7 @@ struct ContentView: View {
           }
         }
       })
-    }
-    .onChange(of: scenePhase) { newPhase in
-      if newPhase == .active {
-        sync(documents.appendingPathComponent("rime"), appGroupData.appendingPathComponent("rime"))
-      }
+      viewModel.refresh()
     }
   }
 }

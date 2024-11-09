@@ -60,6 +60,7 @@ option(BUILD_SPELL_DICT "" OFF)
 
 find_host_package(PkgConfig)
 find_host_package(Gettext)
+find_host_package(nlohmann_json)
 
 add_subdirectory(fcitx5)
 
