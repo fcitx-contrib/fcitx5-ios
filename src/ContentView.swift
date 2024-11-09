@@ -23,6 +23,15 @@ private class ViewModel: ObservableObject {
 
   func removeInputMethods(at offsets: IndexSet) {
     inputMethods.remove(atOffsets: offsets)
+    save()
+  }
+
+  func orderInputMethods(at offsets: IndexSet, to destination: Int) {
+    inputMethods.move(fromOffsets: offsets, toOffset: destination)
+    save()
+  }
+
+  private func save() {
     setInputMethods(
       String(data: try! JSONEncoder().encode(inputMethods.map { $0.name }), encoding: .utf8)!)
     requestReload()
@@ -44,10 +53,6 @@ struct ContentView: View {
     setConfig(url.absoluteString, "{}")
   }
 
-  func removeInputMethods(at offsets: IndexSet) {
-    viewModel.removeInputMethods(at: offsets)
-  }
-
   var body: some View {
     NavigationView {
       List {
@@ -59,7 +64,10 @@ struct ContentView: View {
             }
           }
           if viewModel.inputMethods.count > 1 {
-            forEach.onDelete(perform: removeInputMethods)
+            forEach.onDelete { offsets in viewModel.removeInputMethods(at: offsets) }
+              .onMove { indices, newOffset in
+                viewModel.orderInputMethods(at: indices, to: newOffset)
+              }
           } else {
             forEach
           }
