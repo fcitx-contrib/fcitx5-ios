@@ -7,6 +7,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    initProfile()
     startFcitx(Bundle.main.bundlePath, appGroup.path)
     return true
   }

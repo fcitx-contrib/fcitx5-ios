@@ -7,6 +7,7 @@ public let logger = Logger(subsystem: "org.fcitx.Fcitx5", category: "FcitxLog")
 public let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 public let appGroup = FileManager.default.containerURL(
   forSecurityApplicationGroupIdentifier: "org.fcitx.Fcitx5")!
+public let appGroupConfig = appGroup.appendingPathComponent("config")
 public let appGroupTmp = appGroup.appendingPathComponent("tmp")
 public let appGroupData = appGroup.appendingPathComponent("data")
 
@@ -88,5 +89,14 @@ public func removeFile(_ file: URL) -> Bool {
     return true
   } catch {
     return false
+  }
+}
+
+// Call on both app and keyboard to initialize input method list after install.
+public func initProfile() {
+  mkdirP(appGroupConfig.path)
+  let profileURL = appGroupConfig.appendingPathComponent("profile")
+  if !profileURL.exists() {
+    try? FileManager.default.copyItem(at: Bundle.main.bundleURL.appendingPathComponent("profile"), to: profileURL)
   }
 }
