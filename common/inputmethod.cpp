@@ -1,11 +1,9 @@
 #include "common-public.h"
 #include "common.h"
 #include "util.h"
-#include <fcitx/inputmethodentry.h>
 #include <fcitx/inputmethodmanager.h>
-#include <nlohmann/json.hpp>
 
-static nlohmann::json jsonDescribeIm(const fcitx::InputMethodEntry *entry) {
+nlohmann::json jsonDescribeIm(const fcitx::InputMethodEntry *entry) {
     nlohmann::json j;
     j["name"] = entry->uniqueName();
     j["displayName"] = entry->nativeName() != "" ? entry->nativeName()
@@ -16,8 +14,7 @@ static nlohmann::json jsonDescribeIm(const fcitx::InputMethodEntry *entry) {
 }
 
 std::string getInputMethods() {
-    return with_fcitx([] {
-        static std::string ret;
+    return with_fcitx([] -> std::string {
         nlohmann::json j;
         auto &imMgr = instance->inputMethodManager();
         auto group = imMgr.currentGroup();
@@ -32,7 +29,6 @@ std::string getInputMethods() {
         if (empty) { // j is not treated array
             return "[]";
         }
-        ret = j.dump();
-        return ret.c_str();
+        return j.dump();
     });
 }

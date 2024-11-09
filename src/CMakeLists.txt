@@ -2,6 +2,7 @@ add_executable(
     ${BUNDLE_NAME}
     MACOSX_BUNDLE
     ContentView.swift
+    InputMethodsView.swift
     ConfigView.swift
     App.swift
     AppDelegate.swift

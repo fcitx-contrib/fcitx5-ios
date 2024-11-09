@@ -51,7 +51,8 @@ struct ContentView: View {
   var body: some View {
     NavigationView {
       List {
-        Section(header: Text("Input Methods")) {
+        Section(header: InputMethodsSectionHeaderView(enabledInputMethods: $viewModel.inputMethods))
+        {
           let forEach = ForEach(viewModel.inputMethods, id: \.name) { inputMethod in
             NavigationLink(destination: ConfigView(inputMethod: inputMethod)) {
               Text(inputMethod.displayName)

@@ -1,8 +1,10 @@
 #pragma once
 
 #include <fcitx-utils/eventdispatcher.h>
+#include <fcitx/inputmethodentry.h>
 #include <fcitx/instance.h>
 #include <future>
+#include <nlohmann/json.hpp>
 
 extern std::unique_ptr<fcitx::Instance> instance;
 extern std::unique_ptr<fcitx::EventDispatcher> dispatcher;
@@ -27,3 +29,5 @@ inline T with_fcitx(F func) {
     fut.wait();
     return fut.get();
 }
+
+nlohmann::json jsonDescribeIm(const fcitx::InputMethodEntry *entry);

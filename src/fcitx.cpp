@@ -60,3 +60,15 @@ void setInputMethods(const char *json) {
         imMgr.save();
     });
 }
+
+std::string getAllInputMethods() {
+    return with_fcitx([] {
+        nlohmann::json j;
+        auto &imMgr = instance->inputMethodManager();
+        imMgr.foreachEntries([&j](const fcitx::InputMethodEntry &entry) {
+            j.push_back(jsonDescribeIm(&entry));
+            return true;
+        });
+        return j.dump();
+    });
+}
