@@ -1,5 +1,6 @@
 #include "common-public.h"
 #include "common.h"
+#include "util.h"
 #include <fcitx/inputmethodentry.h>
 #include <fcitx/inputmethodmanager.h>
 #include <nlohmann/json.hpp>
@@ -15,21 +16,23 @@ static nlohmann::json jsonDescribeIm(const fcitx::InputMethodEntry *entry) {
 }
 
 std::string getInputMethods() {
-    static std::string ret;
-    nlohmann::json j;
-    auto &imMgr = instance->inputMethodManager();
-    auto group = imMgr.currentGroup();
-    bool empty = true;
-    for (const auto &im : group.inputMethodList()) {
-        auto entry = imMgr.entry(im.name());
-        if (!entry)
-            continue;
-        empty = false;
-        j.push_back(jsonDescribeIm(entry));
-    }
-    if (empty) { // j is not treated array
-        return "[]";
-    }
-    ret = j.dump();
-    return ret.c_str();
+    return with_fcitx([] {
+        static std::string ret;
+        nlohmann::json j;
+        auto &imMgr = instance->inputMethodManager();
+        auto group = imMgr.currentGroup();
+        bool empty = true;
+        for (const auto &im : group.inputMethodList()) {
+            auto entry = imMgr.entry(im.name());
+            if (!entry)
+                continue;
+            empty = false;
+            j.push_back(jsonDescribeIm(entry));
+        }
+        if (empty) { // j is not treated array
+            return "[]";
+        }
+        ret = j.dump();
+        return ret.c_str();
+    });
 }

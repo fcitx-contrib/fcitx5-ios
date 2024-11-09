@@ -1,6 +1,7 @@
 import AlertToast
 import Fcitx
 import FcitxCommon
+import FcitxIpc
 import NotifySwift
 import SwiftUI
 import SwiftUtil
@@ -19,6 +20,13 @@ private class ViewModel: ObservableObject {
     inputMethods = try! JSONDecoder().decode(
       [InputMethod].self, from: String(getInputMethods()).data(using: .utf8)!)
   }
+
+  func removeInputMethods(at offsets: IndexSet) {
+    inputMethods.remove(atOffsets: offsets)
+    setInputMethods(
+      String(data: try! JSONEncoder().encode(inputMethods.map { $0.name }), encoding: .utf8)!)
+    requestReload()
+  }
 }
 
 struct ContentView: View {
@@ -36,14 +44,23 @@ struct ContentView: View {
     setConfig(url.absoluteString, "{}")
   }
 
+  func removeInputMethods(at offsets: IndexSet) {
+    viewModel.removeInputMethods(at: offsets)
+  }
+
   var body: some View {
     NavigationView {
       List {
         Section(header: Text("Input Methods")) {
-          ForEach(viewModel.inputMethods, id: \.name) { inputMethod in
+          let forEach = ForEach(viewModel.inputMethods, id: \.name) { inputMethod in
             NavigationLink(destination: ConfigView(inputMethod: inputMethod)) {
               Text(inputMethod.displayName)
             }
+          }
+          if viewModel.inputMethods.count > 1 {
+            forEach.onDelete(perform: removeInputMethods)
+          } else {
+            forEach
           }
         }
       }

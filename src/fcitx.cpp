@@ -1,7 +1,10 @@
 #include "fcitx.h"
 #include "../common/common.h"
+#include "../common/util.h"
 #include <fcitx-config/rawconfig.h>
 #include <fcitx/addonmanager.h>
+#include <fcitx/inputmethodmanager.h>
+#include <nlohmann/json.hpp>
 
 constexpr char addonConfigPrefix[] = "fcitx://config/addon/";
 
@@ -41,4 +44,19 @@ void setConfig(const char *uri_, const char *value) {
             }
         });
     }
+}
+
+void setInputMethods(const char *json) {
+    with_fcitx([=] {
+        auto &imMgr = instance->inputMethodManager();
+        auto group = imMgr.currentGroup();
+        auto &imList = group.inputMethodList();
+        imList.clear();
+        auto j = nlohmann::json::parse(json);
+        for (const auto &im : j) {
+            imList.emplace_back(im.get<std::string>());
+        }
+        imMgr.setGroup(group);
+        imMgr.save();
+    });
 }

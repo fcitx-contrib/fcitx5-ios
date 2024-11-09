@@ -4,6 +4,8 @@
 #include "../common/util.h"
 #include "fcitx.h"
 
+#include <fcitx/inputmethodmanager.h>
+
 fcitx::IosFrontend *frontend;
 
 void startFcitx(const char *bundlePath, const char *appGroupPath) {
@@ -44,5 +46,6 @@ void reload() {
                 instance->reloadAddonConfig(name);
             }
         }
+        instance->inputMethodManager().load();
     });
 }
