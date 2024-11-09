@@ -75,10 +75,10 @@ index dcbd627..6b0f00d 100644
 +    \"
 +)
 diff --git a/src/hallelujah.h b/src/hallelujah.h
-index ace78e7..2a371b8 100644
+index 2dcee57..caf1bec 100644
 --- a/src/hallelujah.h
 +++ b/src/hallelujah.h
-@@ -71,7 +71,6 @@ private:
+@@ -98,7 +98,6 @@ private:
  class HallelujahFactory : public AddonFactory {
  public:
      AddonInstance *create(AddonManager *manager) override {

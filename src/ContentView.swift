@@ -59,7 +59,11 @@ struct ContentView: View {
         Section(header: InputMethodsSectionHeaderView(enabledInputMethods: $viewModel.inputMethods))
         {
           let forEach = ForEach(viewModel.inputMethods, id: \.name) { inputMethod in
-            NavigationLink(destination: ConfigView(inputMethod: inputMethod)) {
+            NavigationLink(
+              destination: ConfigView(
+                title: inputMethod.displayName,
+                uri: "fcitx://config/inputmethod/\(inputMethod.name)")
+            ) {
               Text(inputMethod.displayName)
             }
           }

@@ -8,6 +8,7 @@ add_executable(
     AppDelegate.swift
     SceneDelegate.swift
     fcitx.cpp
+    config.cpp
 )
 
 target_include_directories(${BUNDLE_NAME} PRIVATE
