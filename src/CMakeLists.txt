@@ -2,6 +2,7 @@ add_executable(
     ${BUNDLE_NAME}
     MACOSX_BUNDLE
     ContentView.swift
+    ConfigView.swift
     App.swift
     AppDelegate.swift
     SceneDelegate.swift
@@ -10,6 +11,7 @@ add_executable(
 
 target_include_directories(${BUNDLE_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${PROJECT_SOURCE_DIR}/common"
     "${PROJECT_BINARY_DIR}/common/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
     "${PROJECT_BINARY_DIR}/iosnotifications/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
     "${PROJECT_BINARY_DIR}/deps/AlertToast/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
