@@ -1,3 +1,5 @@
+file(GLOB CONFIG_UI_FILES CONFIGURE_DEPENDS config/*.swift)
+
 add_executable(
     ${BUNDLE_NAME}
     MACOSX_BUNDLE
@@ -7,6 +9,7 @@ add_executable(
     App.swift
     AppDelegate.swift
     SceneDelegate.swift
+    ${CONFIG_UI_FILES}
     fcitx.cpp
     config.cpp
 )
