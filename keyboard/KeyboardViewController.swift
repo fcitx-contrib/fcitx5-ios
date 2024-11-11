@@ -102,4 +102,9 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   public func commitString(_ commit: String) {
     textDocumentProxy.insertText(commit)
   }
+
+  public func setPreedit(_ preedit: String, _ cursor: Int) {
+    let proxy = textDocumentProxy as! UITextDocumentProxy
+    proxy.setMarkedText(preedit, selectedRange: NSRange(location: cursor, length: 0))
+  }
 }

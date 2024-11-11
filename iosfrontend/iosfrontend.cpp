@@ -49,6 +49,7 @@ void IosInputContext::commitStringImpl(const std::string &text) {
 void IosInputContext::updatePreeditImpl() {
     auto preedit =
         frontend_->instance()->outputFilter(this, inputPanel().clientPreedit());
-    FCITX_ERROR() << preedit.toString().c_str() << preedit.cursor();
+    SwiftFrontend::setPreeditAsync(client_, preedit.toString(),
+                                   preedit.cursor());
 }
 } // namespace fcitx
