@@ -20,10 +20,24 @@ class OptionViewModel<T>: ObservableObject {
   }
 }
 
+extension View {
+  func resettable<T>(_ viewModel: OptionViewModel<T>) -> some View {
+    self.contextMenu {
+      Button {
+        viewModel.reset()
+      } label: {
+        Text("Reset")
+      }
+    }
+  }
+}
+
 func toOptionView(_ data: [String: Any], onUpdate: @escaping (Encodable) -> Void) -> any View {
   switch data["Type"] as! String {
   case "Boolean":
     return BooleanView(data: data, onUpdate: onUpdate)
+  case "Enum":
+    return EnumView(data: data, onUpdate: onUpdate)
   default:
     return UnknownView()
   }

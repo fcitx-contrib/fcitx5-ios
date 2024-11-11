@@ -18,12 +18,6 @@ struct BooleanView: View {
   var body: some View {
     Toggle(isOn: $viewModel.value) {
       Text(description)
-    }.contextMenu {
-      Button {
-        viewModel.reset()
-      } label: {
-        Text("Reset")
-      }
-    }
+    }.resettable(viewModel)
   }
 }
