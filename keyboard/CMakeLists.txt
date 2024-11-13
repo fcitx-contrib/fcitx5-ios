@@ -34,12 +34,3 @@ target_link_libraries(keyboard PRIVATE
 )
 
 add_dependencies(keyboard gen_profile)
-add_custom_command(
-    TARGET keyboard
-    POST_BUILD COMMAND /bin/sh -c
-    \"
-    ${CMAKE_COMMAND} -E copy
-        ${PROJECT_BINARY_DIR}/profile
-        ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/profile
-    \"
-)

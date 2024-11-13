@@ -18,13 +18,3 @@ target_link_libraries(iosnotifications Fcitx5::Core Fcitx5::Module::Notification
 
 configure_file(notifications.conf.in.in notifications.conf.in @ONLY)
 fcitx5_translate_desktop_file(${CMAKE_CURRENT_BINARY_DIR}/notifications.conf.in notifications.conf)
-
-add_custom_command(
-    TARGET iosnotifications
-    POST_BUILD COMMAND /bin/sh -c
-    \"
-    ${CMAKE_COMMAND} -E copy
-        ${CMAKE_CURRENT_BINARY_DIR}/notifications.conf
-        ${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share/fcitx5/addon/notifications.conf
-    \"
-)
