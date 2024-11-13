@@ -30,16 +30,13 @@ include(AddSwift)
 set(KEYBOARD_NAME "Keyboard")
 set(KEYBOARD_LANGUAGE "zh-Hans")
 
-set(PREBUILDER_LIB_DIR "${PROJECT_BINARY_DIR}/sysroot/usr/lib")
-set(PREBUILDER_SHARE_DIR "${PROJECT_BINARY_DIR}/sysroot/usr/share")
+set(FIND_ROOT_PATH "${PROJECT_BINARY_DIR}/sysroot/usr")
+set(PREBUILDER_LIB_DIR "${FIND_ROOT_PATH}/lib")
+set(PREBUILDER_SHARE_DIR "${FIND_ROOT_PATH}/share")
 
 set(ENV{PKG_CONFIG_PATH} "${PREBUILDER_LIB_DIR}/pkgconfig")
 
-# For dependencies not to be find via pkg-config
-set(LibIntl_DIR "${PREBUILDER_LIB_DIR}/cmake")
-find_package(LibIntl)
-set(fmt_DIR "${PREBUILDER_LIB_DIR}/cmake/fmt")
-find_package(fmt)
+list(APPEND CMAKE_FIND_ROOT_PATH "${FIND_ROOT_PATH}")
 
 add_subdirectory(deps)
 
@@ -75,6 +72,22 @@ option(RIME "" OFF)
 
 set(ADDONS)
 set(DEFAULT_INPUT_METHODS)
+
+function(copy_to_keyboard cmd file relative_path)
+    add_custom_command(TARGET ${BUNDLE_NAME}
+        POST_BUILD COMMAND /bin/sh -c \"
+        ${CMAKE_COMMAND} -E ${cmd} ${file}
+            ${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/${relative_path}
+    \")
+endfunction()
+
+function(copy_to_app cmd file relative_path)
+    add_custom_command(TARGET ${BUNDLE_NAME}
+        POST_BUILD COMMAND /bin/sh -c \"
+        ${CMAKE_COMMAND} -E ${cmd} ${file}
+            ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app/${relative_path}
+    \")
+endfunction()
 
 if (HALLELUJAH)
     add_definitions(-DHALLELUJAH)

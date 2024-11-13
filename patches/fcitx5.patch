@@ -38,10 +38,10 @@ index 85c9865b..edf51a44 100644
    )
  target_include_directories(Fcitx5Config PUBLIC
 diff --git a/src/lib/fcitx-utils/CMakeLists.txt b/src/lib/fcitx-utils/CMakeLists.txt
-index dd67e07d..2b942b28 100644
+index e1498a14..4dfbe2e1 100644
 --- a/src/lib/fcitx-utils/CMakeLists.txt
 +++ b/src/lib/fcitx-utils/CMakeLists.txt
-@@ -119,23 +119,22 @@ ecm_setup_version(PROJECT
+@@ -121,23 +121,22 @@ ecm_setup_version(PROJECT
                    PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/Fcitx5UtilsConfigVersion.cmake"
                    SOVERSION 2)
  

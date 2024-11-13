@@ -37,6 +37,7 @@ target_link_libraries(${BUNDLE_NAME} PRIVATE
     ${ADDONS}
 )
 
+# Make main app the last target so that keyboard can be copied into it.
 add_dependencies(${BUNDLE_NAME} keyboard)
 
 set_target_properties(${BUNDLE_NAME} PROPERTIES
@@ -45,36 +46,31 @@ set_target_properties(${BUNDLE_NAME} PROPERTIES
 
 set_xcode_property(${BUNDLE_NAME} CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/assets/app.entitlements)
 
-add_custom_command(
-    TARGET ${BUNDLE_NAME}
-    POST_BUILD COMMAND /bin/sh -c
-    \"
-    ${CMAKE_COMMAND} -E copy_directory
-        ${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex
-        ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app/PlugIns/keyboard.appex
-    \"
-)
+copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/profile" profile)
+copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/iosfrontend/iosfrontend.conf" "share/fcitx5/addon/iosfrontend.conf")
+copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/iosnotifications/notifications.conf" "share/fcitx5/addon/notifications.conf")
+copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "share/fcitx5/addon/uipanel.conf")
+
+if (HALLELUJAH)
+    set(HALLELUJAH_SOURCE_DIR "${PROJECT_SOURCE_DIR}/engines/fcitx5-hallelujah")
+    set(HALLELUJAH_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-hallelujah")
+    copy_to_keyboard(copy "${HALLELUJAH_BINARY_DIR}/data/google_227800_words.bin" "share/hallelujah/google_227800_words.bin")
+    copy_to_keyboard(copy "${HALLELUJAH_SOURCE_DIR}/data/words.json" "share/hallelujah/words.json")
+    copy_to_keyboard(copy "${HALLELUJAH_SOURCE_DIR}/data/cedict.json" "share/hallelujah/cedict.json")
+    copy_to_keyboard(copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah-addon.conf" "share/fcitx5/addon/hallelujah.conf")
+    copy_to_keyboard(copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah.conf" "share/fcitx5/inputmethod/hallelujah.conf")
+endif()
+
+if (RIME)
+    set(RIME_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-rime")
+    copy_to_keyboard(copy "${RIME_BINARY_DIR}/src/rime-addon.conf" "share/fcitx5/addon/rime.conf")
+    copy_to_keyboard(copy "${RIME_BINARY_DIR}/src/rime.conf" "share/fcitx5/inputmethod/rime.conf")
+    copy_to_keyboard(copy_directory "${PREBUILDER_SHARE_DIR}/rime-data" "share/rime-data")
+endif()
 
 # Embed keyboard.appex in app.
+copy_to_app(copy_directory "${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex" "PlugIns/keyboard.appex")
 # Copy share directory, icon and profile.
-add_custom_command(
-    TARGET ${BUNDLE_NAME}
-    POST_BUILD COMMAND /bin/sh -c
-    \"
-    ${CMAKE_COMMAND} -E copy_directory
-        ${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex
-        ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app/PlugIns/keyboard.appex
-    \;
-    ${CMAKE_COMMAND} -E copy_directory
-        ${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share
-        ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app/share
-    \;
-    ${CMAKE_COMMAND} -E copy
-        ${PROJECT_SOURCE_DIR}/assets/${ICON_FILE}
-        ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app
-    \;
-    ${CMAKE_COMMAND} -E copy
-        ${PROJECT_BINARY_DIR}/profile
-        ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app/profile
-    \"
-)
+copy_to_app(copy_directory "${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share" "share")
+copy_to_app(copy "${PROJECT_SOURCE_DIR}/assets/${ICON_FILE}" "${ICON_FILE}")
+copy_to_app(copy "${PROJECT_BINARY_DIR}/profile" profile)
