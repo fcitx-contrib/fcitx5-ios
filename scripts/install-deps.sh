@@ -26,10 +26,6 @@ for dep in "${deps[@]}"; do
   tar xjvf cache/$file -C $EXTRACT_DIR
 done
 
-sed -i '' "s|=/usr/include|=$(pwd)/$EXTRACT_DIR/include|" $EXTRACT_DIR/lib/pkgconfig/{json-c,libuv,marisa,rime}.pc
-sed -i '' "s|-L\${libdir} -luv|$(pwd)/$EXTRACT_DIR/lib/libuv.a|" $EXTRACT_DIR/lib/pkgconfig/libuv.pc
-sed -E -i '' "s|Libs:.*-l(.*)|Libs: $(pwd)/$EXTRACT_DIR/lib/lib\1.a|" $EXTRACT_DIR/lib/pkgconfig/json-c.pc
-
 plugins=(
   rime
 )

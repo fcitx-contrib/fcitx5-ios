@@ -21,10 +21,10 @@ index 1a1637a..92a41e0 100644
  add_subdirectory(po)
  add_subdirectory(src)
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 0854a9a..a3ef4a0 100644
+index 78ef79b..c4abccd 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -22,7 +22,9 @@ else()
+@@ -23,7 +23,9 @@ else()
      add_definitions(-DFCITX_RIME_NO_DBUS)
  endif()
  
@@ -36,7 +36,7 @@ index 0854a9a..a3ef4a0 100644
  install(TARGETS rime DESTINATION "${CMAKE_INSTALL_LIBDIR}/fcitx5")
  fcitx5_translate_desktop_file(rime.conf.in rime.conf)
 diff --git a/src/rimeengine.cpp b/src/rimeengine.cpp
-index 090ee37..e924ba7 100644
+index 49fc5b8..b3212fa 100644
 --- a/src/rimeengine.cpp
 +++ b/src/rimeengine.cpp
 @@ -47,6 +47,8 @@
@@ -119,15 +119,15 @@ index 090ee37..e924ba7 100644
              blockMessage = true;
          }
      } else if (messageType == "option") {
-diff --git a/src/rimeengine.h b/src/rimeengine.h
-index 6bec003..10940c8 100644
---- a/src/rimeengine.h
-+++ b/src/rimeengine.h
-@@ -238,7 +238,6 @@ private:
- class RimeEngineFactory : public AddonFactory {
- public:
-     AddonInstance *create(AddonManager *manager) override {
--        registerDomain("fcitx5-rime", FCITX_INSTALL_LOCALEDIR);
-         return new RimeEngine(manager->instance());
-     }
- };
+diff --git a/src/rimefactory.cpp b/src/rimefactory.cpp
+index 91a2f37..b061d11 100644
+--- a/src/rimefactory.cpp
++++ b/src/rimefactory.cpp
+@@ -11,7 +11,6 @@
+ namespace fcitx {
+ 
+ AddonInstance *RimeEngineFactory::create(AddonManager *manager) {
+-    registerDomain("fcitx5-rime", FCITX_INSTALL_LOCALEDIR);
+     return new RimeEngine(manager->instance());
+ }
+ 

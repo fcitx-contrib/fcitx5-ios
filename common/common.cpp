@@ -1,6 +1,6 @@
 #include "common.h"
-#include "../engines/fcitx5-hallelujah/src/hallelujah.h"
-#include "../engines/fcitx5-rime/src/rimeengine.h"
+#include "../engines/fcitx5-hallelujah/src/factory.h"
+#include "../engines/fcitx5-rime/src/rimefactory.h"
 #include "../fcitx5/src/modules/spell/spell.h"
 #include "../iosfrontend/iosfrontend.h"
 #include "../iosnotifications/iosnotifications.h"
