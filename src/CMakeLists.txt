@@ -46,10 +46,16 @@ set_target_properties(${BUNDLE_NAME} PROPERTIES
 
 set_xcode_property(${BUNDLE_NAME} CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/assets/app.entitlements)
 
+set(ADDON_PREFIX "share/fcitx5/addon")
+set(IM_PREFIX "share/fcitx5/inputmethod")
+
 copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/profile" profile)
-copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/iosfrontend/iosfrontend.conf" "share/fcitx5/addon/iosfrontend.conf")
-copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/iosnotifications/notifications.conf" "share/fcitx5/addon/notifications.conf")
-copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "share/fcitx5/addon/uipanel.conf")
+copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/iosfrontend/iosfrontend.conf" "${ADDON_PREFIX}/iosfrontend.conf")
+copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/iosnotifications/notifications.conf" "${ADDON_PREFIX}/notifications.conf")
+copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "${ADDON_PREFIX}/uipanel.conf")
+
+set(FCITX5_MODULE_BINARY_DIR "${PROJECT_BINARY_DIR}/fcitx5/src/modules")
+copy_to_keyboard(copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
 
 if (HALLELUJAH)
     set(HALLELUJAH_SOURCE_DIR "${PROJECT_SOURCE_DIR}/engines/fcitx5-hallelujah")
@@ -57,14 +63,14 @@ if (HALLELUJAH)
     copy_to_keyboard(copy "${HALLELUJAH_BINARY_DIR}/data/google_227800_words.bin" "share/hallelujah/google_227800_words.bin")
     copy_to_keyboard(copy "${HALLELUJAH_SOURCE_DIR}/data/words.json" "share/hallelujah/words.json")
     copy_to_keyboard(copy "${HALLELUJAH_SOURCE_DIR}/data/cedict.json" "share/hallelujah/cedict.json")
-    copy_to_keyboard(copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah-addon.conf" "share/fcitx5/addon/hallelujah.conf")
-    copy_to_keyboard(copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah.conf" "share/fcitx5/inputmethod/hallelujah.conf")
+    copy_to_keyboard(copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah-addon.conf" "${ADDON_PREFIX}/hallelujah.conf")
+    copy_to_keyboard(copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah.conf" "${IM_PREFIX}/hallelujah.conf")
 endif()
 
 if (RIME)
     set(RIME_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-rime")
-    copy_to_keyboard(copy "${RIME_BINARY_DIR}/src/rime-addon.conf" "share/fcitx5/addon/rime.conf")
-    copy_to_keyboard(copy "${RIME_BINARY_DIR}/src/rime.conf" "share/fcitx5/inputmethod/rime.conf")
+    copy_to_keyboard(copy "${RIME_BINARY_DIR}/src/rime-addon.conf" "${ADDON_PREFIX}/rime.conf")
+    copy_to_keyboard(copy "${RIME_BINARY_DIR}/src/rime.conf" "${IM_PREFIX}/rime.conf")
     copy_to_keyboard(copy_directory "${PREBUILDER_SHARE_DIR}/rime-data" "share/rime-data")
 endif()
 

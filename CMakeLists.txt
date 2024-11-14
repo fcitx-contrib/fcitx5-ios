@@ -31,10 +31,9 @@ set(KEYBOARD_NAME "Keyboard")
 set(KEYBOARD_LANGUAGE "zh-Hans")
 
 set(FIND_ROOT_PATH "${PROJECT_BINARY_DIR}/sysroot/usr")
+set(PREBUILDER_INCLUDE_DIR "${FIND_ROOT_PATH}/include")
 set(PREBUILDER_LIB_DIR "${FIND_ROOT_PATH}/lib")
 set(PREBUILDER_SHARE_DIR "${FIND_ROOT_PATH}/share")
-
-set(ENV{PKG_CONFIG_PATH} "${PREBUILDER_LIB_DIR}/pkgconfig")
 
 list(APPEND CMAKE_FIND_ROOT_PATH "${FIND_ROOT_PATH}")
 
@@ -58,6 +57,13 @@ option(BUILD_SPELL_DICT "" OFF)
 find_host_package(PkgConfig)
 find_host_package(Gettext)
 find_host_package(nlohmann_json)
+
+add_library(Libuv_static STATIC IMPORTED)
+set_target_properties(Libuv_static PROPERTIES
+    IMPORTED_LOCATION "${PREBUILDER_LIB_DIR}/libuv.a"
+    INTERFACE_INCLUDE_DIRECTORIES "${PREBUILDER_INCLUDE_DIR}"
+)
+set(LIBUV_TARGET Libuv_static)
 
 add_subdirectory(fcitx5)
 
@@ -90,6 +96,19 @@ function(copy_to_app cmd file relative_path)
 endfunction()
 
 if (HALLELUJAH)
+    add_library(Marisa_static STATIC IMPORTED)
+    set_target_properties(Marisa_static PROPERTIES
+        IMPORTED_LOCATION "${PREBUILDER_LIB_DIR}/libmarisa.a"
+        INTERFACE_INCLUDE_DIRECTORIES "${PREBUILDER_INCLUDE_DIR}"
+    )
+    set(MARISA_TARGET Marisa_static)
+    add_library(JsonC_static STATIC IMPORTED)
+    set_target_properties(JsonC_static PROPERTIES
+        IMPORTED_LOCATION "${PREBUILDER_LIB_DIR}/libjson-c.a"
+        INTERFACE_INCLUDE_DIRECTORIES "${PREBUILDER_INCLUDE_DIR}"
+    )
+    set(JSONC_TARGET JsonC_static)
+
     add_definitions(-DHALLELUJAH)
     add_subdirectory(engines/fcitx5-hallelujah)
     list(APPEND ADDONS hallelujah)
@@ -98,8 +117,22 @@ endif()
 if (RIME)
     # RIME_DATA_DIR is not actually used but must exist.
     set(RIME_DATA_DIR "/usr/share/rime-data")
-    set(RIME_TARGET "${PREBUILDER_LIB_DIR}/librime.a" "-L${PREBUILDER_LIB_DIR}" leveldb yaml-cpp marisa opencc glog)
-    set(Rime_VERSION "1.11.2")
+    set(Rime_dependencies
+        "${PREBUILDER_LIB_DIR}/libleveldb.a"
+        "${PREBUILDER_LIB_DIR}/libyaml-cpp.a"
+        "${PREBUILDER_LIB_DIR}/libmarisa.a"
+        "${PREBUILDER_LIB_DIR}/libopencc.a"
+        "${PREBUILDER_LIB_DIR}/libglog.a"
+    )
+    add_library(Rime_static STATIC IMPORTED)
+    set_target_properties(Rime_static PROPERTIES
+        IMPORTED_LOCATION "${PREBUILDER_LIB_DIR}/librime.a"
+        INTERFACE_INCLUDE_DIRECTORIES "${PREBUILDER_INCLUDE_DIR}"
+        INTERFACE_LINK_LIBRARIES "${Rime_dependencies}"
+    )
+    set(RIME_TARGET Rime_static)
+    set(Rime_VERSION "1.12")
+
     add_definitions(-DRIME)
     add_subdirectory(engines/fcitx5-rime)
     list(APPEND ADDONS rime)

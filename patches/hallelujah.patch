@@ -21,24 +21,12 @@ index 7ffcf34..a57a061 100644
  add_subdirectory(src)
  if (ENABLE_TEST)
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index dcbd627..05832b4 100644
+index bf6da01..e117fa5 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -1,4 +1,4 @@
--add_library(hallelujah MODULE hallelujah.cpp)
-+add_library(hallelujah STATIC hallelujah.cpp)
+-add_library(hallelujah MODULE hallelujah.cpp factory.cpp)
++add_library(hallelujah STATIC hallelujah.cpp factory.cpp)
  target_link_libraries(hallelujah Fcitx5::Core Fcitx5::Module::Spell fmt::fmt ${MARISA_TARGET} ${JSONC_TARGET})
  install(TARGETS hallelujah DESTINATION "${FCITX_INSTALL_LIBDIR}/fcitx5")
  fcitx5_translate_desktop_file(hallelujah.conf.in hallelujah.conf)
-diff --git a/src/hallelujah.h b/src/hallelujah.h
-index 2dcee57..caf1bec 100644
---- a/src/hallelujah.h
-+++ b/src/hallelujah.h
-@@ -98,7 +98,6 @@ private:
- class HallelujahFactory : public AddonFactory {
- public:
-     AddonInstance *create(AddonManager *manager) override {
--        registerDomain("fcitx5-hallelujah", FCITX_INSTALL_LOCALEDIR);
-         return new HallelujahEngine(manager->instance());
-     }
- };
