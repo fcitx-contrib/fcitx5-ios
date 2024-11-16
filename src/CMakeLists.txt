@@ -71,7 +71,7 @@ if (RIME)
     set(RIME_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-rime")
     copy_to_keyboard(copy "${RIME_BINARY_DIR}/src/rime-addon.conf" "${ADDON_PREFIX}/rime.conf")
     copy_to_keyboard(copy "${RIME_BINARY_DIR}/src/rime.conf" "${IM_PREFIX}/rime.conf")
-    copy_to_keyboard(copy_directory "${PREBUILDER_SHARE_DIR}/rime-data" "share/rime-data")
+    copy_share_to_keyboard(copy_directory "rime-data")
 endif()
 
 # Embed keyboard.appex in app.

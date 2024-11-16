@@ -1,25 +1,3 @@
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 7ffcf34..a57a061 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -12,8 +12,6 @@ option(ENABLE_TEST "Build Test" On)
- option(BUILD_DATA "Build data" On)
- 
- find_package(Gettext REQUIRED)
--find_package(Fcitx5Core 5.1.9 REQUIRED)
--find_package(Fcitx5Module REQUIRED COMPONENTS Spell TestFrontend)
- find_package(PkgConfig REQUIRED)
- 
- if (NOT TARGET fmt::fmt)
-@@ -33,7 +31,7 @@ endif()
- add_definitions(-DFCITX_GETTEXT_DOMAIN=\"fcitx5-hallelujah\")
- fcitx5_add_i18n_definition()
- 
--include("${FCITX_INSTALL_CMAKECONFIG_DIR}/Fcitx5Utils/Fcitx5CompilerSettings.cmake")
-+include("../../fcitx5/cmake/Fcitx5CompilerSettings.cmake")
- 
- add_subdirectory(src)
- if (ENABLE_TEST)
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
 index bf6da01..e117fa5 100644
 --- a/src/CMakeLists.txt
