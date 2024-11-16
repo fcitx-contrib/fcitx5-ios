@@ -87,6 +87,10 @@ function(copy_to_keyboard cmd file relative_path)
     \")
 endfunction()
 
+function(copy_share_to_keyboard cmd relative_path)
+    copy_to_keyboard(${cmd} "${PREBUILDER_SHARE_DIR}/${relative_path}" "share/${relative_path}")
+endfunction()
+
 function(copy_to_app cmd file relative_path)
     add_custom_command(TARGET ${BUNDLE_NAME}
         POST_BUILD COMMAND /bin/sh -c \"
