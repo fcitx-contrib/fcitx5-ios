@@ -56,6 +56,44 @@ copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "${ADDON_PREF
 
 set(FCITX5_MODULE_BINARY_DIR "${PROJECT_BINARY_DIR}/fcitx5/src/modules")
 copy_to_keyboard(copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
+copy_share_to_keyboard(copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
+
+if (CHINESE_ADDONS)
+    set(CHINESE_ADDONS_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-chinese-addons")
+
+    # Pinyin addon and im
+    copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/im/pinyin/pinyin-addon.conf" "${ADDON_PREFIX}/pinyin.conf")
+    copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/im/pinyin/pinyin.conf" "${IM_PREFIX}/pinyin.conf")
+    copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/im/pinyin/shuangpin.conf" "${IM_PREFIX}/shuangpin.conf")
+
+    # Table addon, im and dict
+    copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/im/table/table.conf" "share/fcitx5/addon/table.conf")
+    # Filter out wanfeng, erbi, cangjie and qxm.
+    copy_share_to_keyboard(copy "fcitx5/inputmethod/db.conf")
+    copy_share_to_keyboard(copy "libime/db.main.dict")
+    copy_share_to_keyboard(copy "fcitx5/inputmethod/wbx.conf")
+    copy_share_to_keyboard(copy "libime/wbx.main.dict")
+    copy_share_to_keyboard(copy "fcitx5/inputmethod/wbpy.conf")
+    copy_share_to_keyboard(copy "libime/wbpy.main.dict")
+    copy_share_to_keyboard(copy "fcitx5/inputmethod/zrm.conf")
+    copy_share_to_keyboard(copy "libime/zrm.main.dict")
+
+    # Module addons
+    copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/modules/pinyinhelper/pinyinhelper.conf" "share/fcitx5/addon/pinyinhelper.conf")
+    copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/modules/fullwidth/fullwidth.conf" "share/fcitx5/addon/fullwidth.conf")
+    copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/modules/punctuation/punctuation.conf" "share/fcitx5/addon/punctuation.conf")
+    copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/modules/chttrans/chttrans.conf" "share/fcitx5/addon/chttrans.conf")
+
+    # Shared resources
+    copy_to_keyboard(copy_directory "${PREBUILDER_LIB_DIR}/libime" "lib/libime")
+    copy_share_to_keyboard(copy_directory "fcitx5/pinyin")
+    copy_share_to_keyboard(copy_directory "fcitx5/pinyinhelper")
+    copy_share_to_keyboard(copy_directory "fcitx5/punctuation")
+    copy_share_to_keyboard(copy "libime/sc.dict")
+    copy_share_to_keyboard(copy "libime/extb.dict")
+    copy_share_to_keyboard(copy_directory "fcitx5/chttrans")
+    copy_share_to_keyboard(copy_directory "opencc")
+endif()
 
 if (HALLELUJAH)
     set(HALLELUJAH_SOURCE_DIR "${PROJECT_SOURCE_DIR}/engines/fcitx5-hallelujah")

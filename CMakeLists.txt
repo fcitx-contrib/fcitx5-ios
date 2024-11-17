@@ -73,6 +73,7 @@ add_subdirectory(iosnotifications)
 add_subdirectory(uipanel)
 add_subdirectory(ipc)
 
+option(CHINESE_ADDONS "" ON)
 option(HALLELUJAH "" OFF)
 option(RIME "" OFF)
 
@@ -99,6 +100,20 @@ function(copy_to_app cmd file relative_path)
     \")
 endfunction()
 
+if (CHINESE_ADDONS)
+    find_package(OpenCC REQUIRED)
+    option(ENABLE_GUI OFF)
+    option(ENABLE_CLOUDPINYIN OFF)
+    option(ENABLE_DATA OFF)
+    add_definitions(-DCHINESE_ADDONS)
+    set(_Fcitx5Macro_SELF_DIR "${PROJECT_SOURCE_DIR}/fcitx5/src/lib/fcitx-utils")
+    set(HAS_STD_FILESYSTEM 1)
+    set(BUILD_TOOLS OFF)
+    add_subdirectory(engines/libime)
+    add_subdirectory(engines/fcitx5-chinese-addons)
+    list(APPEND ADDONS chttrans fullwidth pinyin pinyinhelper punctuation table)
+    list(APPEND DEFAULT_INPUT_METHODS pinyin shuangpin wbx)
+endif()
 if (HALLELUJAH)
     add_library(Marisa_static STATIC IMPORTED)
     set_target_properties(Marisa_static PROPERTIES
@@ -153,7 +168,7 @@ add_custom_command(
 )
 add_custom_target(gen_profile DEPENDS "${PROJECT_BINARY_DIR}/profile")
 
-if (HALLELUJAH)
+if (CHINESE_ADDONS OR HALLELUJAH)
     list(APPEND ADDONS spell)
 endif()
 

@@ -24,7 +24,16 @@ FCITX_IMPORT_ADDON_FACTORY(addons, iosfrontend);
 FCITX_IMPORT_ADDON_FACTORY(addons, notifications);
 FCITX_IMPORT_ADDON_FACTORY(addons, uipanel);
 
-#ifdef HALLELUJAH
+#ifdef CHINESE_ADDONS
+FCITX_IMPORT_ADDON_FACTORY(addons, pinyin);
+FCITX_IMPORT_ADDON_FACTORY(addons, table);
+FCITX_IMPORT_ADDON_FACTORY(addons, chttrans);
+FCITX_IMPORT_ADDON_FACTORY(addons, fullwidth);
+FCITX_IMPORT_ADDON_FACTORY(addons, pinyinhelper);
+FCITX_IMPORT_ADDON_FACTORY(addons, punctuation);
+#endif
+
+#if defined(HALLELUJAH) || defined(CHINESE_ADDONS)
 FCITX_IMPORT_ADDON_FACTORY(addons, spell);
 #endif
 
@@ -51,7 +60,9 @@ void setupEnv(const char *bundlePath, const char *appGroupPath,
 
     fs::path bundle = bundlePath;
     std::string xdg_data_dirs = bundle / "share";
+    std::string libime_model_dirs = bundle / "lib/libime";
     setenv("XDG_DATA_DIRS", xdg_data_dirs.c_str(), 1);
+    setenv("LIBIME_MODEL_DIRS", libime_model_dirs.c_str(), 1);
 
     fs::path group = appGroupPath;
     std::string xdg_data_home = group / "data";
