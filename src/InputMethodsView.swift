@@ -19,17 +19,17 @@ struct InputMethodsSectionHeaderView: View {
   }
 }
 
-private class ViewModel: ObservableObject {
-  @Published var inputMethods = [InputMethod]()
+func availableInputMethods() -> [InputMethod] {
+  let allInputMethods = try! JSONDecoder().decode(
+    [InputMethod].self, from: String(getAllInputMethods()).data(using: .utf8)!)
+  let enabledInputMethods = try! JSONDecoder().decode(
+    [InputMethod].self, from: String(getInputMethods()).data(using: .utf8)!
+  ).map { $0.name }
+  return allInputMethods.filter { !enabledInputMethods.contains($0.name) }
+}
 
-  func refresh() {
-    let allInputMethods = try! JSONDecoder().decode(
-      [InputMethod].self, from: String(getAllInputMethods()).data(using: .utf8)!)
-    let enabledInputMethods = try! JSONDecoder().decode(
-      [InputMethod].self, from: String(getInputMethods()).data(using: .utf8)!
-    ).map { $0.name }
-    inputMethods = allInputMethods.filter { !enabledInputMethods.contains($0.name) }
-  }
+private class ViewModel: ObservableObject {
+  @Published var inputMethods = availableInputMethods()
 }
 
 struct AddInputMethodsView: View {
@@ -54,7 +54,8 @@ struct AddInputMethodsView: View {
               enabledInputMethods.append(inputMethod)
               setInputMethods(
                 String(
-                  data: try! JSONEncoder().encode(enabledInputMethods.map { $0.name }),
+                  data: try! JSONEncoder().encode(
+                    enabledInputMethods.map { $0.name } + [inputMethod.name]),
                   encoding: .utf8)!)
               requestReload()
               message = "Added \(inputMethod.displayName)"
@@ -78,8 +79,5 @@ struct AddInputMethodsView: View {
     }
     .navigationTitle("Add input methods")
     .navigationBarTitleDisplayMode(.inline)
-    .onAppear {
-      viewModel.refresh()
-    }
   }
 }
