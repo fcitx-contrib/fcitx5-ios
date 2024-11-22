@@ -131,11 +131,11 @@ if (RIME)
     )
     add_library(Rime_static STATIC IMPORTED)
     set_target_properties(Rime_static PROPERTIES
-        IMPORTED_LOCATION "${PREBUILDER_LIB_DIR}/librime.a"
+        IMPORTED_LOCATION "-Wl,-force_load,${PREBUILDER_LIB_DIR}/librime.a" # plugins use __attribute__((constructor))
         INTERFACE_INCLUDE_DIRECTORIES "${PREBUILDER_INCLUDE_DIR}"
         INTERFACE_LINK_LIBRARIES "${Rime_dependencies}"
     )
-    set(RIME_TARGET $<LINK_LIBRARY:WHOLE_ARCHIVE,Rime_static>)
+    set(RIME_TARGET Rime_static)
     set(Rime_VERSION "1.12")
 
     add_definitions(-DRIME)
