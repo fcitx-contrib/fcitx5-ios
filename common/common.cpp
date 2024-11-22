@@ -1,7 +1,6 @@
 #include "common.h"
 #include "../engines/fcitx5-hallelujah/src/factory.h"
-#include "../engines/fcitx5-rime/src/rimefactory.h"
-#include "../fcitx5/src/modules/spell/spell.h"
+#include "../fcitx5/src/lib/fcitx/addoninstance.h"
 #include "../iosfrontend/iosfrontend.h"
 #include "../iosnotifications/iosnotifications.h"
 #include "../uipanel/uipanel.h"
@@ -12,10 +11,6 @@
 
 #ifdef HALLELUJAH
 fcitx::HallelujahFactory HallelujahFactory;
-fcitx::SpellModuleFactory SpellModuleFactory;
-#endif
-#ifdef RIME
-fcitx::RimeEngineFactory RimeFactory;
 #endif
 
 namespace fs = std::filesystem;
@@ -26,8 +21,8 @@ static fcitx::UIPanelFactory UIPanelFactory;
 
 static fcitx::StaticAddonRegistry addons = {
 #ifdef HALLELUJAH
-    std::make_pair<std::string, fcitx::AddonFactory *>("spell",
-                                                       &SpellModuleFactory),
+    std::make_pair<std::string, fcitx::AddonFactory *>("hallelujah",
+                                                       &HallelujahFactory),
 #endif
     std::make_pair<std::string, fcitx::AddonFactory *>("iosfrontend",
                                                        &IosFrontendFactory),
@@ -35,14 +30,15 @@ static fcitx::StaticAddonRegistry addons = {
         "notifications", &IosNotificationsFactory),
     std::make_pair<std::string, fcitx::AddonFactory *>("uipanel",
                                                        &UIPanelFactory),
-#ifdef HALLELUJAH
-    std::make_pair<std::string, fcitx::AddonFactory *>("hallelujah",
-                                                       &HallelujahFactory),
-#endif
-#ifdef RIME
-    std::make_pair<std::string, fcitx::AddonFactory *>("rime", &RimeFactory),
-#endif
 };
+
+#ifdef HALLELUJAH
+FCITX_IMPORT_ADDON_FACTORY(addons, spell);
+#endif
+
+#ifdef RIME
+FCITX_IMPORT_ADDON_FACTORY(addons, rime);
+#endif
 
 std::unique_ptr<fcitx::Instance> instance;
 std::unique_ptr<fcitx::EventDispatcher> dispatcher;

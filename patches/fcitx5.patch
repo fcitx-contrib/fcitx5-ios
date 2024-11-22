@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 3c7bc877..12612326 100644
+index 0d219a51..21695937 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -224,9 +224,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DI

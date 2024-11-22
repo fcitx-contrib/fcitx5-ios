@@ -127,6 +127,7 @@ if (RIME)
         "${PREBUILDER_LIB_DIR}/libmarisa.a"
         "${PREBUILDER_LIB_DIR}/libopencc.a"
         "${PREBUILDER_LIB_DIR}/libglog.a"
+        "${PREBUILDER_LIB_DIR}/liblua.a"
     )
     add_library(Rime_static STATIC IMPORTED)
     set_target_properties(Rime_static PROPERTIES
@@ -134,7 +135,7 @@ if (RIME)
         INTERFACE_INCLUDE_DIRECTORIES "${PREBUILDER_INCLUDE_DIR}"
         INTERFACE_LINK_LIBRARIES "${Rime_dependencies}"
     )
-    set(RIME_TARGET Rime_static)
+    set(RIME_TARGET $<LINK_LIBRARY:WHOLE_ARCHIVE,Rime_static>)
     set(Rime_VERSION "1.12")
 
     add_definitions(-DRIME)

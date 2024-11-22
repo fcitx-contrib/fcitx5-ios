@@ -6,6 +6,7 @@ deps=(
   libintl
   librime
   libuv
+  lua
   marisa
   opencc
   yaml-cpp
@@ -22,7 +23,7 @@ fi
 
 for dep in "${deps[@]}"; do
   file=$dep$POSTFIX.tar.bz2
-  [[ -f cache/$file ]] || wget -P cache https://github.com/fcitx-contrib/fcitx5-ios-prebuilder/releases/download/latest/$file
+  [[ -f cache/$file ]] || wget -P cache https://github.com/fcitx-contrib/fcitx5-prebuilder/releases/download/ios/$file
   tar xjvf cache/$file -C $EXTRACT_DIR
 done
 
