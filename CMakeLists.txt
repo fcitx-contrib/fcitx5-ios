@@ -127,10 +127,11 @@ if (RIME)
         "${PREBUILDER_LIB_DIR}/libmarisa.a"
         "${PREBUILDER_LIB_DIR}/libopencc.a"
         "${PREBUILDER_LIB_DIR}/libglog.a"
+        "${PREBUILDER_LIB_DIR}/liblua.a"
     )
     add_library(Rime_static STATIC IMPORTED)
     set_target_properties(Rime_static PROPERTIES
-        IMPORTED_LOCATION "${PREBUILDER_LIB_DIR}/librime.a"
+        IMPORTED_LOCATION "-Wl,-force_load,${PREBUILDER_LIB_DIR}/librime.a" # plugins use __attribute__((constructor))
         INTERFACE_INCLUDE_DIRECTORIES "${PREBUILDER_INCLUDE_DIR}"
         INTERFACE_LINK_LIBRARIES "${Rime_dependencies}"
     )

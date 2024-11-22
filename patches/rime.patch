@@ -14,7 +14,7 @@ index 78ef79b..c4abccd 100644
  install(TARGETS rime DESTINATION "${CMAKE_INSTALL_LIBDIR}/fcitx5")
  fcitx5_translate_desktop_file(rime.conf.in rime.conf)
 diff --git a/src/rimeengine.cpp b/src/rimeengine.cpp
-index 49fc5b8..b3212fa 100644
+index b335069..a65a123 100644
 --- a/src/rimeengine.cpp
 +++ b/src/rimeengine.cpp
 @@ -47,6 +47,8 @@
@@ -23,9 +23,9 @@ index 49fc5b8..b3212fa 100644
  
 +#include "fcitxipc-swift.h"
 +
- FCITX_DEFINE_LOG_CATEGORY(rime, "rime");
+ FCITX_DEFINE_LOG_CATEGORY(rime_log, "rime");
  
- namespace fcitx {
+ namespace fcitx::rime {
 @@ -197,11 +199,17 @@ RimeEngine::RimeEngine(Instance *instance)
      deployAction_.setIcon("fcitx_rime_deploy");
      deployAction_.setShortText(_("Deploy"));
