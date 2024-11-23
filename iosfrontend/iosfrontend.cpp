@@ -53,3 +53,5 @@ void IosInputContext::updatePreeditImpl() {
                                    preedit.cursor());
 }
 } // namespace fcitx
+
+FCITX_ADDON_FACTORY_V2(iosfrontend, fcitx::IosFrontendFactory);

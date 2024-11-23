@@ -74,6 +74,8 @@ void UIPanel::updateStatusArea(InputContext *ic) {
 
 } // namespace fcitx
 
+FCITX_ADDON_FACTORY_V2(uipanel, fcitx::UIPanelFactory);
+
 void selectCandidate(int index) {
     with_fcitx([index] {
         auto ic = instance->mostRecentInputContext();

@@ -29,3 +29,5 @@ void Notifications::closeNotification(uint64_t internalId) {
     FCITX_INFO() << "closeNotification " << internalId;
 }
 } // namespace fcitx
+
+FCITX_ADDON_FACTORY_V2(notifications, fcitx::IosNotificationsFactory);

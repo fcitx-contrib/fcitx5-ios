@@ -1,9 +1,7 @@
 #include "common.h"
 #include "../engines/fcitx5-hallelujah/src/factory.h"
 #include "../fcitx5/src/lib/fcitx/addoninstance.h"
-#include "../iosfrontend/iosfrontend.h"
-#include "../iosnotifications/iosnotifications.h"
-#include "../uipanel/uipanel.h"
+#include "../fcitx5/src/lib/fcitx/addonmanager.h"
 #include "nativestreambuf.h"
 #include <filesystem>
 
@@ -15,22 +13,16 @@ fcitx::HallelujahFactory HallelujahFactory;
 
 namespace fs = std::filesystem;
 
-static fcitx::IosFrontendFactory IosFrontendFactory;
-static fcitx::IosNotificationsFactory IosNotificationsFactory;
-static fcitx::UIPanelFactory UIPanelFactory;
-
 static fcitx::StaticAddonRegistry addons = {
 #ifdef HALLELUJAH
     std::make_pair<std::string, fcitx::AddonFactory *>("hallelujah",
                                                        &HallelujahFactory),
 #endif
-    std::make_pair<std::string, fcitx::AddonFactory *>("iosfrontend",
-                                                       &IosFrontendFactory),
-    std::make_pair<std::string, fcitx::AddonFactory *>(
-        "notifications", &IosNotificationsFactory),
-    std::make_pair<std::string, fcitx::AddonFactory *>("uipanel",
-                                                       &UIPanelFactory),
 };
+
+FCITX_IMPORT_ADDON_FACTORY(addons, iosfrontend);
+FCITX_IMPORT_ADDON_FACTORY(addons, notifications);
+FCITX_IMPORT_ADDON_FACTORY(addons, uipanel);
 
 #ifdef HALLELUJAH
 FCITX_IMPORT_ADDON_FACTORY(addons, spell);
