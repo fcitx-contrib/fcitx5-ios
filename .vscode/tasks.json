@@ -12,7 +12,7 @@
         {
             "type": "shell",
             "label": "Configure",
-            "command": "cmake -B build -G Xcode -DHALLELUJAH=ON -DURL_SCHEME=fcitx -DRIME=ON -DCMAKE_TOOLCHAIN_FILE=cmake/ios.cmake -DIOS_PLATFORM=SIMULATOR",
+            "command": "cmake -B build -G Xcode -DURL_SCHEME=fcitx -DCHINESE_ADDONS=ON -DHALLELUJAH=ON -DRIME=ON -DCMAKE_TOOLCHAIN_FILE=cmake/ios.cmake -DIOS_PLATFORM=SIMULATOR",
             "group": {
                 "kind": "build"
             }

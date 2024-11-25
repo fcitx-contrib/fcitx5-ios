@@ -10,3 +10,9 @@
 [submodule "deps/AlertToast"]
 	path = deps/AlertToast
 	url = https://github.com/fcitx-contrib/AlertToast
+[submodule "engines/fcitx5-chinese-addons"]
+	path = engines/fcitx5-chinese-addons
+	url = https://github.com/fcitx/fcitx5-chinese-addons
+[submodule "engines/libime"]
+	path = engines/libime
+	url = https://github.com/fcitx/libime

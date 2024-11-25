@@ -1,0 +1,91 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index bd4ce71..c048801 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -40,7 +40,7 @@ option(ENABLE_CLOUDPINYIN "Build cloud pinyin addon" On)
+ option(USE_QT6 "Build with Qt6" On)
+ option(ENABLE_DATA "Build data" On)
+ 
+-if (ENABLE_OPENCC)
++if (ENABLE_OPENCC AND NOT TARGET OpenCC::OpenCC)
+     find_package(OpenCC 1.0.1 REQUIRED)
+ endif()
+ 
+diff --git a/im/pinyin/CMakeLists.txt b/im/pinyin/CMakeLists.txt
+index 4caf30b..ba4caa4 100644
+--- a/im/pinyin/CMakeLists.txt
++++ b/im/pinyin/CMakeLists.txt
+@@ -7,7 +7,7 @@ set(PINYIN_SOURCES
+     pinyinenginefactory.cpp
+ )
+ 
+-add_library(pinyin MODULE ${PINYIN_SOURCES})
++add_library(pinyin STATIC ${PINYIN_SOURCES})
+ target_link_libraries(pinyin Fcitx5::Core Fcitx5::Config LibIME::Pinyin Boost::iostreams Fcitx5::Module::Punctuation Fcitx5::Module::QuickPhrase Fcitx5::Module::Notifications Fcitx5::Module::Spell Fcitx5::Module::PinyinHelper Pthread::Pthread ${FMT_TARGET})
+ 
+ if (TARGET Fcitx5::Module::LuaAddonLoader)
+diff --git a/im/table/CMakeLists.txt b/im/table/CMakeLists.txt
+index 7c930e9..f4b1c17 100644
+--- a/im/table/CMakeLists.txt
++++ b/im/table/CMakeLists.txt
+@@ -6,7 +6,7 @@ set(TABLE_SOURCES
+     candidate.cpp
+     factory.cpp
+ )
+-add_library(table MODULE ${TABLE_SOURCES})
++add_library(table STATIC ${TABLE_SOURCES})
+ target_link_libraries(table Fcitx5::Core Fcitx5::Config LibIME::Table LibIME::Pinyin Boost::iostreams Fcitx5::Module::Punctuation Fcitx5::Module::QuickPhrase Fcitx5::Module::PinyinHelper ${FMT_TARGET})
+ target_compile_definitions(table PRIVATE FCITX_STRINGUTILS_ENABLE_BOOST_STRING_VIEW)
+ install(TARGETS table DESTINATION "${CMAKE_INSTALL_LIBDIR}/fcitx5")
+diff --git a/modules/chttrans/CMakeLists.txt b/modules/chttrans/CMakeLists.txt
+index 14351c8..d3d3bb9 100644
+--- a/modules/chttrans/CMakeLists.txt
++++ b/modules/chttrans/CMakeLists.txt
+@@ -4,7 +4,7 @@ set(CHTTRANS_SOURCES
+ if (ENABLE_OPENCC)
+     set(CHTTRANS_SOURCES ${CHTTRANS_SOURCES} chttrans-opencc.cpp)
+ endif()
+-add_library(chttrans MODULE ${CHTTRANS_SOURCES})
++add_library(chttrans STATIC ${CHTTRANS_SOURCES})
+ target_link_libraries(chttrans Fcitx5::Core Fcitx5::Config Fcitx5::Module::Notifications Boost::iostreams ${FMT_TARGET})
+ if (ENABLE_OPENCC)
+     target_link_libraries(chttrans OpenCC::OpenCC)
+diff --git a/modules/fullwidth/CMakeLists.txt b/modules/fullwidth/CMakeLists.txt
+index 3fb2ee0..e5b42b7 100644
+--- a/modules/fullwidth/CMakeLists.txt
++++ b/modules/fullwidth/CMakeLists.txt
+@@ -1,7 +1,7 @@
+ set(FULLWIDTH_SOURCES
+     fullwidth.cpp
+ )
+-add_library(fullwidth MODULE ${FULLWIDTH_SOURCES})
++add_library(fullwidth STATIC ${FULLWIDTH_SOURCES})
+ target_link_libraries(fullwidth Fcitx5::Core Fcitx5::Config Fcitx5::Module::Notifications)
+ install(TARGETS fullwidth DESTINATION "${CMAKE_INSTALL_LIBDIR}/fcitx5")
+ configure_file(fullwidth.conf.in.in fullwidth.conf.in)
+diff --git a/modules/pinyinhelper/CMakeLists.txt b/modules/pinyinhelper/CMakeLists.txt
+index a2ca5d9..ea0980b 100644
+--- a/modules/pinyinhelper/CMakeLists.txt
++++ b/modules/pinyinhelper/CMakeLists.txt
+@@ -3,7 +3,7 @@ set(PINYINHELPER_SOURCES
+     pinyinlookup.cpp
+     stroke.cpp
+ )
+-add_library(pinyinhelper MODULE ${PINYINHELPER_SOURCES})
++add_library(pinyinhelper STATIC ${PINYINHELPER_SOURCES})
+ target_link_libraries(pinyinhelper 
+ Fcitx5::Core 
+ Fcitx5::Config
+diff --git a/modules/punctuation/CMakeLists.txt b/modules/punctuation/CMakeLists.txt
+index 2de1433..0263601 100644
+--- a/modules/punctuation/CMakeLists.txt
++++ b/modules/punctuation/CMakeLists.txt
+@@ -8,7 +8,7 @@ set(PUNCTUATION_DATA_FILES
+   punc.mb.zh_TW
+ )
+ 
+-add_library(punctuation MODULE ${PUNCTUATION_SOURCES})
++add_library(punctuation STATIC ${PUNCTUATION_SOURCES})
+ target_link_libraries(punctuation Fcitx5::Core Fcitx5::Config Boost::iostreams Fcitx5::Module::Notifications)
+ install(TARGETS punctuation DESTINATION "${CMAKE_INSTALL_LIBDIR}/fcitx5")
+ configure_file(punctuation.conf.in.in punctuation.conf.in)

@@ -46,6 +46,9 @@ jobs:
       - name: Build
         run: |
           git apply --directory=fcitx5 patches/fcitx5.patch
+          git apply --directory=engines/libime/src/libime/core/kenlm patches/kenlm.patch
+          git apply --directory=engines/libime patches/libime.patch
+          git apply --directory=engines/fcitx5-chinese-addons patches/chinese-addons.patch
           git apply --directory=engines/fcitx5-hallelujah patches/hallelujah.patch
           git apply --directory=engines/fcitx5-rime patches/rime.patch
           cmake -B build -G Xcode \

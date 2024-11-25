@@ -1,0 +1,28 @@
+diff --git a/util/usage.cc b/util/usage.cc
+index 79d61c2..62edb0b 100644
+--- a/util/usage.cc
++++ b/util/usage.cc
+@@ -43,7 +43,6 @@ typedef WINBOOL (WINAPI *PFN_MS_EX) (lMEMORYSTATUSEX*);
+ #include <sys/sysctl.h>
+ #include <mach/task.h>
+ #include <mach/mach.h>
+-#include <libproc.h>
+ #endif
+ 
+ namespace util {
+@@ -197,6 +196,7 @@ uint64_t RSSMax() {
+ #endif
+ }
+ 
++#if 0
+ void PrintUsage(std::ostream &out) {
+ #if !defined(_WIN32) && !defined(_WIN64)
+   #if defined(__MACH__) || defined(__APPLE__)
+@@ -238,6 +238,7 @@ void PrintUsage(std::ostream &out) {
+ 
+   out << "real:" << WallTime() << '\n';
+ }
++#endif
+ 
+ /* Adapted from physmem.c in gnulib 831b84c59ef413c57a36b67344467d66a8a2ba70 */
+ /* Calculate the size of physical memory.
