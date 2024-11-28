@@ -1,5 +1,5 @@
 diff --git a/src/libime/core/CMakeLists.txt b/src/libime/core/CMakeLists.txt
-index 35ee954..b1ada6a 100644
+index 35ee954..e40a2dd 100644
 --- a/src/libime/core/CMakeLists.txt
 +++ b/src/libime/core/CMakeLists.txt
 @@ -69,7 +69,7 @@ ecm_setup_version(PROJECT
@@ -11,15 +11,6 @@ index 35ee954..b1ada6a 100644
  set_target_properties(IMECore
                        PROPERTIES VERSION ${IMECore_VERSION}
                        SOVERSION ${IMECore_SOVERSION}
-@@ -82,7 +82,7 @@ target_include_directories(IMECore PUBLIC
- 
- target_link_libraries(IMECore PUBLIC Fcitx5::Utils Boost::boost PRIVATE kenlm Boost::iostreams PkgConfig::ZSTD)
- 
--install(TARGETS IMECore EXPORT LibIMECoreTargets LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib)
-+install(TARGETS IMECore kenlm EXPORT LibIMECoreTargets LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib)
- install(FILES ${LIBIME_HDRS} DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/LibIME/libime/core" COMPONENT header)
- 
- add_library(LibIME::Core ALIAS IMECore)
 diff --git a/src/libime/pinyin/CMakeLists.txt b/src/libime/pinyin/CMakeLists.txt
 index a5e6d35..601d559 100644
 --- a/src/libime/pinyin/CMakeLists.txt

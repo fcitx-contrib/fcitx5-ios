@@ -12,7 +12,7 @@ set(BUNDLE_IDENTIFIER "org.fcitx.Fcitx5")
 set(BUNDLE_NAME "Fcitx5")
 set(ICON_FILE "icon.icns")
 
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 if (IOS_PLATFORM STREQUAL "SIMULATOR")
     set(F5I_TARGET "${CMAKE_OSX_ARCHITECTURES}-apple-ios${CMAKE_OSX_DEPLOYMENT_TARGET}-simulator")
@@ -110,6 +110,8 @@ if (CHINESE_ADDONS)
     set(HAS_STD_FILESYSTEM 1)
     set(BUILD_TOOLS OFF)
     add_subdirectory(engines/libime)
+    # suppress configure error
+    install(TARGETS kenlm EXPORT LibIMECoreTargets LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib)
     add_subdirectory(engines/fcitx5-chinese-addons)
     list(APPEND ADDONS chttrans fullwidth pinyin pinyinhelper punctuation table)
     list(APPEND DEFAULT_INPUT_METHODS pinyin shuangpin wbx)
