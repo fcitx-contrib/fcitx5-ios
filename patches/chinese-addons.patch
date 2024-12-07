@@ -1,16 +1,3 @@
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index bd4ce71..c048801 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -40,7 +40,7 @@ option(ENABLE_CLOUDPINYIN "Build cloud pinyin addon" On)
- option(USE_QT6 "Build with Qt6" On)
- option(ENABLE_DATA "Build data" On)
- 
--if (ENABLE_OPENCC)
-+if (ENABLE_OPENCC AND NOT TARGET OpenCC::OpenCC)
-     find_package(OpenCC 1.0.1 REQUIRED)
- endif()
- 
 diff --git a/im/pinyin/CMakeLists.txt b/im/pinyin/CMakeLists.txt
 index 4caf30b..ba4caa4 100644
 --- a/im/pinyin/CMakeLists.txt

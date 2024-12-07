@@ -35,10 +35,14 @@ set(PREBUILDER_INCLUDE_DIR "${FIND_ROOT_PATH}/include")
 set(PREBUILDER_LIB_DIR "${FIND_ROOT_PATH}/lib")
 set(PREBUILDER_SHARE_DIR "${FIND_ROOT_PATH}/share")
 
+set(ENV{PKG_CONFIG_SYSROOT_DIR} "${PROJECT_BINARY_DIR}/sysroot")
+set(ENV{PKG_CONFIG_PATH} "${PREBUILDER_LIB_DIR}/pkgconfig")
+
 list(APPEND CMAKE_FIND_ROOT_PATH "${FIND_ROOT_PATH}")
 
 add_subdirectory(deps)
 
+option(ENABLE_TESTING_ADDONS "" OFF)
 option(ENABLE_TEST "" OFF)
 option(ENABLE_COVERAGE "" OFF)
 option(ENABLE_ENCHANT "" OFF)
@@ -101,14 +105,13 @@ function(copy_to_app cmd file relative_path)
 endfunction()
 
 if (CHINESE_ADDONS)
-    find_package(OpenCC REQUIRED)
     option(ENABLE_GUI OFF)
     option(ENABLE_CLOUDPINYIN OFF)
     option(ENABLE_DATA OFF)
     add_definitions(-DCHINESE_ADDONS)
     set(_Fcitx5Macro_SELF_DIR "${PROJECT_SOURCE_DIR}/fcitx5/src/lib/fcitx-utils")
     set(HAS_STD_FILESYSTEM 1)
-    set(BUILD_TOOLS OFF)
+    set(ENABLE_TOOLS OFF)
     add_subdirectory(engines/libime)
     # suppress configure error
     install(TARGETS kenlm EXPORT LibIMECoreTargets LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib)

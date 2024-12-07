@@ -1,17 +1,3 @@
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 0d219a51..21695937 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -224,9 +224,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/config.h.in ${CMAKE_CURRENT_BINARY_DI
- include_directories(${CMAKE_CURRENT_BINARY_DIR})
- 
- add_subdirectory(src)
--add_subdirectory(data)
- add_subdirectory(po)
--add_subdirectory(testing)
- 
- #######################################################################
- # Test features
 diff --git a/src/lib/fcitx-config/CMakeLists.txt b/src/lib/fcitx-config/CMakeLists.txt
 index 85c9865b..edf51a44 100644
 --- a/src/lib/fcitx-config/CMakeLists.txt
