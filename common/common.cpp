@@ -1,45 +1,13 @@
 #include "common.h"
-#include "../engines/fcitx5-hallelujah/src/factory.h"
-#include "../fcitx5/src/lib/fcitx/addoninstance.h"
 #include "../fcitx5/src/lib/fcitx/addonmanager.h"
 #include "nativestreambuf.h"
 #include <filesystem>
 
 #include <thread>
 
-#ifdef HALLELUJAH
-fcitx::HallelujahFactory HallelujahFactory;
-#endif
-
 namespace fs = std::filesystem;
 
-static fcitx::StaticAddonRegistry addons = {
-#ifdef HALLELUJAH
-    std::make_pair<std::string, fcitx::AddonFactory *>("hallelujah",
-                                                       &HallelujahFactory),
-#endif
-};
-
-FCITX_IMPORT_ADDON_FACTORY(addons, iosfrontend);
-FCITX_IMPORT_ADDON_FACTORY(addons, notifications);
-FCITX_IMPORT_ADDON_FACTORY(addons, uipanel);
-
-#ifdef CHINESE_ADDONS
-FCITX_IMPORT_ADDON_FACTORY(addons, pinyin);
-FCITX_IMPORT_ADDON_FACTORY(addons, table);
-FCITX_IMPORT_ADDON_FACTORY(addons, chttrans);
-FCITX_IMPORT_ADDON_FACTORY(addons, fullwidth);
-FCITX_IMPORT_ADDON_FACTORY(addons, pinyinhelper);
-FCITX_IMPORT_ADDON_FACTORY(addons, punctuation);
-#endif
-
-#if defined(HALLELUJAH) || defined(CHINESE_ADDONS)
-FCITX_IMPORT_ADDON_FACTORY(addons, spell);
-#endif
-
-#ifdef RIME
-FCITX_IMPORT_ADDON_FACTORY(addons, rime);
-#endif
+extern fcitx::StaticAddonRegistry &getStaticAddon();
 
 std::unique_ptr<fcitx::Instance> instance;
 std::unique_ptr<fcitx::EventDispatcher> dispatcher;
@@ -85,7 +53,7 @@ void setupFcitx(const char *bundlePath, const char *appGroupPath,
     instance->setVirtualKeyboardAutoShow(true);
     instance->setVirtualKeyboardAutoHide(true);
     auto &addonMgr = instance->addonManager();
-    addonMgr.registerDefaultLoader(&addons);
+    addonMgr.registerDefaultLoader(&getStaticAddon());
     instance->initialize();
     dispatcher = std::make_unique<fcitx::EventDispatcher>();
     dispatcher->attach(&instance->eventLoop());

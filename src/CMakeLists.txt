@@ -23,18 +23,14 @@ target_include_directories(${BUNDLE_NAME} PRIVATE
     "${PROJECT_BINARY_DIR}/deps/AlertToast/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
 )
 
-target_link_libraries(${BUNDLE_NAME} PRIVATE
+target_link_libraries(${BUNDLE_NAME}
     AlertToast
-    iosfrontend
     SwiftFrontend
     KeyboardUI
-    uipanel
-    iosnotifications
     NotifySwift
     FcitxIpc
     FcitxCommon
     SwiftUtil
-    ${ADDONS}
 )
 
 # Make main app the last target so that keyboard can be copied into it.
@@ -118,3 +114,8 @@ copy_to_app(copy_directory "${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCOD
 copy_to_app(copy_directory "${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share" "share")
 copy_to_app(copy "${PROJECT_SOURCE_DIR}/assets/${ICON_FILE}" "${ICON_FILE}")
 copy_to_app(copy "${PROJECT_BINARY_DIR}/profile" profile)
+
+fcitx5_import_addons(${BUNDLE_NAME}
+    REGISTRY_VARNAME getStaticAddon
+    ADDONS ${ADDON_TARGETS}
+)

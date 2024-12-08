@@ -14,7 +14,7 @@ _swift_generate_cxx_header(
     SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${PROJECT_BINARY_DIR}/protocol/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
 )
 
-add_library(iosfrontend STATIC iosfrontend.cpp)
+add_fcitx5_addon(iosfrontend iosfrontend.cpp)
 add_dependencies(iosfrontend SwiftFrontend)
 target_link_libraries(iosfrontend Fcitx5::Core)
 target_include_directories(iosfrontend PUBLIC

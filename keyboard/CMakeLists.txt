@@ -20,17 +20,18 @@ target_compile_options(keyboard PUBLIC
     "$<$<COMPILE_LANGUAGE:Swift>:-cxx-interoperability-mode=default>"
 )
 
-target_link_libraries(keyboard PRIVATE
-    iosfrontend
+target_link_libraries(keyboard
     SwiftFrontend
     KeyboardUI
-    uipanel
-    iosnotifications
     NotifySwift
     FcitxIpc
     FcitxCommon
     SwiftUtil
-    ${ADDONS}
 )
 
 add_dependencies(keyboard gen_profile)
+
+fcitx5_import_addons(keyboard
+    REGISTRY_VARNAME getStaticAddon
+    ADDONS ${ADDON_TARGETS}
+)

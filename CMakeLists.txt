@@ -40,6 +40,9 @@ set(ENV{PKG_CONFIG_PATH} "${PREBUILDER_LIB_DIR}/pkgconfig")
 
 list(APPEND CMAKE_FIND_ROOT_PATH "${FIND_ROOT_PATH}")
 
+option(BUILD_SHARED_LIBS "" OFF)
+option(BUILD_SHARED_FCITX_ADDON "" OFF)
+
 add_subdirectory(deps)
 
 option(ENABLE_TESTING_ADDONS "" OFF)
@@ -81,9 +84,6 @@ option(CHINESE_ADDONS "" ON)
 option(HALLELUJAH "" OFF)
 option(RIME "" OFF)
 
-set(ADDONS)
-set(DEFAULT_INPUT_METHODS)
-
 function(copy_to_keyboard cmd file relative_path)
     add_custom_command(TARGET ${BUNDLE_NAME}
         POST_BUILD COMMAND /bin/sh -c \"
@@ -104,78 +104,9 @@ function(copy_to_app cmd file relative_path)
     \")
 endfunction()
 
-if (CHINESE_ADDONS)
-    option(ENABLE_GUI OFF)
-    option(ENABLE_CLOUDPINYIN OFF)
-    option(ENABLE_DATA OFF)
-    add_definitions(-DCHINESE_ADDONS)
-    set(_Fcitx5Macro_SELF_DIR "${PROJECT_SOURCE_DIR}/fcitx5/src/lib/fcitx-utils")
-    set(HAS_STD_FILESYSTEM 1)
-    set(ENABLE_TOOLS OFF)
-    add_subdirectory(engines/libime)
-    # suppress configure error
-    install(TARGETS kenlm EXPORT LibIMECoreTargets LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib)
-    add_subdirectory(engines/fcitx5-chinese-addons)
-    list(APPEND ADDONS chttrans fullwidth pinyin pinyinhelper punctuation table)
-    list(APPEND DEFAULT_INPUT_METHODS pinyin shuangpin wbx)
-endif()
-if (HALLELUJAH)
-    add_library(Marisa_static STATIC IMPORTED)
-    set_target_properties(Marisa_static PROPERTIES
-        IMPORTED_LOCATION "${PREBUILDER_LIB_DIR}/libmarisa.a"
-        INTERFACE_INCLUDE_DIRECTORIES "${PREBUILDER_INCLUDE_DIR}"
-    )
-    set(MARISA_TARGET Marisa_static)
-    add_library(JsonC_static STATIC IMPORTED)
-    set_target_properties(JsonC_static PROPERTIES
-        IMPORTED_LOCATION "${PREBUILDER_LIB_DIR}/libjson-c.a"
-        INTERFACE_INCLUDE_DIRECTORIES "${PREBUILDER_INCLUDE_DIR}"
-    )
-    set(JSONC_TARGET JsonC_static)
+add_subdirectory(engines)
 
-    add_definitions(-DHALLELUJAH)
-    add_subdirectory(engines/fcitx5-hallelujah)
-    list(APPEND ADDONS hallelujah)
-    list(APPEND DEFAULT_INPUT_METHODS hallelujah)
-endif()
-if (RIME)
-    # RIME_DATA_DIR is not actually used but must exist.
-    set(RIME_DATA_DIR "/usr/share/rime-data")
-    set(Rime_dependencies
-        "${PREBUILDER_LIB_DIR}/libleveldb.a"
-        "${PREBUILDER_LIB_DIR}/libyaml-cpp.a"
-        "${PREBUILDER_LIB_DIR}/libmarisa.a"
-        "${PREBUILDER_LIB_DIR}/libopencc.a"
-        "${PREBUILDER_LIB_DIR}/libglog.a"
-        "${PREBUILDER_LIB_DIR}/liblua.a"
-    )
-    add_library(Rime_static STATIC IMPORTED)
-    set_target_properties(Rime_static PROPERTIES
-        IMPORTED_LOCATION "-Wl,-force_load,${PREBUILDER_LIB_DIR}/librime.a" # plugins use __attribute__((constructor))
-        INTERFACE_INCLUDE_DIRECTORIES "${PREBUILDER_INCLUDE_DIR}"
-        INTERFACE_LINK_LIBRARIES "${Rime_dependencies}"
-    )
-    set(RIME_TARGET Rime_static)
-    set(Rime_VERSION "1.12")
-
-    add_definitions(-DRIME)
-    add_subdirectory(engines/fcitx5-rime)
-    list(APPEND ADDONS rime)
-    list(APPEND DEFAULT_INPUT_METHODS rime)
-endif()
-
-add_custom_command(
-    OUTPUT "${PROJECT_BINARY_DIR}/profile"
-    COMMAND python scripts/configure.py ${DEFAULT_INPUT_METHODS}
-    DEPENDS "${PROJECT_SOURCE_DIR}/default"
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    COMMENT "Generating profile"
-)
-add_custom_target(gen_profile DEPENDS "${PROJECT_BINARY_DIR}/profile")
-
-if (CHINESE_ADDONS OR HALLELUJAH)
-    list(APPEND ADDONS spell)
-endif()
+fcitx5_get_addon_targets(ADDON_TARGETS iosnotifications engines fcitx5 iosfrontend uipanel)
 
 add_subdirectory(common)
 add_subdirectory(keyboard)
