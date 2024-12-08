@@ -6,8 +6,6 @@
 
 #include <fcitx/inputmethodmanager.h>
 
-FCITX_DEFINE_STATIC_ADDON_REGISTRY(getStaticAddon)
-
 fcitx::IosFrontend *frontend;
 
 void startFcitx(const char *bundlePath, const char *appGroupPath) {

@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.27)
 # Avoid MinSizeRel and RelWithDebInfo.
 set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE STRING INTERNAL FORCE)
 
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/ios.cmake")
+
 project(fcitx5-ios VERSION 0.1.0 LANGUAGES CXX Swift)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 15)
 set(CMAKE_Swift_LANGUAGE_VERSION 5.9)
