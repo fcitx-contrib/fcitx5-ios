@@ -1,18 +1,3 @@
-diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 78ef79b..c4abccd 100644
---- a/src/CMakeLists.txt
-+++ b/src/CMakeLists.txt
-@@ -23,7 +23,9 @@ else()
-     add_definitions(-DFCITX_RIME_NO_DBUS)
- endif()
- 
--add_library(rime MODULE ${RIME_SOURCES})
-+add_library(rime STATIC ${RIME_SOURCES})
-+target_include_directories(rime PRIVATE "${CMAKE_BINARY_DIR}/ipc/include")
-+add_dependencies(rime FcitxIpc)
- target_link_libraries(rime ${RIME_LINK_LIBRARIES})
- install(TARGETS rime DESTINATION "${CMAKE_INSTALL_LIBDIR}/fcitx5")
- fcitx5_translate_desktop_file(rime.conf.in rime.conf)
 diff --git a/src/rimeengine.cpp b/src/rimeengine.cpp
 index b335069..a65a123 100644
 --- a/src/rimeengine.cpp

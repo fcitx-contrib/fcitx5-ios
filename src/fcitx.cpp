@@ -4,6 +4,8 @@
 #include <fcitx/inputmethodmanager.h>
 #include <nlohmann/json.hpp>
 
+FCITX_DEFINE_STATIC_ADDON_REGISTRY(getStaticAddon)
+
 void startFcitx(const char *bundlePath, const char *appGroupPath) {
     if (instance) {
         return;

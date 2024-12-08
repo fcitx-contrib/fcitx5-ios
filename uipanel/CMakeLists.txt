@@ -23,7 +23,7 @@ _swift_generate_cxx_header(
     SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${PROJECT_BINARY_DIR}/protocol/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
 )
 
-add_library(uipanel STATIC uipanel.cpp)
+add_fcitx5_addon(uipanel uipanel.cpp)
 add_dependencies(uipanel KeyboardUI)
 target_link_libraries(uipanel Fcitx5::Core nlohmann_json)
 target_include_directories(uipanel PUBLIC

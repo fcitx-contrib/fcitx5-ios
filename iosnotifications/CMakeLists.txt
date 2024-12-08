@@ -9,12 +9,12 @@ _swift_generate_cxx_header(
     SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-add_library(iosnotifications iosnotifications.cpp)
-add_dependencies(iosnotifications NotifySwift)
-target_include_directories(iosnotifications PUBLIC
+add_fcitx5_addon(notifications iosnotifications.cpp)
+add_dependencies(notifications NotifySwift)
+target_include_directories(notifications PUBLIC
     "${CMAKE_CURRENT_BINARY_DIR}/include"
 )
-target_link_libraries(iosnotifications Fcitx5::Core Fcitx5::Module::Notifications)
+target_link_libraries(notifications Fcitx5::Core Fcitx5::Module::Notifications)
 
 configure_file(notifications.conf.in.in notifications.conf.in @ONLY)
 fcitx5_translate_desktop_file(${CMAKE_CURRENT_BINARY_DIR}/notifications.conf.in notifications.conf)
