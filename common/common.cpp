@@ -7,7 +7,7 @@
 
 namespace fs = std::filesystem;
 
-extern fcitx::StaticAddonRegistry &getStaticAddon();
+FCITX_DEFINE_STATIC_ADDON_REGISTRY(getStaticAddon)
 
 std::unique_ptr<fcitx::Instance> instance;
 std::unique_ptr<fcitx::EventDispatcher> dispatcher;
