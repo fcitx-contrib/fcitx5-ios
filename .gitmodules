@@ -16,3 +16,6 @@
 [submodule "engines/libime"]
 	path = engines/libime
 	url = https://github.com/fcitx/libime
+[submodule "engines/fcitx5-lua"]
+	path = engines/fcitx5-lua
+	url = https://github.com/fcitx/fcitx5-lua
