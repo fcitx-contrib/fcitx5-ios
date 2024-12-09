@@ -23,8 +23,9 @@ git apply --directory=engines/fcitx5-rime patches/rime.patch # if building with 
 ```sh
 cmake -B build -G Xcode \
   -DURL_SCHEME=fcitx \
+  -DCHINESE_ADDONS=ON \
+  -DHALLELUJAH=ON \
   -DRIME=ON \
-  -DCMAKE_TOOLCHAIN_FILE=cmake/ios.cmake \
   -DIOS_PLATFORM=SIMULATOR
 cmake --build build --config Debug
 ```

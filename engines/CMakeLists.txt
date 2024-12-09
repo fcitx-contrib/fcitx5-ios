@@ -1,16 +1,21 @@
 set(DEFAULT_INPUT_METHODS)
 
 if (CHINESE_ADDONS)
-    option(ENABLE_GUI OFF)
-    option(ENABLE_CLOUDPINYIN OFF)
-    option(ENABLE_DATA OFF)
     add_definitions(-DCHINESE_ADDONS)
     set(_Fcitx5Macro_SELF_DIR "${PROJECT_SOURCE_DIR}/fcitx5/src/lib/fcitx-utils")
+
+    option(USE_DLOPEN "" OFF)
+    add_subdirectory(fcitx5-lua)
+
+    option(ENABLE_DATA OFF)
     set(HAS_STD_FILESYSTEM 1)
     set(ENABLE_TOOLS OFF)
     add_subdirectory(libime)
     # suppress configure error
     install(TARGETS kenlm EXPORT LibIMECoreTargets LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib)
+
+    option(ENABLE_GUI OFF)
+    option(ENABLE_CLOUDPINYIN OFF)
     add_subdirectory(fcitx5-chinese-addons)
     list(APPEND DEFAULT_INPUT_METHODS pinyin shuangpin wbx)
 endif()

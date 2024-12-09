@@ -55,12 +55,18 @@ copy_to_keyboard(copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PR
 copy_share_to_keyboard(copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
 
 if (CHINESE_ADDONS)
+    set(LUA_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-lua")
+    copy_to_keyboard(copy "${LUA_BINARY_DIR}/src/addonloader/luaaddonloader.conf" "${ADDON_PREFIX}/luaaddonloader.conf")
+    copy_to_keyboard(copy "${LUA_BINARY_DIR}/src/imeapi/imeapi.conf" "${ADDON_PREFIX}/imeapi.conf")
+    copy_to_keyboard(copy "${PROJECT_SOURCE_DIR}/engines/fcitx5-lua/src/imeapi/imeapi.lua" "share/fcitx5/lua/imeapi/imeapi.lua")
+
     set(CHINESE_ADDONS_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-chinese-addons")
 
-    # Pinyin addon and im
+    # Pinyin addon, im and lua
     copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/im/pinyin/pinyin-addon.conf" "${ADDON_PREFIX}/pinyin.conf")
     copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/im/pinyin/pinyin.conf" "${IM_PREFIX}/pinyin.conf")
     copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/im/pinyin/shuangpin.conf" "${IM_PREFIX}/shuangpin.conf")
+    copy_to_keyboard(copy "${PROJECT_SOURCE_DIR}/engines/fcitx5-chinese-addons/im/pinyin/pinyin.lua" "share/fcitx5/lua/imeapi/extensions/pinyin.lua")
 
     # Table addon, im and dict
     copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/im/table/table.conf" "share/fcitx5/addon/table.conf")
