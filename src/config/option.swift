@@ -38,6 +38,8 @@ func toOptionView(_ data: [String: Any], onUpdate: @escaping (Encodable) -> Void
     return BooleanView(data: data, onUpdate: onUpdate)
   case "Enum":
     return EnumView(data: data, onUpdate: onUpdate)
+  case "Integer":
+    return IntegerView(data: data, onUpdate: onUpdate)
   default:
     return UnknownView()
   }
