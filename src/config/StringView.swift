@@ -16,7 +16,7 @@ struct StringView: View {
   var body: some View {
     HStack {
       Text(description)
-      TextField("", text: $viewModel.value).resettable(viewModel)
+      TextField("", text: $viewModel.value).multilineTextAlignment(.trailing).resettable(viewModel)
     }
   }
 }

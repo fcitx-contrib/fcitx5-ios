@@ -42,6 +42,8 @@ func toOptionView(_ data: [String: Any], onUpdate: @escaping (Encodable) -> Void
     return IntegerView(data: data, onUpdate: onUpdate)
   case "String":
     return StringView(data: data, onUpdate: onUpdate)
+  case "External":
+    return ExternalView(data: data)
   default:
     return UnknownView()
   }

@@ -227,7 +227,7 @@ void setConfig(const char *uri_, const char *value) {
             if (addon) {
                 FCITX_DEBUG() << "Saving addon config to: " << uri;
                 if (subPath.empty()) {
-                    // addon->setConfig(config);
+                    addon->setConfig(config);
                 } else {
                     addon->setSubConfig(subPath, fcitx::RawConfig());
                 }
