@@ -46,6 +46,8 @@ void reload() {
                 instance->reloadAddonConfig(name);
             }
         }
+        // Changing wbx's config needs this to reload table/wbx.conf.
+        instance->inputMethodManager().reset();
         instance->inputMethodManager().load();
     });
 }

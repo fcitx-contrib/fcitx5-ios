@@ -51,6 +51,12 @@ copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/iosnotifications/notifications.conf
 copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "${ADDON_PREFIX}/uipanel.conf")
 
 set(FCITX5_MODULE_BINARY_DIR "${PROJECT_BINARY_DIR}/fcitx5/src/modules")
+
+# quickphrase
+copy_to_keyboard(copy "${FCITX5_MODULE_BINARY_DIR}/quickphrase/quickphrase.conf" "${ADDON_PREFIX}/quickphrase.conf")
+copy_to_keyboard(copy_directory "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/quickphrase/quickphrase.d" "share/fcitx5/data/quickphrase.d")
+
+# spell
 copy_to_keyboard(copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
 copy_share_to_keyboard(copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
 
