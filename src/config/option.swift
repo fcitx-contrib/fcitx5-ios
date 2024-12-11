@@ -41,6 +41,9 @@ func toOptionView(_ data: [String: Any], onUpdate: @escaping (Encodable) -> Void
   case "Integer":
     return IntegerView(data: data, onUpdate: onUpdate)
   case "String":
+    if data["IsEnum"] as? String == "True" {
+      return EnumView(data: data, onUpdate: onUpdate)
+    }
     return StringView(data: data, onUpdate: onUpdate)
   case "External":
     return ExternalView(data: data)
