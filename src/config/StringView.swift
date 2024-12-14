@@ -16,7 +16,9 @@ struct StringView: View, OptionViewProtocol {
           get: { value as! String },
           set: { value = $0 }
         )
-      ).multilineTextAlignment(label.isEmpty ? .leading : .trailing)  // Leading for List item, trailing for String option.
+      )
+      // Leading for List item, trailing for String option.
+      .multilineTextAlignment(label.isEmpty ? .leading : .trailing)
     }
   }
 }
