@@ -73,7 +73,7 @@ func toOptionViewType(_ data: [String: Any]) -> any OptionViewProtocol.Type {
     return EnumView.self
   case "Integer":
     return IntegerView.self
-  case "String":
+  case "String", "Key":
     if data["IsEnum"] as? String == "True" {
       return EnumView.self
     }
@@ -81,6 +81,9 @@ func toOptionViewType(_ data: [String: Any]) -> any OptionViewProtocol.Type {
   case "External":
     return ExternalView.self
   default:
+    if type.starts(with: "List|") {
+      return ListView.self
+    }
     return UnknownView.self
   }
 }

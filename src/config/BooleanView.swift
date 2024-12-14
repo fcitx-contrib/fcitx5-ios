@@ -9,7 +9,7 @@ struct BooleanView: OptionViewProtocol {
     Toggle(
       isOn: Binding<Bool>(
         get: { value as! String == "True" },
-        set: { x in value = x ? "True" : "False" }
+        set: { value = $0 ? "True" : "False" }
       )
     ) {
       Text(label)

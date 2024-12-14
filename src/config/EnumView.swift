@@ -18,7 +18,7 @@ struct EnumView: OptionViewProtocol {
       label,
       selection: Binding<String>(
         get: { value as! String },
-        set: { x in value = x }
+        set: { value = $0 }
       )
     ) {
       ForEach(dataToOptions(data), id: \.0) { pair in
