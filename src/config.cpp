@@ -229,7 +229,7 @@ void setConfig(const char *uri_, const char *value) {
                 if (subPath.empty()) {
                     addon->setConfig(config);
                 } else {
-                    addon->setSubConfig(subPath, fcitx::RawConfig());
+                    addon->setSubConfig(subPath, config);
                 }
             } else {
                 FCITX_ERROR() << "Failed to get addon";

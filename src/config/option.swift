@@ -84,6 +84,9 @@ func toOptionViewType(_ data: [String: Any]) -> any OptionViewProtocol.Type {
     if type.starts(with: "List|") {
       return ListView.self
     }
+    if type.starts(with: "Entries") {
+      return EntryView.self
+    }
     if data["Children"] != nil {
       return GroupView.self
     }

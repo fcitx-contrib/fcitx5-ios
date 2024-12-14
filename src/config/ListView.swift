@@ -44,7 +44,7 @@ struct ListSubView: OptionViewProtocol {
         ForEach(list.indices, id: \.self) { i in
           AnyView(
             optionViewType.init(
-              label: "", data: [:],
+              label: "", data: data,  // List|Entries need this.
               value: Binding<Any>(
                 get: { list[i] },
                 set: {
