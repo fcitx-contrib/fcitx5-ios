@@ -1,6 +1,7 @@
 import SwiftUI
+import SwiftUtil
 
-let numberFormatter: NumberFormatter = {
+private let numberFormatter: NumberFormatter = {
   let formatter = NumberFormatter()
   formatter.numberStyle = .decimal
   formatter.allowsFloats = false
@@ -8,43 +9,40 @@ let numberFormatter: NumberFormatter = {
   return formatter
 }()
 
-struct IntegerView: View {
-  let description: String
-  let minValue: Int?
-  let maxValue: Int?
-  @ObservedObject private var viewModel: OptionViewModel<Int>
+private func transform(_ binding: Binding<Any>) -> Binding<Int> {
+  return Binding<Int>(
+    get: {
+      let value = binding.wrappedValue as! String
+      return value.isEmpty ? 0 : Int(value)!
+    },
+    set: { value in binding.wrappedValue = String(value) }
+  )
+}
 
-  init(data: [String: Any], onUpdate: @escaping (String) -> Void) {
-    description = data["Description"] as! String
-    minValue = Int(data["IntMin"] as? String ?? "")
-    maxValue = Int(data["IntMax"] as? String ?? "")
-    viewModel = OptionViewModel(
-      value: Int(data["Value"] as! String) ?? 0,
-      defaultValue: Int(data["DefaultValue"] as! String) ?? 0,
-      onUpdate: { value in
-        onUpdate(String(value))
-      }
-    )
-  }
+struct IntegerView: OptionViewProtocol {
+  let label: String
+  let data: [String: Any]
+  @Binding var value: Any
 
   var body: some View {
+    let intValue = transform($value)
+    let minValue = Int(data["IntMin"] as? String ?? "")
+    let maxValue = Int(data["IntMax"] as? String ?? "")
     HStack {
-      Text(description)
-      TextField("", value: $viewModel.value, formatter: numberFormatter).resettable(
-        viewModel
-      ).multilineTextAlignment(.trailing)
+      Text(label)
+      TextField("", value: intValue, formatter: numberFormatter).multilineTextAlignment(.trailing)
       if let minValue = minValue, let maxValue = maxValue {
         Stepper(
-          value: $viewModel.value,
+          value: intValue,
           in: minValue...maxValue,
           step: 1
         ) {}
       } else {
         Stepper {
         } onIncrement: {
-          viewModel.value += 1
+          intValue.wrappedValue += 1
         } onDecrement: {
-          viewModel.value -= 1
+          intValue.wrappedValue -= 1
         }
       }
     }

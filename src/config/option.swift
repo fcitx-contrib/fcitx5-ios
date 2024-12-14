@@ -1,15 +1,15 @@
 import SwiftUI
 
-class OptionViewModel<T>: ObservableObject {
-  @Published var value: T {
+class OptionViewModel: ObservableObject {
+  @Published var value: Any {
     didSet {
       onUpdate(value)
     }
   }
-  let defaultValue: T
-  let onUpdate: (T) -> Void
+  let defaultValue: Any
+  let onUpdate: (Any) -> Void
 
-  init(value: T, defaultValue: T, onUpdate: @escaping (T) -> Void) {
+  init(value: Any, defaultValue: Any, onUpdate: @escaping (Any) -> Void) {
     self.value = value
     self.defaultValue = defaultValue
     self.onUpdate = onUpdate
@@ -20,8 +20,40 @@ class OptionViewModel<T>: ObservableObject {
   }
 }
 
+protocol OptionViewProtocol: View {
+  init(label: String, data: [String: Any], value: Binding<Any>)
+}
+
+struct OptionView: View {
+  private let description: String
+  private let data: [String: Any]
+  private let optionViewType: any OptionViewProtocol.Type
+  @ObservedObject private var viewModel: OptionViewModel
+
+  init(data: [String: Any], onUpdate: @escaping (Any) -> Void) {
+    description = data["Description"] as! String
+    self.data = data
+    optionViewType = toOptionViewType(data)
+
+    viewModel = OptionViewModel(
+      value: data["Value"] ?? "",
+      defaultValue: data["DefaultValue"] ?? "",
+      onUpdate: onUpdate
+    )
+  }
+
+  var body: some View {
+    let view = AnyView(optionViewType.init(label: description, data: data, value: $viewModel.value))
+    if optionViewType == ExternalView.self || optionViewType == UnknownView.self {
+      view
+    } else {
+      view.resettable(viewModel)
+    }
+  }
+}
+
 extension View {
-  func resettable<T>(_ viewModel: OptionViewModel<T>) -> some View {
+  func resettable(_ viewModel: OptionViewModel) -> some View {
     self.contextMenu {
       Button {
         viewModel.reset()
@@ -32,22 +64,23 @@ extension View {
   }
 }
 
-func toOptionView(_ data: [String: Any], onUpdate: @escaping (Encodable) -> Void) -> any View {
-  switch data["Type"] as! String {
+func toOptionViewType(_ data: [String: Any]) -> any OptionViewProtocol.Type {
+  let type = data["Type"] as! String
+  switch type {
   case "Boolean":
-    return BooleanView(data: data, onUpdate: onUpdate)
+    return BooleanView.self
   case "Enum":
-    return EnumView(data: data, onUpdate: onUpdate)
+    return EnumView.self
   case "Integer":
-    return IntegerView(data: data, onUpdate: onUpdate)
+    return IntegerView.self
   case "String":
     if data["IsEnum"] as? String == "True" {
-      return EnumView(data: data, onUpdate: onUpdate)
+      return EnumView.self
     }
-    return StringView(data: data, onUpdate: onUpdate)
+    return StringView.self
   case "External":
-    return ExternalView(data: data)
+    return ExternalView.self
   default:
-    return UnknownView()
+    return UnknownView.self
   }
 }

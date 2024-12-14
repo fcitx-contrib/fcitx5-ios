@@ -7,10 +7,9 @@ private func getConfig(_ uri: String) -> [String: Any] {
   return try! JSONSerialization.jsonObject(with: data, options: []) as! [String: Any]
 }
 
-private func setConfig(_ uri: String, _ option: String, _ value: Encodable) {
-  let encodedKey = String(data: try! JSONEncoder().encode(option), encoding: .utf8)!
-  let encodedValue = String(data: try! JSONEncoder().encode(value), encoding: .utf8)!
-  Fcitx.setConfig(uri, "{\(encodedKey): \(encodedValue)}")
+private func setConfig(_ uri: String, _ option: String, _ value: Any) {
+  let data = try! JSONSerialization.data(withJSONObject: [option: value])
+  Fcitx.setConfig(uri, String(data: data, encoding: .utf8)!)
   requestReload()
 }
 
@@ -43,13 +42,12 @@ struct ConfigView: View {
         List {
           ForEach(viewModel.children.indices, id: \.self) { index in
             let child = viewModel.children[index]
-            AnyView(
-              toOptionView(
-                child,
-                onUpdate: { value in
-                  setConfig(uri, child["Option"] as! String, value)
-                  viewModel.refresh(uri)
-                }))
+            OptionView(
+              data: child,
+              onUpdate: { value in
+                setConfig(uri, child["Option"] as! String, value)
+                viewModel.refresh(uri)
+              })
           }
         }
       }
