@@ -1,22 +1,22 @@
 import SwiftUI
 
-struct StringView: View {
-  let description: String
-  @ObservedObject private var viewModel: OptionViewModel<String>
-
-  init(data: [String: Any], onUpdate: @escaping (String) -> Void) {
-    description = data["Description"] as! String
-    viewModel = OptionViewModel(
-      value: data["Value"] as! String,
-      defaultValue: data["DefaultValue"] as! String,
-      onUpdate: onUpdate
-    )
-  }
+struct StringView: View, OptionViewProtocol {
+  let label: String
+  let data: [String: Any]
+  @Binding var value: Any
 
   var body: some View {
     HStack {
-      Text(description)
-      TextField("", text: $viewModel.value).multilineTextAlignment(.trailing).resettable(viewModel)
+      if !label.isEmpty {
+        Text(label)
+      }
+      TextField(
+        "",
+        text: Binding<String>(
+          get: { value as! String },
+          set: { x in value = x }
+        )
+      ).multilineTextAlignment(.trailing)
     }
   }
 }

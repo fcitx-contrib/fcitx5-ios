@@ -1,32 +1,29 @@
 import SwiftUI
-import SwiftUtil
 
-struct EnumView: View {
-  let description: String
-  @ObservedObject private var viewModel: OptionViewModel<String>
-  let options: [(String, String)]
-
-  init(data: [String: Any], onUpdate: @escaping (String) -> Void) {
-    description = data["Description"] as! String
-    let original = data["Enum"] as! [String: String]
-    let translation = data["EnumI18n"] as? [String: String] ?? original
-    options = original.reduce(into: [(String, String)]()) { result, pair in
-      result.append((pair.value, translation[pair.key] ?? pair.value))
-    }
-    viewModel = OptionViewModel(
-      value: data["Value"] as! String,
-      defaultValue: data["DefaultValue"] as! String,
-      onUpdate: { value in
-        onUpdate(value)
-      }
-    )
+private func dataToOptions(_ data: [String: Any]) -> [(String, String)] {
+  let original = data["Enum"] as! [String: String]
+  let translation = data["EnumI18n"] as? [String: String] ?? original
+  return original.reduce(into: [(String, String)]()) { result, pair in
+    result.append((pair.value, translation[pair.key] ?? pair.value))
   }
+}
+
+struct EnumView: OptionViewProtocol {
+  let label: String
+  let data: [String: Any]
+  @Binding var value: Any
 
   var body: some View {
-    Picker(description, selection: $viewModel.value) {
-      ForEach(options, id: \.0) { pair in
+    Picker(
+      label,
+      selection: Binding<String>(
+        get: { value as! String },
+        set: { x in value = x }
+      )
+    ) {
+      ForEach(dataToOptions(data), id: \.0) { pair in
         Text(pair.1).tag(pair.0)
       }
-    }.resettable(viewModel)
+    }
   }
 }

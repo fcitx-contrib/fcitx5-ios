@@ -1,23 +1,18 @@
 import SwiftUI
 
-struct BooleanView: View {
-  let description: String
-  @ObservedObject private var viewModel: OptionViewModel<Bool>
-
-  init(data: [String: Any], onUpdate: @escaping (String) -> Void) {
-    description = data["Description"] as! String
-    viewModel = OptionViewModel(
-      value: data["Value"] as! String == "True",
-      defaultValue: data["DefaultValue"] as! String == "True",
-      onUpdate: { value in
-        onUpdate(value ? "True" : "False")
-      }
-    )
-  }
+struct BooleanView: OptionViewProtocol {
+  let label: String
+  let data: [String: Any]
+  @Binding var value: Any
 
   var body: some View {
-    Toggle(isOn: $viewModel.value) {
-      Text(description)
-    }.resettable(viewModel)
+    Toggle(
+      isOn: Binding<Bool>(
+        get: { value as! String == "True" },
+        set: { x in value = x ? "True" : "False" }
+      )
+    ) {
+      Text(label)
+    }
   }
 }
