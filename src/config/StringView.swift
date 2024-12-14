@@ -14,9 +14,11 @@ struct StringView: View, OptionViewProtocol {
         "",
         text: Binding<String>(
           get: { value as! String },
-          set: { x in value = x }
+          set: { value = $0 }
         )
-      ).multilineTextAlignment(.trailing)
+      )
+      // Leading for List item, trailing for String option.
+      .multilineTextAlignment(label.isEmpty ? .leading : .trailing)
     }
   }
 }
