@@ -46,7 +46,8 @@ struct ConfigView: View {
               data: child,
               onUpdate: { value in
                 setConfig(uri, child["Option"] as! String, value)
-                viewModel.refresh(uri)
+                // Don't call viewModel.refresh here because view may be in a temporary invalid state,
+                // e.g. having removed key of punctuation map but not put anything yet.
               })
           }
         }

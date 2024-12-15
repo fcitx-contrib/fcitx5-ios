@@ -14,6 +14,7 @@ private func serialize(_ value: [Any]) -> [String: Any] {
 }
 
 private struct ListSectionHeader: View {
+  let children: Any?
   @Binding var value: Any
 
   var body: some View {
@@ -21,7 +22,14 @@ private struct ListSectionHeader: View {
       Spacer()
       Button {
         var list = deserialize(value)
-        list.append("")
+        if let children = children as? [[String: Any]] {
+          list.append(
+            children.reduce(into: [:]) { result, child in
+              result[child["Option"] as! String] = child["DefaultValue"] ?? ""
+            } as NSDictionary)
+        } else {
+          list.append("")
+        }
         value = serialize(list)
       } label: {
         Image(systemName: "plus")
@@ -40,7 +48,7 @@ struct ListSubView: OptionViewProtocol {
     let optionViewType = toOptionViewType(["Type": String(type.suffix(type.count - "List|".count))])
     var list = deserialize(value)
     List {
-      Section(header: ListSectionHeader(value: $value)) {
+      Section(header: ListSectionHeader(children: data["Children"], value: $value)) {
         ForEach(list.indices, id: \.self) { i in
           AnyView(
             optionViewType.init(

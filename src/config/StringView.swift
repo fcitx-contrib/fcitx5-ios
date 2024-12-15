@@ -14,7 +14,12 @@ struct StringView: View, OptionViewProtocol {
         "",
         text: Binding<String>(
           get: { value as! String },
-          set: { value = $0 }
+          set: {
+            // Avoid unnecessary write.
+            if value as! String != $0 {
+              value = $0
+            }
+          }
         )
       )
       // Leading for List item, trailing for String option.
