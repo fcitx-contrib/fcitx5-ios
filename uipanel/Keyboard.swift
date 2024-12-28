@@ -36,6 +36,13 @@ class Keyboard: UIStackView {
       rowStackView.spacing = 5
 
       for key in row {
+        // TODO(Inoki): find a better way to handle special keys
+        if key == "⌫" {
+          let button = Key(client, key, BackspaceKeyAction())
+          rowStackView.addArrangedSubview(button)
+          continue
+        }
+
         let button = Key(client, key, AlphabetKeyAction(key: key))
         rowStackView.addArrangedSubview(button)
       }

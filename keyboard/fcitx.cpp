@@ -28,8 +28,14 @@ void focusOut() {
 }
 
 bool processKey(const char *key) {
-    return with_fcitx(
-        [key] { return frontend->keyEvent(fcitx::Key{key}, false); });
+    return with_fcitx([key] {
+        // Handle backspace.
+        if (strcmp(key, "Backspace") == 0) {
+            return frontend->keyEvent(fcitx::Key{fcitx::KeySym::FcitxKey_BackSpace},
+                                        false);
+        }
+        return frontend->keyEvent(fcitx::Key{key}, false);
+    });
 }
 
 void reload() {

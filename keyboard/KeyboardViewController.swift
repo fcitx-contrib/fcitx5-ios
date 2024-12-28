@@ -94,8 +94,24 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   public func keyPressed(_ key: String) {
-    if !processKey(key) {
+    var finalKey = key
+    // Handle special keys
+    if key == "⌫" {
+      // backspace
+      processBackspace()
+      return
+    }
+
+    // Handle normal keys
+    if !processKey(finalKey) {
       textDocumentProxy.insertText(key)
+    }
+  }
+
+  private func processBackspace() {
+    if !processKey("Backspace") {
+      // Fallback to the default behavior
+      textDocumentProxy.deleteBackward()
     }
   }
 

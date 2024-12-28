@@ -21,3 +21,11 @@ class AlphabetKeyAction: KeyAction {
         })
     }
 }
+
+class BackspaceKeyAction: KeyAction {
+    init() {
+        super.init(key: "Backspace", action: { client in
+            client.keyPressed("⌫")
+        })
+    }
+}
