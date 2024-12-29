@@ -64,3 +64,15 @@ class BackspaceKeyAction: SymbolKeyAction {
     super.init(symbol: "BackSpace", label: "⌫")
   }
 }
+
+class InternalStateKeyAction: KeyAction {
+  init(label: String, action: @escaping (_ client: FcitxProtocol) -> Void) {
+    super.init(
+      key: label,
+      capsKey: label,
+      label: label,
+      capsLabel: label,
+      action: action
+    )
+  }
+}
