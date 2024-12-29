@@ -25,7 +25,8 @@ class AlphabetKeyAction: KeyAction {
 class BackspaceKeyAction: KeyAction {
     init() {
         super.init(key: "Backspace", action: { client in
-            client.keyPressed("⌫")
+            // Use the symbol name of keyNameList in `fcitx5/src/lib/fcitx-utils/keynametable.h`
+            client.keyPressed("BackSpace")
         })
     }
 }

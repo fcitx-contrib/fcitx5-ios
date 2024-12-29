@@ -96,20 +96,20 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   public func keyPressed(_ key: String) {
     var finalKey = key
     // Handle special keys
-    if key == "⌫" {
+    if key == "BackSpace" {
       // backspace
       processBackspace()
       return
     }
 
-    // Handle normal keys
+    // Handle normal keys and other symbols
     if !processKey(finalKey) {
       textDocumentProxy.insertText(key)
     }
   }
 
   private func processBackspace() {
-    if !processKey("Backspace") {
+    if !processKey("BackSpace") {
       // Fallback to the default behavior
       textDocumentProxy.deleteBackward()
     }
