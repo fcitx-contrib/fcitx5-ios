@@ -1,0 +1,1 @@
+../../../fcitx5/src/modules/clipboard/clipboard_public.h

@@ -17,6 +17,7 @@ IOS_PLATFORM=SIMULATOR ./scripts/install-deps.sh
 git apply --directory=fcitx5 patches/fcitx5.patch
 git apply --directory=engines/libime/src/libime/core/kenlm patches/kenlm.patch
 git apply --directory=engines/fcitx5-rime patches/rime.patch # if building with Rime
+git clone https://github.com/google/mozc engines/fcitx5-mozc/mozc --depth=1 --recurse-submodules # if building with Mozc
 ```
 
 ### Build with CMake

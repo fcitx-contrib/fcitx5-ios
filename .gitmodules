@@ -19,3 +19,6 @@
 [submodule "engines/fcitx5-lua"]
 	path = engines/fcitx5-lua
 	url = https://github.com/fcitx/fcitx5-lua
+[submodule "engines/fcitx5-mozc"]
+	path = engines/fcitx5-mozc
+	url = https://github.com/fcitx-contrib/fcitx5-mozc
