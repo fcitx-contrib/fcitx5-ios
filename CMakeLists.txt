@@ -84,6 +84,7 @@ add_subdirectory(ipc)
 
 option(CHINESE_ADDONS "" ON)
 option(HALLELUJAH "" OFF)
+option(MOZC "" OFF)
 option(RIME "" OFF)
 
 function(copy_to_keyboard cmd file relative_path)

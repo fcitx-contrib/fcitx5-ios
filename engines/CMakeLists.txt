@@ -39,6 +39,22 @@ if (HALLELUJAH)
     list(APPEND DEFAULT_INPUT_METHODS hallelujah)
 endif()
 
+if (MOZC)
+    set(MOZC_TARGET
+        "-L${PREBUILDER_LIB_DIR}"
+        "-lmozc-static"
+        "-lutf8_validity"
+        "-lprotobuf"
+        "-labsl"
+    )
+    add_subdirectory(fcitx5-mozc)
+    target_include_directories(mozc PRIVATE
+        "${PREBUILDER_INCLUDE_DIR}/mozc"
+        "${PROJECT_SOURCE_DIR}/include"
+    )
+    list(APPEND DEFAULT_INPUT_METHODS mozc)
+endif()
+
 if (RIME)
     # RIME_DATA_DIR is not actually used but must exist.
     set(RIME_DATA_DIR "/usr/share/rime-data")

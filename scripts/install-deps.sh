@@ -5,6 +5,7 @@ deps=(
   json-c
   leveldb
   libintl
+  libmozc
   librime
   libuv
   lua

@@ -113,6 +113,12 @@ if (HALLELUJAH)
     copy_to_keyboard(copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah.conf" "${IM_PREFIX}/hallelujah.conf")
 endif()
 
+if (MOZC)
+    set(MOZC_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-mozc")
+    copy_to_keyboard(copy "${MOZC_BINARY_DIR}/src/unix/fcitx5/mozc-addon.conf" "${ADDON_PREFIX}/mozc.conf")
+    copy_to_keyboard(copy "${PROJECT_SOURCE_DIR}/engines/fcitx5-mozc/src/unix/fcitx5/mozc.conf" "${IM_PREFIX}/mozc.conf")
+endif()
+
 if (RIME)
     set(RIME_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-rime")
     copy_to_keyboard(copy "${RIME_BINARY_DIR}/src/rime-addon.conf" "${ADDON_PREFIX}/rime.conf")
