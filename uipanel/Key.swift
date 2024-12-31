@@ -3,9 +3,11 @@ import UIKit
 
 class Key: UIButton {
   let client: FcitxProtocol
+  let action: KeyAction
 
-  init(_ client: FcitxProtocol, _ label: String) {
+  init(_ client: FcitxProtocol, _ label: String, _ action: KeyAction) {
     self.client = client
+    self.action = action
     super.init(frame: .zero)
     setTitle(label, for: .normal)
     titleLabel?.font = UIFont.systemFont(ofSize: 24)
@@ -22,6 +24,6 @@ class Key: UIButton {
     guard let currentTitle = sender.currentTitle else {
       return
     }
-    client.keyPressed(currentTitle)
+    self.action.perform(self.client)
   }
 }
