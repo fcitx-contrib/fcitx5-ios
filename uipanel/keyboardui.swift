@@ -38,8 +38,10 @@ public func showKeyboardAsync(_ clientPtr: UnsafeMutableRawPointer) {
   guard let client = client as? FcitxProtocol else {
     return
   }
-  DispatchQueue.main.async {
-    setupMainLayout(client)
+  if keyboardView == nil {
+    DispatchQueue.main.async {
+      setupMainLayout(client)
+    }
   }
 }
 
