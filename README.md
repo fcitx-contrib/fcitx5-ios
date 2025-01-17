@@ -26,6 +26,7 @@ cmake -B build -G Xcode \
   -DURL_SCHEME=fcitx \
   -DCHINESE_ADDONS=ON \
   -DHALLELUJAH=ON \
+  -DMOZC=ON \
   -DRIME=ON \
   -DIOS_PLATFORM=SIMULATOR
 cmake --build build --config Debug

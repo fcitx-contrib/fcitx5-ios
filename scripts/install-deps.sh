@@ -42,6 +42,6 @@ plugins=(
 
 for plugin in "${plugins[@]}"; do
   file=$plugin-any.tar.bz2
-  [[ -f cache/$file ]] || wget -P cache https://github.com/fcitx-contrib/fcitx5-macos-plugins/releases/download/latest/$file
+  [[ -f cache/$file ]] || wget -P cache https://github.com/fcitx-contrib/fcitx5-plugins/releases/download/macos/$file
   tar xjvf cache/$file -C $EXTRACT_DIR
 done
