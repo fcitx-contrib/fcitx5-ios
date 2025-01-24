@@ -4,10 +4,8 @@ import SwiftUtil
 import UIKit
 
 class KeyboardViewController: UIInputViewController, FcitxProtocol {
-
-  @IBOutlet var nextKeyboardButton: UIButton!
-
   var mainStackView: UIStackView!
+  var id: UInt64!
 
   override func updateViewConstraints() {
     super.updateViewConstraints()
@@ -16,6 +14,8 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   override func viewDidLoad() {
+    id = UInt64(Int(bitPattern: Unmanaged.passUnretained(self).toOpaque()))
+    logger.info("viewDidLoad \(self.id)")
     super.viewDidLoad()
 
     mainStackView = UIStackView()
@@ -35,25 +35,10 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
     initProfile()
     startFcitx(Bundle.main.bundlePath, appGroup.path)
-
-    // Perform custom UI setup here
-    self.nextKeyboardButton = UIButton(type: .system)
-
-    self.nextKeyboardButton.setTitle(
-      NSLocalizedString("Next Keyboard", comment: "Title for 'Next Keyboard' button"), for: [])
-    self.nextKeyboardButton.sizeToFit()
-    self.nextKeyboardButton.translatesAutoresizingMaskIntoConstraints = false
-
-    self.nextKeyboardButton.addTarget(
-      self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
-
-    self.view.addSubview(self.nextKeyboardButton)
-
-    self.nextKeyboardButton.leftAnchor.constraint(equalTo: self.view.leftAnchor).isActive = true
-    self.nextKeyboardButton.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
   }
 
   override func viewWillAppear(_ animated: Bool) {
+    logger.info("viewWillAppear \(self.id)")
     super.viewWillAppear(animated)
     if removeFile(appGroupTmp.appendingPathComponent("reload")) {
       logger.info("Reload accepted")
@@ -63,12 +48,13 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   override func viewWillDisappear(_ animated: Bool) {
+    logger.info("viewWillDisappear \(self.id)")
     super.viewWillDisappear(animated)
     focusOut()
   }
 
   override func viewWillLayoutSubviews() {
-    self.nextKeyboardButton.isHidden = !self.needsInputModeSwitchKey
+    logger.info("viewWillLayoutSubviews \(self.id)")
     super.viewWillLayoutSubviews()
   }
 
@@ -78,15 +64,6 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   override func textDidChange(_ textInput: UITextInput?) {
     // The app has just changed the document's contents, the document context has been updated.
-
-    var textColor: UIColor
-    let proxy = self.textDocumentProxy
-    if proxy.keyboardAppearance == UIKeyboardAppearance.dark {
-      textColor = UIColor.white
-    } else {
-      textColor = UIColor.black
-    }
-    self.nextKeyboardButton.setTitleColor(textColor, for: [])
   }
 
   public func getView() -> UIStackView {
