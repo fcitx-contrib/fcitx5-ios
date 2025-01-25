@@ -1,11 +1,13 @@
 import Fcitx
 import FcitxProtocol
+import KeyboardUI
+import SwiftUI
 import SwiftUtil
 import UIKit
 
 class KeyboardViewController: UIInputViewController, FcitxProtocol {
-  var mainStackView: UIStackView!
   var id: UInt64!
+  var hostingController: UIHostingController<VirtualKeyboardView>!
 
   override func updateViewConstraints() {
     super.updateViewConstraints()
@@ -17,24 +19,23 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     id = UInt64(Int(bitPattern: Unmanaged.passUnretained(self).toOpaque()))
     logger.info("viewDidLoad \(self.id)")
     super.viewDidLoad()
-
-    mainStackView = UIStackView()
-    mainStackView.axis = .vertical
-    mainStackView.alignment = .fill
-
-    mainStackView.translatesAutoresizingMaskIntoConstraints = false
-    view.addSubview(mainStackView)
-
-    // fill parent with no padding
-    NSLayoutConstraint.activate([
-      mainStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0),
-      mainStackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0),
-      mainStackView.topAnchor.constraint(equalTo: view.topAnchor, constant: 0),
-      mainStackView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0),
-    ])
-
     initProfile()
     startFcitx(Bundle.main.bundlePath, appGroup.path)
+
+    hostingController = UIHostingController(rootView: virtualKeyboardView)
+    addChild(hostingController)
+
+    hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+    view.addSubview(hostingController.view)
+
+    NSLayoutConstraint.activate([
+      hostingController.view.topAnchor.constraint(equalTo: view.topAnchor),
+      hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+      hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+    ])
+
+    hostingController.didMove(toParent: self)
   }
 
   override func viewWillAppear(_ animated: Bool) {
@@ -53,6 +54,14 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     focusOut()
   }
 
+  deinit {
+    logger.info("deinit \(self.id)")
+    hostingController.willMove(toParent: nil)
+    hostingController.view.removeFromSuperview()
+    hostingController.removeFromParent()
+    hostingController = nil
+  }
+
   override func viewWillLayoutSubviews() {
     logger.info("viewWillLayoutSubviews \(self.id)")
     super.viewWillLayoutSubviews()
@@ -64,10 +73,6 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   override func textDidChange(_ textInput: UITextInput?) {
     // The app has just changed the document's contents, the document context has been updated.
-  }
-
-  public func getView() -> UIStackView {
-    return mainStackView
   }
 
   public func keyPressed(_ key: String) {

@@ -1,14 +1,11 @@
 import SwiftUI
 import UIPanel
 
-private class ViewModel: ObservableObject {
-  @Published var actions = [StatusAreaAction]()
-}
-
 private let circleDiameter: CGFloat = 60
 
-struct StatusArea: View {
-  @ObservedObject private var viewModel = ViewModel()
+struct StatusAreaView: View {
+  @Binding var actions: [StatusAreaAction]
+
   private let columns = [
     GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()),
   ]
@@ -17,7 +14,7 @@ struct StatusArea: View {
     VStack {
       HStack {
         Button {
-          toggleStatusArea(false)
+          virtualKeyboardView.setDisplayMode(.initial)
         } label: {
           Image(systemName: "arrow.backward")
             .frame(width: barHeight, height: barHeight)
@@ -26,7 +23,7 @@ struct StatusArea: View {
       }
       ScrollView {
         LazyVGrid(columns: columns) {
-          ForEach(viewModel.actions) { action in
+          ForEach(actions) { action in
             if action.children.isEmpty {
               Button {
                 activateStatusAreaAction(action.id)
@@ -73,10 +70,6 @@ struct StatusArea: View {
           }
         }
       }
-    }
-  }
-
-  func setActions(_ actions: [StatusAreaAction]) {
-    viewModel.actions = actions
+    }.frame(height: barHeight + keyboardHeight)
   }
 }

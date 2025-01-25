@@ -1,9 +1,6 @@
-import FcitxProtocol
-import UIKit
+import SwiftUI
 
-class Keyboard: UIStackView {
-  let client: FcitxProtocol
-
+struct KeyboardView: View {
   let keys: [[String]] = [
     ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
     ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
@@ -12,34 +9,15 @@ class Keyboard: UIStackView {
     [",", " ", "."],
   ]
 
-  init(_ client: FcitxProtocol) {
-    self.client = client
-    super.init(frame: .zero)
-    setupKeyboardLayout()
-  }
-
-  required init(coder: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
-  }
-
-  private func setupKeyboardLayout() {
-    axis = .vertical
-    distribution = .fillEqually
-    alignment = .fill
-    spacing = 5
-
-    for row in keys {
-      let rowStackView = UIStackView()
-      rowStackView.axis = .horizontal
-      rowStackView.distribution = .fillEqually
-      rowStackView.alignment = .fill
-      rowStackView.spacing = 5
-
-      for key in row {
-        let button = Key(client, key)
-        rowStackView.addArrangedSubview(button)
+  var body: some View {
+    VStack(spacing: 8) {
+      ForEach(keys, id: \.self) { row in
+        HStack(spacing: 6) {
+          ForEach(row, id: \.self) { key in
+            KeyView(label: key)
+          }
+        }
       }
-      addArrangedSubview(rowStackView)
-    }
+    }.frame(height: keyboardHeight)
   }
 }

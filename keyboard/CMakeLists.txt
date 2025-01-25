@@ -14,6 +14,7 @@ target_include_directories(keyboard PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_BINARY_DIR}/../fcitx5"
     "${PROJECT_BINARY_DIR}/common/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
+    "${PROJECT_BINARY_DIR}/uipanel/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
 )
 
 target_compile_options(keyboard PUBLIC
