@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct Toolbar: View {
+struct ToolbarView: View {
   var body: some View {
     HStack {
       Button {
@@ -9,7 +9,7 @@ struct Toolbar: View {
           .frame(width: barHeight, height: barHeight)
       }.background(lightBackground)
       Button {
-        toggleStatusArea(true)
+        virtualKeyboardView.setDisplayMode(.statusArea)
       } label: {
         Image(systemName: "ellipsis")
           .frame(width: barHeight, height: barHeight)

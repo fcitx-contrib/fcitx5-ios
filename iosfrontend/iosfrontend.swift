@@ -1,5 +1,5 @@
 import FcitxProtocol
-import UIKit
+import Foundation
 
 public func commitStringAsync(_ clientPtr: UnsafeMutableRawPointer, _ commit: String) {
   let client: AnyObject = Unmanaged.fromOpaque(clientPtr).takeUnretainedValue()

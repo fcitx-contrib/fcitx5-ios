@@ -1,27 +1,20 @@
-import FcitxProtocol
-import UIKit
+import SwiftUI
 
-class Key: UIButton {
-  let client: FcitxProtocol
+struct KeyView: View {
+  let label: String
 
-  init(_ client: FcitxProtocol, _ label: String) {
-    self.client = client
-    super.init(frame: .zero)
-    setTitle(label, for: .normal)
-    titleLabel?.font = UIFont.systemFont(ofSize: 24)
-    backgroundColor = UIColor.gray.withAlphaComponent(0.2)
-    layer.cornerRadius = 8
-    addTarget(self, action: #selector(keyPressed(_:)), for: .touchUpInside)
-  }
-
-  required init?(coder: NSCoder) {
-    fatalError("init(coder:) has not been implemented")
-  }
-
-  @objc private func keyPressed(_ sender: UIButton) {
-    guard let currentTitle = sender.currentTitle else {
-      return
+  var body: some View {
+    Button {
+      virtualKeyboardView.keyPressed(label)
+    } label: {
+      Text(label)
+        .frame(width: label == " " ? 100 : 35, height: 40)
+        .background(Color.white)
+        .cornerRadius(5)
+        .overlay(
+          RoundedRectangle(cornerRadius: 5)
+            .stroke(Color.gray, lineWidth: 1)
+        )
     }
-    client.keyPressed(currentTitle)
   }
 }
