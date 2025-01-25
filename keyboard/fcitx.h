@@ -4,6 +4,6 @@
 
 void startFcitx(const char *bundlePath, const char *appGroupPath);
 void focusIn(id client);
-void focusOut();
+void focusOut(id client);
 bool processKey(const char *key);
 void reload();

@@ -23,8 +23,8 @@ void focusIn(id client) {
     return with_fcitx([client] { frontend->focusIn(client); });
 }
 
-void focusOut() {
-    return with_fcitx([] { frontend->focusOut(); });
+void focusOut(id client) {
+    return with_fcitx([client] { frontend->focusOut(client); });
 }
 
 bool processKey(const char *key) {

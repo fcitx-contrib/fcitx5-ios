@@ -45,13 +45,14 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       logger.info("Reload accepted")
       reload()
     }
+    virtualKeyboardView.setDisplayMode(.initial)
     focusIn(self)
   }
 
   override func viewWillDisappear(_ animated: Bool) {
     logger.info("viewWillDisappear \(self.id)")
     super.viewWillDisappear(animated)
-    focusOut()
+    focusOut(self)
   }
 
   deinit {

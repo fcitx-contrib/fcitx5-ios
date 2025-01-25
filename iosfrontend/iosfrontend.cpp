@@ -24,7 +24,12 @@ void IosFrontend::focusIn(id client) {
     ic_->focusIn();
 }
 
-void IosFrontend::focusOut() {
+void IosFrontend::focusOut(id client) {
+    // Old viewWillDisappear may be called after new viewWillAppear (if
+    // switching apps) so don't always reset.
+    if (client != ic_->getClient()) {
+        return;
+    }
     ic_->focusOut();
     // Extracting client from nil crashes on Swift, so it has to be put after
     // ic_->focusOut, although commit on focus out doesn't work on iOS (even if

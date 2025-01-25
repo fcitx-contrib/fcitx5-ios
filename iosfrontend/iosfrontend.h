@@ -25,7 +25,7 @@ class IosFrontend : public AddonInstance {
     void createInputContext();
     bool keyEvent(const Key &key, bool isRelease);
     void focusIn(id client);
-    void focusOut();
+    void focusOut(id client);
 
   private:
     Instance *instance_;
