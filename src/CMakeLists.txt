@@ -5,6 +5,7 @@ add_executable(
     MACOSX_BUNDLE
     ContentView.swift
     InputMethodsView.swift
+    AddonConfigView.swift
     ConfigView.swift
     App.swift
     AppDelegate.swift
@@ -59,6 +60,9 @@ copy_to_keyboard(copy_directory "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/quickp
 # spell
 copy_to_keyboard(copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
 copy_share_to_keyboard(copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
+
+# unicode
+copy_to_keyboard(copy "${FCITX5_MODULE_BINARY_DIR}/unicode/unicode.conf" "${ADDON_PREFIX}/unicode.conf")
 
 if (CHINESE_ADDONS)
     set(LUA_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-lua")

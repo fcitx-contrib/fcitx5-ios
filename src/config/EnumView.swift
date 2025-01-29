@@ -20,7 +20,10 @@ struct EnumView: OptionViewProtocol {
         Text(pair.1).tag(pair.0)
       }
     }.onChange(of: selection) {
-      value = selection
+      // Avoid rerender, which is dead loop for spell addon.
+      if value as! String != selection {
+        value = selection
+      }
     }
     .onAppear {
       selection = value as! String

@@ -209,6 +209,21 @@ parseAddonUri(const std::string &uri) {
         return {addon.substr(0, pos), addon.substr(pos + 1)};
     }
 }
+
+std::string getAddons() {
+    auto addons = nlohmann::json::array();
+    auto names = instance->addonManager().addonNames(AddonCategory::Module);
+    for (const auto &name : names) {
+        const auto *info = instance->addonManager().addonInfo(name);
+        if (!info || !info->isConfigurable()) {
+            continue;
+        }
+        addons.push_back(nlohmann::json{{"id", info->uniqueName()},
+                                        {"name", info->name().match()},
+                                        {"comment", info->comment().match()}});
+    }
+    return addons.dump();
+}
 } // namespace fcitx
 
 std::string getConfig(const char *uri_) {
@@ -253,4 +268,8 @@ void setConfig(const char *uri_, const char *value) {
             }
         }
     });
+}
+
+std::string getAddons() {
+    return with_fcitx([] { return fcitx::getAddons(); });
 }

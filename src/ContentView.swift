@@ -84,6 +84,11 @@ struct ContentView: View {
           ) {
             Text("Global Config")
           }
+          NavigationLink(
+            destination: AddonConfigView()
+          ) {
+            Text("Addon Config")
+          }
         }
       }
       .navigationTitle("Fcitx5")
