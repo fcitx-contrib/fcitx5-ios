@@ -12,18 +12,18 @@ struct EnumView: OptionViewProtocol {
   let label: String
   let data: [String: Any]
   @Binding var value: Any
+  @State private var selection: String = ""
 
   var body: some View {
-    Picker(
-      label,
-      selection: Binding<String>(
-        get: { value as! String },
-        set: { value = $0 }
-      )
-    ) {
+    Picker(label, selection: $selection) {
       ForEach(dataToOptions(data), id: \.0) { pair in
         Text(pair.1).tag(pair.0)
       }
+    }.onChange(of: selection) {
+      value = selection
+    }
+    .onAppear {
+      selection = value as! String
     }
   }
 }
