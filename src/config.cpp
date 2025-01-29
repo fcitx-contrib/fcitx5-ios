@@ -220,8 +220,15 @@ void setConfig(const char *uri_, const char *value) {
     std::string uri = uri_;
     auto config = fcitx::jsonToRawConfig(nlohmann::json::parse(value));
     FCITX_DEBUG() << "setConfig " << uri;
-    if (fcitx::stringutils::startsWith(uri, fcitx::addonConfigPrefix)) {
-        dispatcher->schedule([=] {
+    dispatcher->schedule([=] {
+        if (uri == fcitx::globalConfigPath) {
+            auto &gc = instance->globalConfig();
+            gc.load(config, true);
+            if (gc.safeSave()) {
+                instance->reloadConfig();
+            }
+        } else if (fcitx::stringutils::startsWith(uri,
+                                                  fcitx::addonConfigPrefix)) {
             auto [addonName, subPath] = fcitx::parseAddonUri(uri);
             auto *addon = instance->addonManager().addon(addonName, true);
             if (addon) {
@@ -234,9 +241,7 @@ void setConfig(const char *uri_, const char *value) {
             } else {
                 FCITX_ERROR() << "Failed to get addon";
             }
-        });
-    } else if (fcitx::stringutils::startsWith(uri, fcitx::imConfigPrefix)) {
-        dispatcher->schedule([=] {
+        } else if (fcitx::stringutils::startsWith(uri, fcitx::imConfigPrefix)) {
             auto im = uri.substr(sizeof(fcitx::imConfigPrefix) - 1);
             const auto *entry = instance->inputMethodManager().entry(im);
             auto *engine = instance->inputMethodEngine(im);
@@ -246,6 +251,6 @@ void setConfig(const char *uri_, const char *value) {
             } else {
                 FCITX_ERROR() << "Failed to get input method";
             }
-        });
-    }
+        }
+    });
 }

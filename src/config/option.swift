@@ -30,10 +30,10 @@ struct OptionView: View {
   private let optionViewType: any OptionViewProtocol.Type
   @ObservedObject private var viewModel: OptionViewModel
 
-  init(data: [String: Any], onUpdate: @escaping (Any) -> Void) {
+  init(data: [String: Any], onUpdate: @escaping (Any) -> Void, expandGroup: Bool = false) {
     description = data["Description"] as! String
     self.data = data
-    optionViewType = toOptionViewType(data)
+    optionViewType = toOptionViewType(data, expandGroup: expandGroup)
 
     viewModel = OptionViewModel(
       value: data["Value"] ?? "",
@@ -64,7 +64,9 @@ extension View {
   }
 }
 
-func toOptionViewType(_ data: [String: Any]) -> any OptionViewProtocol.Type {
+func toOptionViewType(_ data: [String: Any], expandGroup: Bool = false)
+  -> any OptionViewProtocol.Type
+{
   let type = data["Type"] as! String
   switch type {
   case "Boolean":
@@ -88,7 +90,8 @@ func toOptionViewType(_ data: [String: Any]) -> any OptionViewProtocol.Type {
       return EntryView.self
     }
     if data["Children"] != nil {
-      return GroupView.self
+      // Expand: global config, link: fuzzy pinyin.
+      return expandGroup ? GroupView.self : GroupLinkView.self
     }
     return UnknownView.self
   }

@@ -2,6 +2,8 @@ import Fcitx
 import FcitxIpc
 import SwiftUI
 
+let globalConfigUri = "fcitx://config/global"
+
 private func getConfig(_ uri: String) -> [String: Any] {
   let data = String(Fcitx.getConfig(uri)).data(using: .utf8)!
   return try! JSONSerialization.jsonObject(with: data, options: []) as! [String: Any]
@@ -20,7 +22,8 @@ private class ViewModel: ObservableObject {
   func refresh(_ uri: String) {
     let dict = getConfig(uri)
     if let children = dict["Children"] as? [[String: Any]] {
-      self.children = children
+      // For global config, Behavior should appear before Hotkey.
+      self.children = uri == globalConfigUri ? children.reversed() : children
       self.error = nil
     } else {
       self.error = dict["ERROR"] as? String
@@ -40,15 +43,15 @@ struct ConfigView: View {
         Text(error)
       } else {
         List {
-          ForEach(viewModel.children.indices, id: \.self) { index in
-            let child = viewModel.children[index]
+          ForEach(Array(viewModel.children.enumerated()), id: \.offset) { _, child in
             OptionView(
               data: child,
               onUpdate: { value in
                 setConfig(uri, child["Option"] as! String, value)
                 // Don't call viewModel.refresh here because view may be in a temporary invalid state,
                 // e.g. having removed key of punctuation map but not put anything yet.
-              })
+              },
+              expandGroup: uri == globalConfigUri)
           }
         }
       }

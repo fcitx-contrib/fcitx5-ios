@@ -76,6 +76,15 @@ struct ContentView: View {
             forEach
           }
         }
+        Section {
+          NavigationLink(
+            destination: ConfigView(
+              title: "Global Config",
+              uri: globalConfigUri)
+          ) {
+            Text("Global Config")
+          }
+        }
       }
       .navigationTitle("Fcitx5")
     }
