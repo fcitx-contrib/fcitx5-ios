@@ -3,7 +3,8 @@ import SwiftUI
 struct UnknownView: OptionViewProtocol {
   let label: String
   let data: [String: Any]
-  @Binding var value: Any
+  let value: Any
+  let onUpdate: (Any) -> Void
 
   var body: some View {
     Text(label)

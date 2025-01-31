@@ -2,7 +2,8 @@ import SwiftUI
 
 struct GroupSubView: View {
   let data: [String: Any]
-  @Binding var value: Any
+  let value: Any
+  let onUpdate: (Any) -> Void
 
   var body: some View {
     let children = data["Children"] as! [[String: Any]]
@@ -12,7 +13,7 @@ struct GroupSubView: View {
         onUpdate: {
           var v = value as! [String: Any]
           v[children[i]["Option"] as! String] = $0
-          value = v
+          onUpdate(v)
         })
     }
   }
@@ -21,11 +22,12 @@ struct GroupSubView: View {
 struct GroupView: OptionViewProtocol {
   let label: String
   let data: [String: Any]
-  @Binding var value: Any
+  let value: Any
+  let onUpdate: (Any) -> Void
 
   var body: some View {
     Section(header: Text(label).textCase(nil)) {
-      GroupSubView(data: data, value: $value)
+      GroupSubView(data: data, value: value, onUpdate: onUpdate)
     }
   }
 }
@@ -33,12 +35,13 @@ struct GroupView: OptionViewProtocol {
 struct GroupLinkView: OptionViewProtocol {
   let label: String
   let data: [String: Any]
-  @Binding var value: Any
+  let value: Any
+  let onUpdate: (Any) -> Void
 
   var body: some View {
     NavigationLink(
       destination: List {
-        GroupSubView(data: data, value: $value)
+        GroupSubView(data: data, value: value, onUpdate: onUpdate)
       }.navigationTitle(label)
     ) {
       Text(label)

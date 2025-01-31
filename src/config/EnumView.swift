@@ -11,7 +11,8 @@ private func dataToOptions(_ data: [String: Any]) -> [(String, String)] {
 struct EnumView: OptionViewProtocol {
   let label: String
   let data: [String: Any]
-  @Binding var value: Any
+  let value: Any
+  let onUpdate: (Any) -> Void
   @State private var selection: String = ""
 
   var body: some View {
@@ -22,11 +23,17 @@ struct EnumView: OptionViewProtocol {
     }.onChange(of: selection) {
       // Avoid rerender, which is dead loop for spell addon.
       if value as! String != selection {
-        value = selection
+        onUpdate(selection)
       }
     }
     .onAppear {
       selection = value as! String
+    }.contextMenu {
+      Button {
+        selection = data["DefaultValue"] as! String
+      } label: {
+        Text("Reset")
+      }
     }
   }
 }

@@ -1,66 +1,25 @@
 import SwiftUI
 
-class OptionViewModel: ObservableObject {
-  @Published var value: Any {
-    didSet {
-      onUpdate(value)
-    }
-  }
-  let defaultValue: Any
-  let onUpdate: (Any) -> Void
-
-  init(value: Any, defaultValue: Any, onUpdate: @escaping (Any) -> Void) {
-    self.value = value
-    self.defaultValue = defaultValue
-    self.onUpdate = onUpdate
-  }
-
-  func reset() {
-    value = defaultValue
-  }
-}
-
 protocol OptionViewProtocol: View {
-  init(label: String, data: [String: Any], value: Binding<Any>)
+  init(label: String, data: [String: Any], value: Any, onUpdate: @escaping (Any) -> Void)
 }
 
 struct OptionView: View {
   private let description: String
   private let data: [String: Any]
+  private let onUpdate: (Any) -> Void
   private let optionViewType: any OptionViewProtocol.Type
-  @ObservedObject private var viewModel: OptionViewModel
 
   init(data: [String: Any], onUpdate: @escaping (Any) -> Void, expandGroup: Bool = false) {
     description = data["Description"] as! String
     self.data = data
+    self.onUpdate = onUpdate
     optionViewType = toOptionViewType(data, expandGroup: expandGroup)
-
-    viewModel = OptionViewModel(
-      value: data["Value"] ?? "",
-      defaultValue: data["DefaultValue"] ?? "",
-      onUpdate: onUpdate
-    )
   }
 
   var body: some View {
-    let view = AnyView(optionViewType.init(label: description, data: data, value: $viewModel.value))
-    if optionViewType == ExternalView.self || optionViewType == UnknownView.self {
-      view
-    } else {
-      view.resettable(viewModel)
-    }
-  }
-}
-
-extension View {
-  func resettable(_ viewModel: OptionViewModel) -> some View {
-    self.contextMenu {
-      Button {
-        viewModel.reset()
-      } label: {
-        Text("Reset")
-      }
-    }
+    AnyView(
+      optionViewType.init(label: description, data: data, value: data["Value"], onUpdate: onUpdate))
   }
 }
 
