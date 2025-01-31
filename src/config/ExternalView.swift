@@ -8,13 +8,7 @@ struct ExternalView: OptionViewProtocol {
 
   var body: some View {
     if data["LaunchSubConfig"] as? String == "True" {
-      NavigationLink(
-        destination: ConfigView(
-          title: label,
-          uri: data["External"] as! String)
-      ) {
-        Text(label)
-      }
+      ConfigLinkView(title: label, uri: data["External"] as! String)
     } else {
       Text(label)
     }

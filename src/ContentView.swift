@@ -59,13 +59,8 @@ struct ContentView: View {
         Section(header: InputMethodsSectionHeaderView(enabledInputMethods: $viewModel.inputMethods))
         {
           let forEach = ForEach(viewModel.inputMethods, id: \.name) { inputMethod in
-            NavigationLink(
-              destination: ConfigView(
-                title: inputMethod.displayName,
-                uri: "fcitx://config/inputmethod/\(inputMethod.name)")
-            ) {
-              Text(inputMethod.displayName)
-            }
+            ConfigLinkView(
+              title: inputMethod.displayName, uri: "fcitx://config/inputmethod/\(inputMethod.name)")
           }
           if viewModel.inputMethods.count > 1 {
             forEach.onDelete { offsets in viewModel.removeInputMethods(at: offsets) }
@@ -77,13 +72,7 @@ struct ContentView: View {
           }
         }
         Section {
-          NavigationLink(
-            destination: ConfigView(
-              title: "Global Config",
-              uri: globalConfigUri)
-          ) {
-            Text("Global Config")
-          }
+          ConfigLinkView(title: "Global Config", uri: globalConfigUri)
           NavigationLink(
             destination: AddonConfigView()
           ) {

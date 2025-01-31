@@ -1,6 +1,7 @@
 import Fcitx
 import FcitxIpc
 import SwiftUI
+import SwiftUtil
 
 let globalConfigUri = "fcitx://config/global"
 
@@ -29,6 +30,18 @@ private class ViewModel: ObservableObject {
       self.error = dict["ERROR"] as? String
     }
   }
+}
+
+func getDefaultValue(_ child: [String: Any]) -> Any {
+  if let defaultValue = child["DefaultValue"] {
+    return defaultValue
+  }
+  if let children = child["Children"] as? [[String: Any]] {
+    return children.reduce(into: [String: Any]()) { result, grandChild in
+      result[grandChild["Option"] as! String] = getDefaultValue(grandChild)
+    }
+  }
+  return [:]
 }
 
 struct ConfigView: View {
@@ -60,6 +73,33 @@ struct ConfigView: View {
     .navigationBarTitleDisplayMode(.inline)
     .onAppear {
       viewModel.refresh(uri)
+    }
+  }
+
+  func reset() {
+    for child in viewModel.children {
+      setConfig(uri, child["Option"] as! String, getDefaultValue(child))
+    }
+    viewModel.refresh(uri)
+  }
+}
+
+struct ConfigLinkView: View {
+  let title: String
+  let uri: String
+
+  var body: some View {
+    let configView = ConfigView(title: title, uri: uri)
+    NavigationLink(
+      destination: configView
+    ) {
+      Text(title)
+    }.contextMenu {
+      Button {
+        configView.reset()
+      } label: {
+        Text("Reset")
+      }
     }
   }
 }

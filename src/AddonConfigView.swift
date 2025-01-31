@@ -14,13 +14,7 @@ struct AddonConfigView: View {
     List {
       ForEach(addons) { addon in
         Section(footer: addon.comment.count > 0 ? Text(addon.comment) : nil) {
-          NavigationLink(
-            destination: ConfigView(
-              title: addon.name,
-              uri: "fcitx://config/addon/\(addon.id)")
-          ) {
-            Text(addon.name)
-          }
+          ConfigLinkView(title: addon.name, uri: "fcitx://config/addon/\(addon.id)")
         }
       }
     }
