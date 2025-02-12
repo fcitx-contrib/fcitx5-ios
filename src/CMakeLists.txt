@@ -95,6 +95,7 @@ if (CHINESE_ADDONS)
     copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/modules/fullwidth/fullwidth.conf" "share/fcitx5/addon/fullwidth.conf")
     copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/modules/punctuation/punctuation.conf" "share/fcitx5/addon/punctuation.conf")
     copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/modules/chttrans/chttrans.conf" "share/fcitx5/addon/chttrans.conf")
+    copy_to_keyboard(copy "${CHINESE_ADDONS_BINARY_DIR}/modules/cloudpinyin/cloudpinyin.conf" "share/fcitx5/addon/cloudpinyin.conf")
 
     # Shared resources
     copy_to_keyboard(copy_directory "${PREBUILDER_LIB_DIR}/libime" "lib/libime")
