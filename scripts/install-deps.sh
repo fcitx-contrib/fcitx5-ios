@@ -1,5 +1,6 @@
 deps=(
   boost
+  curl
   fmt
   glog
   json-c

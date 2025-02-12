@@ -15,7 +15,6 @@ if (CHINESE_ADDONS)
     install(TARGETS kenlm EXPORT LibIMECoreTargets LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib)
 
     option(ENABLE_GUI OFF)
-    option(ENABLE_CLOUDPINYIN OFF)
     add_subdirectory(fcitx5-chinese-addons)
     list(APPEND DEFAULT_INPUT_METHODS pinyin shuangpin wbx)
 endif()
