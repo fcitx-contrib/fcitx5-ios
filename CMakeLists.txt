@@ -8,7 +8,7 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/ios.cmake")
 project(fcitx5-ios VERSION 0.1.0 LANGUAGES CXX Swift)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 17) # I really need onChange for focus out.
 set(CMAKE_Swift_LANGUAGE_VERSION 5.9)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 set(BUNDLE_IDENTIFIER "org.fcitx.Fcitx5")
 set(BUNDLE_NAME "Fcitx5")

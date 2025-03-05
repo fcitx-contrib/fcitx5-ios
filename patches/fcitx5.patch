@@ -1,5 +1,5 @@
 diff --git a/src/lib/fcitx/addonmanager.cpp b/src/lib/fcitx/addonmanager.cpp
-index 55269f33..5e7b8d27 100644
+index f9334009..6f34f265 100644
 --- a/src/lib/fcitx/addonmanager.cpp
 +++ b/src/lib/fcitx/addonmanager.cpp
 @@ -250,7 +250,6 @@ void AddonManager::unregisterLoader(const std::string &name) {
