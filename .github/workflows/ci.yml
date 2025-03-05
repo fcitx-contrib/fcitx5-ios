@@ -20,16 +20,14 @@ jobs:
 
   build:
     needs: lint
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-15
     env:
       MOZC_SHA: ad0e97b8b8dcfd4c841a02c5d6a043fb5e741405
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-15, macos-13]
         include:
-          - { os: macos-15, simulator: "iPhone 16" }
-          - { os: macos-13, simulator: "iPhone 15" }
+          - { simulator: "iPhone 16" }
 
     steps:
       - uses: actions/checkout@v4
