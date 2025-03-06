@@ -27,7 +27,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { simulator: "iPhone 16" }
+          - { platform: SIMULATORARM64 }
+          - { platform: SIMULATOR64 }
 
     steps:
       - uses: actions/checkout@v4
@@ -46,7 +47,7 @@ jobs:
           brew install \
             nlohmann-json \
             extra-cmake-modules
-          IOS_PLATFORM=SIMULATOR ./scripts/install-deps.sh
+          ./scripts/install-deps.sh ${{ matrix.platform }}
           wget https://github.com/fcitx-contrib/fcitx5-prebuilder/releases/download/macos/marisa-$(uname -m).tar.bz2
           sudo tar xjvf marisa-$(uname -m).tar.bz2 -C /usr/local bin/marisa-build
 
@@ -55,21 +56,22 @@ jobs:
           git apply --directory=fcitx5 patches/fcitx5.patch
           git apply --directory=engines/libime/src/libime/core/kenlm patches/kenlm.patch
           git apply --directory=engines/fcitx5-rime patches/rime.patch
-          cmake -B build -G Xcode \
+          cmake -B build/${{ matrix.platform }} -G Xcode \
             -DURL_SCHEME=fcitx \
             -DHALLELUJAH=ON \
             -DRIME=ON \
-            -DIOS_PLATFORM=SIMULATOR
-          cmake --build build --config Release
+            -DPLATFORM=${{ matrix.platform }}
+          cmake --build build/${{ matrix.platform }} --config Release
 
       - name: Check validity
         run: |
-          ./scripts/check-validity.sh
+          ./scripts/check-validity.sh ${{ matrix.platform }}
 
       - name: Install
+        if: ${{ matrix.platform == 'SIMULATORARM64' }}
         run: |
-          xcrun simctl boot "${{ matrix.simulator }}"
-          xcrun simctl install booted build/src/Release-iphonesimulator/Fcitx5.app
+          xcrun simctl boot "iPhone 16"
+          xcrun simctl install booted build/${{ matrix.platform }}/src/Release-iphonesimulator/Fcitx5.app
           xcrun simctl launch booted org.fcitx.Fcitx5
 
       - name: Setup tmate session

@@ -8,13 +8,13 @@ set_target_properties(keyboard PROPERTIES
     XCODE_PRODUCT_TYPE "com.apple.product-type.app-extension"
 )
 
-set_xcode_property(keyboard CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/assets/keyboard.entitlements)
+set_xcode_property(keyboard CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/assets/keyboard.entitlements All)
 
 target_include_directories(keyboard PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${CMAKE_CURRENT_BINARY_DIR}/../fcitx5"
-    "${PROJECT_BINARY_DIR}/common/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
-    "${PROJECT_BINARY_DIR}/uipanel/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
+    "${PROJECT_BINARY_DIR}/common/$<CONFIG>-${SDK_NAME}"
+    "${PROJECT_BINARY_DIR}/uipanel/$<CONFIG>-${SDK_NAME}"
 )
 
 target_compile_options(keyboard PUBLIC

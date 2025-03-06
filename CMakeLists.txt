@@ -3,10 +3,13 @@ cmake_minimum_required(VERSION 3.27)
 # Avoid MinSizeRel and RelWithDebInfo.
 set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE STRING INTERNAL FORCE)
 
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/cmake/ios.cmake")
+set(ENABLE_STRICT_TRY_COMPILE ON)
+set(DEPLOYMENT_TARGET 17) # I really need onChange for focus out.
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/ios-cmake/ios.toolchain.cmake")
 
 project(fcitx5-ios VERSION 0.1.0 LANGUAGES CXX Swift)
-set(CMAKE_OSX_DEPLOYMENT_TARGET 17) # I really need onChange for focus out.
+set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED YES) # Need it for AppGroup even for simulator.
+set(CMAKE_OSX_DEPLOYMENT_TARGET 17)
 set(CMAKE_Swift_LANGUAGE_VERSION 5.9)
 set(CMAKE_CXX_STANDARD 20)
 
@@ -15,12 +18,6 @@ set(BUNDLE_NAME "Fcitx5")
 set(ICON_FILE "icon.icns")
 
 list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-
-if (IOS_PLATFORM STREQUAL "SIMULATOR")
-    set(F5I_TARGET "${CMAKE_OSX_ARCHITECTURES}-apple-ios${CMAKE_OSX_DEPLOYMENT_TARGET}-simulator")
-else()
-    set(F5I_TARGET "${CMAKE_OSX_ARCHITECTURES}-apple-ios${CMAKE_OSX_DEPLOYMENT_TARGET}")
-endif()
 
 if (NOT URL_SCHEME)
     message(FATAL_ERROR "Must provide URL_SCHEME")
@@ -32,12 +29,12 @@ include(AddSwift)
 set(KEYBOARD_NAME "Keyboard")
 set(KEYBOARD_LANGUAGE "zh-Hans")
 
-set(FIND_ROOT_PATH "${PROJECT_BINARY_DIR}/sysroot/usr")
+set(FIND_ROOT_PATH "${PROJECT_BINARY_DIR}/usr")
 set(PREBUILDER_INCLUDE_DIR "${FIND_ROOT_PATH}/include")
 set(PREBUILDER_LIB_DIR "${FIND_ROOT_PATH}/lib")
 set(PREBUILDER_SHARE_DIR "${FIND_ROOT_PATH}/share")
 
-set(ENV{PKG_CONFIG_SYSROOT_DIR} "${PROJECT_BINARY_DIR}/sysroot")
+set(ENV{PKG_CONFIG_SYSROOT_DIR} "${PROJECT_BINARY_DIR}")
 set(ENV{PKG_CONFIG_PATH} "${PREBUILDER_LIB_DIR}/pkgconfig")
 
 list(APPEND CMAKE_FIND_ROOT_PATH "${FIND_ROOT_PATH}")
@@ -65,7 +62,7 @@ option(BUILD_SPELL_DICT "" OFF)
 
 find_host_package(PkgConfig)
 find_host_package(Gettext)
-find_host_package(nlohmann_json)
+find_package(nlohmann_json REQUIRED)
 
 add_library(Libuv_static STATIC IMPORTED)
 set_target_properties(Libuv_static PROPERTIES
@@ -91,7 +88,7 @@ function(copy_to_keyboard cmd file relative_path)
     add_custom_command(TARGET ${BUNDLE_NAME}
         POST_BUILD COMMAND /bin/sh -c \"
         ${CMAKE_COMMAND} -E ${cmd} ${file}
-            ${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/${relative_path}
+            ${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>-${SDK_NAME}/keyboard.appex/${relative_path}
     \")
 endfunction()
 
@@ -103,7 +100,7 @@ function(copy_to_app cmd file relative_path)
     add_custom_command(TARGET ${BUNDLE_NAME}
         POST_BUILD COMMAND /bin/sh -c \"
         ${CMAKE_COMMAND} -E ${cmd} ${file}
-            ${PROJECT_BINARY_DIR}/src/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/${BUNDLE_NAME}.app/${relative_path}
+            ${PROJECT_BINARY_DIR}/src/$<CONFIG>-${SDK_NAME}/${BUNDLE_NAME}.app/${relative_path}
     \")
 endfunction()
 

@@ -1,10 +1,12 @@
 set -e
 
+platform=$1
+
 has_dl=0
 
 executables=(
-  build/src/Release-iphonesimulator/Fcitx5.app/Fcitx5
-  build/src/Release-iphonesimulator/Fcitx5.app/PlugIns/keyboard.appex/keyboard
+  build/$1/src/Release-iphonesimulator/Fcitx5.app/Fcitx5
+  build/$1/src/Release-iphonesimulator/Fcitx5.app/PlugIns/keyboard.appex/keyboard
 )
 
 for executable in "${executables[@]}"; do  

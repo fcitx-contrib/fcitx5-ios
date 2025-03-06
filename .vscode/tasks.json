@@ -3,32 +3,64 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "Install dependencies",
-            "command": "IOS_PLATFORM=SIMULATOR ./scripts/install-deps.sh",
+            "label": "Install dependencies (arm64 simulator)",
+            "command": "./scripts/install-deps.sh SIMULATORARM64",
             "group": {
                 "kind": "build"
             }
         },
         {
             "type": "shell",
-            "label": "Configure",
-            "command": "cmake -B build -G Xcode -DURL_SCHEME=fcitx -DCHINESE_ADDONS=ON -DHALLELUJAH=ON -DMOZC=ON -DRIME=ON -DIOS_PLATFORM=SIMULATOR",
+            "label": "Configure (arm64 simulator)",
+            "command": "cmake -B build/SIMULATORARM64 -G Xcode -DURL_SCHEME=fcitx -DCHINESE_ADDONS=ON -DHALLELUJAH=ON -DMOZC=ON -DRIME=ON -DPLATFORM=SIMULATORARM64",
             "group": {
                 "kind": "build"
             }
         },
         {
             "type": "shell",
-            "label": "Build",
-            "command": "cmake --build build --config Debug",
+            "label": "Build (arm64 simulator)",
+            "command": "cmake --build build/SIMULATORARM64 --config Debug",
             "group": {
                 "kind": "build"
             }
         },
         {
             "type": "shell",
-            "label": "Install",
-            "command": "xcrun simctl install booted build/src/Debug-iphonesimulator/Fcitx5.app",
+            "label": "Install (arm64 simulator)",
+            "command": "xcrun simctl install booted build/SIMULATORARM64/src/Debug-iphonesimulator/Fcitx5.app",
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Install dependencies (x86_64 simulator)",
+            "command": "./scripts/install-deps.sh SIMULATOR64",
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Configure (x86_64 simulator)",
+            "command": "cmake -B build/SIMULATOR64 -G Xcode -DURL_SCHEME=fcitx -DCHINESE_ADDONS=ON -DHALLELUJAH=ON -DMOZC=ON -DRIME=ON -DPLATFORM=SIMULATOR64",
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Build (x86_64 simulator)",
+            "command": "cmake --build build/SIMULATOR64 --config Debug",
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Install (x86_64 simulator)",
+            "command": "xcrun simctl install booted build/SIMULATOR64/src/Debug-iphonesimulator/Fcitx5.app",
             "group": {
                 "kind": "build"
             }

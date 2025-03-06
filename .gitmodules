@@ -22,3 +22,6 @@
 [submodule "engines/fcitx5-mozc"]
 	path = engines/fcitx5-mozc
 	url = https://github.com/fcitx-contrib/fcitx5-mozc
+[submodule "ios-cmake"]
+	path = ios-cmake
+	url = https://github.com/leetal/ios-cmake

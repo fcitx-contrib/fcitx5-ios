@@ -18,10 +18,10 @@ add_executable(
 target_include_directories(${BUNDLE_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${PROJECT_SOURCE_DIR}/common"
-    "${PROJECT_BINARY_DIR}/common/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
-    "${PROJECT_BINARY_DIR}/ipc/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
-    "${PROJECT_BINARY_DIR}/iosnotifications/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
-    "${PROJECT_BINARY_DIR}/deps/AlertToast/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}"
+    "${PROJECT_BINARY_DIR}/common/$<CONFIG>-${SDK_NAME}"
+    "${PROJECT_BINARY_DIR}/ipc/$<CONFIG>-${SDK_NAME}"
+    "${PROJECT_BINARY_DIR}/iosnotifications/$<CONFIG>-${SDK_NAME}"
+    "${PROJECT_BINARY_DIR}/deps/AlertToast/$<CONFIG>-${SDK_NAME}"
 )
 
 target_link_libraries(${BUNDLE_NAME}
@@ -41,7 +41,7 @@ set_target_properties(${BUNDLE_NAME} PROPERTIES
     XCODE_EMBED_APP_EXTENSIONS keyboard
 )
 
-set_xcode_property(${BUNDLE_NAME} CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/assets/app.entitlements)
+set_xcode_property(${BUNDLE_NAME} CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/assets/app.entitlements All)
 
 set(ADDON_PREFIX "share/fcitx5/addon")
 set(IM_PREFIX "share/fcitx5/inputmethod")
@@ -132,9 +132,9 @@ if (RIME)
 endif()
 
 # Embed keyboard.appex in app.
-copy_to_app(copy_directory "${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex" "PlugIns/keyboard.appex")
+copy_to_app(copy_directory "${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>-${SDK_NAME}/keyboard.appex" "PlugIns/keyboard.appex")
 # Copy share directory, icon and profile.
-copy_to_app(copy_directory "${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>${CMAKE_XCODE_EFFECTIVE_PLATFORMS}/keyboard.appex/share" "share")
+copy_to_app(copy_directory "${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>-${SDK_NAME}/keyboard.appex/share" "share")
 copy_to_app(copy "${PROJECT_SOURCE_DIR}/assets/${ICON_FILE}" "${ICON_FILE}")
 copy_to_app(copy "${PROJECT_BINARY_DIR}/profile" profile)
 
