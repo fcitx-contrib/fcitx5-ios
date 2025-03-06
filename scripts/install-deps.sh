@@ -1,8 +1,10 @@
 deps=(
   boost
   curl
+  ecm
   fmt
   glog
+  json
   json-c
   leveldb
   libintl
@@ -16,14 +18,21 @@ deps=(
   zstd
 )
 
-EXTRACT_DIR=build/sysroot/usr
+PLATFORM=$1
+
+EXTRACT_DIR=build/$PLATFORM/usr
 SPELL_DICT_DIR=$EXTRACT_DIR/share/fcitx5/spell
 mkdir -p $SPELL_DICT_DIR
 
-if [[ $IOS_PLATFORM == "SIMULATOR" ]]; then
-  POSTFIX=-$(uname -m)
-else
+if [[ $PLATFORM == "SIMULATORARM64" ]]; then
+  POSTFIX=-arm64
+elif [[ $PLATFORM == "SIMULATOR64" ]]; then
+  POSTFIX=-x86_64
+elif [[ $PLATFORM == "OS64" ]]; then
   POSTFIX=""
+else
+  echo "Unknown platform: $PLATFORM"
+  exit 1
 fi
 
 for dep in "${deps[@]}"; do

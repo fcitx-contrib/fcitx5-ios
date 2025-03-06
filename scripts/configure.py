@@ -18,8 +18,11 @@ PROFILE_TAIL = '''
 0=Default
 '''
 
-with open('build/profile', 'w') as f:
-    f.write(PROFILE_HEADER.format(sys.argv[1]))
-    for i in range(len(sys.argv) - 1):
-        f.write(PROFILE_ITEM.format(i, sys.argv[i + 1]))
+directory = sys.argv[1]
+input_methods = sys.argv[2:]
+
+with open(f'{directory}/profile', 'w') as f:
+    f.write(PROFILE_HEADER.format(input_methods[0]))
+    for i, input_method in enumerate(input_methods):
+        f.write(PROFILE_ITEM.format(i, input_method))
     f.write(PROFILE_TAIL)

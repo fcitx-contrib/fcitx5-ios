@@ -51,6 +51,7 @@ if (MOZC)
         "${PREBUILDER_INCLUDE_DIR}/mozc"
         "${PROJECT_SOURCE_DIR}/include"
     )
+    target_compile_definitions(mozc PRIVATE -DMOZC_DISABLE_SESSION_WATCHDOG)
     list(APPEND DEFAULT_INPUT_METHODS mozc)
 endif()
 
@@ -83,7 +84,7 @@ endif()
 
 add_custom_command(
     OUTPUT "${PROJECT_BINARY_DIR}/profile"
-    COMMAND python scripts/configure.py ${DEFAULT_INPUT_METHODS}
+    COMMAND python scripts/configure.py "${PROJECT_BINARY_DIR}" ${DEFAULT_INPUT_METHODS}
     DEPENDS "${PROJECT_SOURCE_DIR}/default"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     COMMENT "Generating profile"
