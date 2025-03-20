@@ -11,16 +11,8 @@ struct StatusAreaView: View {
   ]
 
   var body: some View {
-    VStack {
-      HStack {
-        Button {
-          virtualKeyboardView.setDisplayMode(.initial)
-        } label: {
-          Image(systemName: "arrow.backward")
-            .frame(width: barHeight, height: barHeight)
-        }.background(lightBackground)
-        Spacer()
-      }
+    VStack(spacing: 0) {
+      ReturnBarView()
       ScrollView {
         LazyVGrid(columns: columns) {
           ForEach(actions) { action in
@@ -69,7 +61,7 @@ struct StatusAreaView: View {
             }
           }
         }
-      }
-    }.frame(height: barHeight + keyboardHeight)
+      }.frame(height: keyboardHeight)
+    }
   }
 }

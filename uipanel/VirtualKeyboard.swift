@@ -4,6 +4,7 @@ import SwiftUI
 public enum DisplayMode {
   case initial
   case candidates
+  case edit
   case statusArea
 }
 
@@ -25,14 +26,12 @@ public struct VirtualKeyboardView: View {
       }
       if viewModel.mode == .statusArea {
         StatusAreaView(actions: $viewModel.actions)
+      } else if viewModel.mode == .edit {
+        EditView()
       } else {
         KeyboardView()
       }
     }.background(lightBackground)
-  }
-
-  public func keyPressed(_ key: String) {
-    client.keyPressed(key)
   }
 
   public func setDisplayMode(_ mode: DisplayMode) {
