@@ -1,5 +1,6 @@
 add_executable(keyboard MACOSX_BUNDLE
     KeyboardViewController.swift
+    util.swift
     fcitx.cpp
 )
 

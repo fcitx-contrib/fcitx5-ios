@@ -76,9 +76,66 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     // The app has just changed the document's contents, the document context has been updated.
   }
 
-  public func keyPressed(_ key: String) {
-    if !processKey(key) {
-      textDocumentProxy.insertText(key)
+  public func keyPressed(_ key: String, _ code: String) {
+    // documentContextBeforeInput could be all text or text in current line before cursor.
+    // In the latter case, it will be '\n' if cursor is at the beginning of a non-first line.
+    if !processKey(key, code) {
+      switch code {
+      case "ArrowDown":
+        let offset = lengthOfLastLine(textDocumentProxy.documentContextBeforeInput ?? "")
+        let step = lengthOfFirstLine(textDocumentProxy.documentContextAfterInput ?? "")
+        textDocumentProxy.adjustTextPosition(byCharacterOffset: step)
+        DispatchQueue.main.async {
+          // Move to the start of next line if exists.
+          self.textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
+          // Must have a delay, otherwise nextLineLength is always 0.
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            let nextLineLength = lengthOfFirstLine(
+              self.textDocumentProxy.documentContextAfterInput ?? "")
+            self.textDocumentProxy.adjustTextPosition(
+              byCharacterOffset: min(offset, nextLineLength))
+          }
+        }
+        break
+      case "ArrowLeft":
+        textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
+        break
+      case "ArrowRight":
+        textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
+        break
+      case "ArrowUp":
+        let offset = lengthOfLastLine(textDocumentProxy.documentContextBeforeInput ?? "")
+        textDocumentProxy.adjustTextPosition(byCharacterOffset: -offset)
+        DispatchQueue.main.async {
+          // Move to the end of previous line if exists.
+          self.textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
+          // Must have a delay, otherwise previousLineLength may always be 0.
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            let previousLineLength = lengthOfLastLine(
+              self.textDocumentProxy.documentContextBeforeInput ?? "")
+            if previousLineLength > offset {
+              self.textDocumentProxy.adjustTextPosition(
+                byCharacterOffset: -(previousLineLength - offset))
+            }
+          }
+        }
+        break
+      case "Backspace":
+        textDocumentProxy.deleteBackward()
+        break
+      case "End":
+        let textAfter = textDocumentProxy.documentContextAfterInput ?? ""
+        textDocumentProxy.adjustTextPosition(byCharacterOffset: lengthOfFirstLine(textAfter))
+        break
+      case "Home":
+        let textBefore = textDocumentProxy.documentContextBeforeInput ?? ""
+        textDocumentProxy.adjustTextPosition(byCharacterOffset: -lengthOfLastLine(textBefore))
+        break
+      default:
+        if !key.isEmpty {
+          textDocumentProxy.insertText(key)
+        }
+      }
     }
   }
 
@@ -89,5 +146,24 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   public func setPreedit(_ preedit: String, _ cursor: Int) {
     let proxy = textDocumentProxy as! UITextDocumentProxy
     proxy.setMarkedText(preedit, selectedRange: NSRange(location: cursor, length: 0))
+  }
+
+  public func cut() {
+    if let text = textDocumentProxy.selectedText {
+      UIPasteboard.general.string = text
+      textDocumentProxy.deleteBackward()
+    }
+  }
+
+  public func copy() {
+    if let text = textDocumentProxy.selectedText {
+      UIPasteboard.general.string = text
+    }
+  }
+
+  public func paste() {
+    if let text = UIPasteboard.general.string {
+      textDocumentProxy.insertText(text)
+    }
   }
 }

@@ -5,7 +5,7 @@ struct KeyView: View {
 
   var body: some View {
     Button {
-      virtualKeyboardView.keyPressed(label)
+      client.keyPressed(label, "")
     } label: {
       Text(label)
         .frame(width: label == " " ? 100 : 35, height: 40)
