@@ -2,6 +2,7 @@ add_executable(keyboard MACOSX_BUNDLE
     KeyboardViewController.swift
     util.swift
     fcitx.cpp
+    keycode.cpp
 )
 
 set_target_properties(keyboard PROPERTIES

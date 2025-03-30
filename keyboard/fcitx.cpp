@@ -3,6 +3,7 @@
 #include "../common/common.h"
 #include "../common/util.h"
 #include "fcitx.h"
+#include "keycode.h"
 
 #include <fcitx/inputmethodmanager.h>
 
@@ -28,8 +29,10 @@ void focusOut(id client) {
 }
 
 bool processKey(const char *key, const char *code) {
-    return with_fcitx(
-        [key] { return frontend->keyEvent(fcitx::Key{key}, false); });
+    return with_fcitx([=] {
+        return frontend->keyEvent(fcitx::js_key_to_fcitx_key(key, code, 0),
+                                  false);
+    });
 }
 
 void reload() {
