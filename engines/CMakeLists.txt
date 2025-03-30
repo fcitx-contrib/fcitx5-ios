@@ -59,12 +59,14 @@ if (RIME)
     # RIME_DATA_DIR is not actually used but must exist.
     set(RIME_DATA_DIR "/usr/share/rime-data")
     set(Rime_dependencies
-        "${PREBUILDER_LIB_DIR}/libleveldb.a"
-        "${PREBUILDER_LIB_DIR}/libyaml-cpp.a"
-        "${PREBUILDER_LIB_DIR}/libmarisa.a"
-        "${PREBUILDER_LIB_DIR}/libopencc.a"
-        "${PREBUILDER_LIB_DIR}/libglog.a"
-        "${PREBUILDER_LIB_DIR}/liblua.a"
+        "-L${PREBUILDER_LIB_DIR}"
+        "-lleveldb"
+        "-lyaml-cpp"
+        "-lmarisa"
+        "-lopencc"
+        "-lglog"
+        "-llua"
+        "-lqjs"
     )
     add_library(Rime_static STATIC IMPORTED)
     set_target_properties(Rime_static PROPERTIES
