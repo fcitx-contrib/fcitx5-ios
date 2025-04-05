@@ -11,7 +11,7 @@ For Intel, replace all `SIMULATORARM64` with `SIMULATOR64`.
 
 ### Install dependencies
 ```sh
-brew install cmake extra-cmake-modules gettext
+brew install cmake extra-cmake-modules gettext pkg-config
 ./scripts/install-deps.sh SIMULATORARM64
 ```
 
