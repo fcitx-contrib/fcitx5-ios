@@ -6,19 +6,12 @@ import NotifySwift
 import SwiftUI
 import SwiftUtil
 
-struct InputMethod: Codable {
-  let name: String
-  let displayName: String
-  let languageCode: String
-}
-
 private class ViewModel: ObservableObject {
   @Published var url: URL?
   @Published var inputMethods = [InputMethod]()
 
   func refresh() {
-    inputMethods = try! JSONDecoder().decode(
-      [InputMethod].self, from: String(getInputMethods()).data(using: .utf8)!)
+    inputMethods = deserialize([InputMethod].self, String(getInputMethods()))
   }
 
   func removeInputMethods(at offsets: IndexSet) {

@@ -100,3 +100,13 @@ public func initProfile() {
     try? FileManager.default.copyItem(at: Bundle.main.bundleURL.appendingPathComponent("profile"), to: profileURL)
   }
 }
+
+public struct InputMethod: Codable {
+  public let name: String
+  public let displayName: String
+  public let languageCode: String
+}
+
+public func deserialize<T: Codable>(_ type: T.Type, _ s: String) -> T {
+  return try! JSONDecoder().decode(type, from: s.data(using: .utf8)!)
+}

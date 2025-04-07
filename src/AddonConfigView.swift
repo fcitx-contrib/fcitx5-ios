@@ -1,5 +1,6 @@
 import Fcitx
 import SwiftUI
+import SwiftUtil
 
 private struct Addon: Codable, Identifiable {
   let name: String
@@ -8,8 +9,7 @@ private struct Addon: Codable, Identifiable {
 }
 
 struct AddonConfigView: View {
-  private let addons = try! JSONDecoder().decode(
-    [Addon].self, from: String(getAddons()).data(using: .utf8)!)
+  private let addons = deserialize([Addon].self, String(getAddons()))
   var body: some View {
     List {
       ForEach(addons) { addon in

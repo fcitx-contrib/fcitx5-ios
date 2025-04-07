@@ -20,11 +20,10 @@ struct InputMethodsSectionHeaderView: View {
 }
 
 func availableInputMethods() -> [InputMethod] {
-  let allInputMethods = try! JSONDecoder().decode(
-    [InputMethod].self, from: String(getAllInputMethods()).data(using: .utf8)!)
-  let enabledInputMethods = try! JSONDecoder().decode(
-    [InputMethod].self, from: String(getInputMethods()).data(using: .utf8)!
-  ).map { $0.name }
+  let allInputMethods = deserialize([InputMethod].self, String(getAllInputMethods()))
+  let enabledInputMethods = deserialize([InputMethod].self, String(getInputMethods())).map {
+    $0.name
+  }
   return allInputMethods.filter { !enabledInputMethods.contains($0.name) }
 }
 
