@@ -111,7 +111,7 @@ struct EditView: View {
         .foregroundColor(.black)
         .cornerRadius(r)
     }.buttonStyle(PlainButtonStyle())
-      .shadow(color: Color.black.opacity(0.3), radius: 1, x: 0, y: 1)
+      .shadow(color: Color.gray, radius: 0, x: 0, y: 1)
       .frame(width: w, height: h)
       .overlay(
         RoundedRectangle(cornerRadius: r)

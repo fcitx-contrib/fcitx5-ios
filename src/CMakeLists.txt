@@ -131,6 +131,8 @@ if (RIME)
     copy_share_to_keyboard(copy_directory "rime-data")
 endif()
 
+copy_to_keyboard(copy_directory "${PROJECT_SOURCE_DIR}/fcitx5-keyboard-layouts/layout" "share/layout")
+
 # Embed keyboard.appex in app.
 copy_to_app(copy_directory "${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>-${SDK_NAME}/keyboard.appex" "PlugIns/keyboard.appex")
 # Copy share directory, icon and profile.

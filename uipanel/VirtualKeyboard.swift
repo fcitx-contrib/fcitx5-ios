@@ -1,5 +1,6 @@
 import FcitxProtocol
 import SwiftUI
+import SwiftUtil
 
 public enum DisplayMode {
   case initial
@@ -12,6 +13,7 @@ private class ViewModel: ObservableObject {
   @Published var mode: DisplayMode = .initial
   @Published var candidates: [String] = []
   @Published var actions = [StatusAreaAction]()
+  @Published var spaceLabel = ""
 }
 
 public struct VirtualKeyboardView: View {
@@ -29,7 +31,7 @@ public struct VirtualKeyboardView: View {
       } else if viewModel.mode == .edit {
         EditView()
       } else {
-        KeyboardView()
+        KeyboardView(spaceLabel: $viewModel.spaceLabel)
       }
     }.background(lightBackground)
   }
@@ -47,8 +49,16 @@ public struct VirtualKeyboardView: View {
     viewModel.candidates = candidates
   }
 
-  public func setActions(_ actions: [StatusAreaAction]) {
+  public func setStatusArea(
+    _ actions: [StatusAreaAction], _ currentInputMethod: String, _ inputMethods: [InputMethod]
+  ) {
     viewModel.actions = actions
+    for inputMethod in inputMethods {
+      if inputMethod.name == currentInputMethod {
+        viewModel.spaceLabel = inputMethod.displayName
+        break
+      }
+    }
   }
 }
 

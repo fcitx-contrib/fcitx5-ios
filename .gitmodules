@@ -25,3 +25,6 @@
 [submodule "ios-cmake"]
 	path = ios-cmake
 	url = https://github.com/leetal/ios-cmake
+[submodule "fcitx5-keyboard-layouts"]
+	path = fcitx5-keyboard-layouts
+	url = https://github.com/fcitx-contrib/fcitx5-keyboard-layouts

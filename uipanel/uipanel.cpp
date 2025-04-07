@@ -69,7 +69,8 @@ void UIPanel::updateStatusArea(InputContext *ic) {
         }
         actions.append(convertAction(action, ic));
     }
-    KeyboardUI::setStatusAreaActionsAsync(actions);
+    auto im = instance_->currentInputMethod();
+    KeyboardUI::setStatusAreaAsync(actions, im.c_str());
 }
 
 } // namespace fcitx
