@@ -15,15 +15,17 @@ set_target_properties(KeyboardUI PROPERTIES Swift_MODULE_NAME KeyboardUI)
 target_compile_options(KeyboardUI PUBLIC "$<$<COMPILE_LANGUAGE:Swift>:-cxx-interoperability-mode=default>")
 target_include_directories(KeyboardUI PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}"
+    "${PROJECT_SOURCE_DIR}/common"
     "${PROJECT_BINARY_DIR}/protocol/$<CONFIG>-${SDK_NAME}"
+    "${PROJECT_BINARY_DIR}/common/$<CONFIG>-${SDK_NAME}"
 )
-target_link_libraries(KeyboardUI FcitxProtocol)
+target_link_libraries(KeyboardUI FcitxProtocol FcitxCommon SwiftUtil)
 
 _swift_generate_cxx_header(
     KeyboardUI
     "${CMAKE_CURRENT_BINARY_DIR}/include/keyboardui-swift.h"
     SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/keyboardui.swift"
-    SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${PROJECT_BINARY_DIR}/protocol/$<CONFIG>-${SDK_NAME}"
+    SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/common;${PROJECT_BINARY_DIR}/protocol/$<CONFIG>-${SDK_NAME};${PROJECT_BINARY_DIR}/common/$<CONFIG>-${SDK_NAME}"
 )
 
 add_fcitx5_addon(uipanel uipanel.cpp)

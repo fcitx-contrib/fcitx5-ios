@@ -92,6 +92,16 @@ public func removeFile(_ file: URL) -> Bool {
   }
 }
 
+public func readJSON(_ file: URL) -> Any? {
+  guard let stream = InputStream(url: file) else {
+    return nil
+  }
+  stream.open()
+  let j = try? JSONSerialization.jsonObject(with: stream)
+  stream.close()
+  return j
+}
+
 // Call on both app and keyboard to initialize input method list after install.
 public func initProfile() {
   mkdirP(appGroupConfig.path)

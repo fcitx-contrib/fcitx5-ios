@@ -1,5 +1,7 @@
+import FcitxCommon
 import FcitxProtocol
 import SwiftUI
+import SwiftUtil
 
 var client: FcitxProtocol!
 
@@ -34,8 +36,9 @@ public struct StatusAreaAction: Identifiable {
   }
 }
 
-public func setStatusAreaActionsAsync(_ actions: [StatusAreaAction]) {
+public func setStatusAreaAsync(_ actions: [StatusAreaAction], _ currentInputMethod: String) {
   DispatchQueue.main.async {
-    virtualKeyboardView.setActions(actions)
+    virtualKeyboardView.setStatusArea(
+      actions, currentInputMethod, deserialize([InputMethod].self, String(getInputMethods())))
   }
 }

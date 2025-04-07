@@ -1,23 +1,75 @@
 import SwiftUI
+import SwiftUtil
+
+private func getFlexes(_ keys: [[String: Any]]) -> [CGFloat] {
+  return keys.map({ key in
+    if let flex = key["flex"] as? String,
+      let value = Double(flex)
+    {
+      return CGFloat(value)
+    }
+    return 1
+  })
+}
 
 struct KeyboardView: View {
-  let keys: [[String]] = [
-    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
-    ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"],
-    ["a", "s", "d", "f", "g", "h", "j", "k", "l"],
-    ["`", "z", "x", "c", "v", "b", "n", "m"],
-    [",", " ", "."],
-  ]
+  @Binding var spaceLabel: String
+  @State private var rows: [[String: Any]] = []
 
   var body: some View {
-    VStack(spacing: 8) {
-      ForEach(keys, id: \.self) { row in
-        HStack(spacing: 6) {
-          ForEach(row, id: \.self) { key in
-            KeyView(label: key)
-          }
+    GeometryReader { geometry in
+      let width = geometry.size.width
+      let height = keyboardHeight / CGFloat(rows.count)
+      VStack(spacing: 0) {
+        ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+          renderRow(row, width, height)
         }
       }
+      .onAppear {
+        setLayout()
+      }
     }.frame(height: keyboardHeight)
+  }
+
+  func setLayout() {
+    let layoutUrl = Bundle.main.bundleURL.appendingPathComponent("share/layout/qwerty.json")
+    guard let content = readJSON(layoutUrl) as? [String: Any],
+      let layers = content["layers"] as? [[String: Any]],
+      let defaultLayer = layers.first,
+      let rows = defaultLayer["rows"] as? [[String: Any]]
+    else {
+      return
+    }
+    self.rows = rows
+  }
+
+  func renderRow(_ row: [String: Any], _ width: CGFloat, _ height: CGFloat) -> some View {
+    guard let keys = row["keys"] as? [[String: Any]] else {
+      return AnyView(EmptyView())
+    }
+    let flexes = getFlexes(keys)
+    let unit = width / flexes.reduce(0, +)
+    return AnyView(
+      HStack(spacing: 0) {
+        ForEach(Array(keys.enumerated()), id: \.offset) { i, key in
+          let keyWidth = flexes[i] * unit
+          if let type = key["type"] as? String {
+            switch type {
+            case "key":
+              if let label = key["label"] as? String,
+                let k = key["key"] as? String
+              {
+                KeyView(label: label, key: k, width: keyWidth, height: height)
+              }
+            case "space":
+              SpaceView(label: spaceLabel, width: keyWidth, height: height)
+            case "backspace":
+              BackspaceView(width: keyWidth, height: height)
+            default:
+              VStack {}.frame(width: keyWidth, height: height)
+            }
+          }
+        }
+      }.frame(width: width, height: height))
   }
 }
