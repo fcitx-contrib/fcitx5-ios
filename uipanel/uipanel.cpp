@@ -3,6 +3,7 @@
 #include <fcitx/menu.h>
 #include <fcitx/statusarea.h>
 #include <fcitx/userinterfacemanager.h>
+#include <nlohmann/json.hpp>
 
 #include "../common/util.h"
 #include "../iosfrontend/iosfrontend.h"
@@ -76,6 +77,53 @@ void UIPanel::updateStatusArea(InputContext *ic) {
 } // namespace fcitx
 
 FCITX_ADDON_FACTORY_V2(uipanel, fcitx::UIPanelFactory);
+
+std::string getCandidateActions(int index) {
+    return with_fcitx([index] -> std::string {
+        auto ic = instance->mostRecentInputContext();
+        const auto &list = ic->inputPanel().candidateList();
+        if (!list)
+            return "[]";
+        auto *actionableList = list->toActionable();
+        if (!actionableList) {
+            return "[]";
+        }
+        try {
+            const auto &candidate = list->candidate(index);
+            if (actionableList->hasAction(candidate)) {
+                auto j = nlohmann::json::array();
+                for (const auto &action :
+                     actionableList->candidateActions(candidate)) {
+                    j.push_back({{"id", action.id()}, {"text", action.text()}});
+                }
+                return j.dump();
+            }
+        } catch (const std::invalid_argument &e) {
+            FCITX_ERROR() << "action candidate index out of range";
+        }
+        return "[]";
+    });
+}
+
+void activateCandidateAction(int index, int id) {
+    dispatcher->schedule([=] {
+        auto ic = instance->mostRecentInputContext();
+        const auto &list = ic->inputPanel().candidateList();
+        if (!list)
+            return;
+        auto *actionableList = list->toActionable();
+        if (!actionableList)
+            return;
+        try {
+            const auto &candidate = list->candidate(index);
+            if (actionableList->hasAction(candidate)) {
+                actionableList->triggerAction(candidate, id);
+            }
+        } catch (const std::invalid_argument &e) {
+            FCITX_ERROR() << "action candidate index out of range";
+        }
+    });
+}
 
 void selectCandidate(int index) {
     with_fcitx([index] {
