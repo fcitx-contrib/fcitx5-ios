@@ -69,3 +69,21 @@ struct BackspaceView: View {
     }.commonContainerStyle(width: width, height: height)
   }
 }
+
+struct GlobeView: View {
+  let width: CGFloat
+  let height: CGFloat
+
+  var body: some View {
+    Button {
+      client.globe()
+    } label: {
+      VStack {
+        Image(systemName: "globe")
+          .resizable()
+          .aspectRatio(contentMode: .fit)
+          .frame(height: height * 0.45)
+      }.commonContentStyle(width: width, height: height, background: normalBackground)
+    }.commonContainerStyle(width: width, height: height)
+  }
+}

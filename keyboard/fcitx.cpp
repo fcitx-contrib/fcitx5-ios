@@ -54,3 +54,7 @@ void reload() {
         instance->inputMethodManager().load();
     });
 }
+
+void toggle() {
+    with_fcitx([] { instance->toggle(); });
+}

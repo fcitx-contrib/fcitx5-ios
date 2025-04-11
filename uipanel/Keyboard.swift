@@ -65,6 +65,8 @@ struct KeyboardView: View {
               SpaceView(label: spaceLabel, width: keyWidth, height: height)
             case "backspace":
               BackspaceView(width: keyWidth, height: height)
+            case "globe":
+              GlobeView(width: keyWidth, height: height)
             default:
               VStack {}.frame(width: keyWidth, height: height)
             }

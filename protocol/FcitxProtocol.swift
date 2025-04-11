@@ -5,4 +5,5 @@ public protocol FcitxProtocol {
   func cut()
   func copy()
   func paste()
+  func globe()
 }
