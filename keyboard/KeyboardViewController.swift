@@ -166,4 +166,8 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       textDocumentProxy.insertText(text)
     }
   }
+
+  public func globe() {
+    Fcitx.toggle()
+  }
 }
