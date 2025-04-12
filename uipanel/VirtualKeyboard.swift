@@ -9,15 +9,16 @@ public enum DisplayMode {
   case statusArea
 }
 
-private class ViewModel: ObservableObject {
+class ViewModel: ObservableObject {
   @Published var mode: DisplayMode = .initial
   @Published var candidates: [String] = []
   @Published var actions = [StatusAreaAction]()
+  @Published var inputMethods = [InputMethod]()
   @Published var spaceLabel = ""
 }
 
 public struct VirtualKeyboardView: View {
-  @ObservedObject private var viewModel = ViewModel()
+  @ObservedObject var viewModel = ViewModel()
 
   public var body: some View {
     VStack(spacing: 0) {
@@ -53,6 +54,7 @@ public struct VirtualKeyboardView: View {
     _ actions: [StatusAreaAction], _ currentInputMethod: String, _ inputMethods: [InputMethod]
   ) {
     viewModel.actions = actions
+    viewModel.inputMethods = inputMethods
     for inputMethod in inputMethods {
       if inputMethod.name == currentInputMethod {
         viewModel.spaceLabel = inputMethod.displayName

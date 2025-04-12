@@ -85,5 +85,14 @@ struct GlobeView: View {
           .frame(height: height * 0.45)
       }.commonContentStyle(width: width, height: height, background: normalBackground)
     }.commonContainerStyle(width: width, height: height)
+      .contextMenu {
+        ForEach(virtualKeyboardView.viewModel.inputMethods, id: \.name) { inputMethod in
+          Button {
+            client.setCurrentInputMethod(inputMethod.name)
+          } label: {
+            Text(inputMethod.displayName)
+          }
+        }
+      }
   }
 }
