@@ -5,6 +5,14 @@ import SwiftUI
 import SwiftUtil
 import UIKit
 
+private func redirectStderr() {
+  let file = fopen("\(appGroup.path)/log.txt", "w")
+  if let file = file {
+    dup2(fileno(file), STDERR_FILENO)
+    fclose(file)
+  }
+}
+
 class KeyboardViewController: UIInputViewController, FcitxProtocol {
   var id: UInt64!
   var hostingController: UIHostingController<VirtualKeyboardView>!
@@ -19,6 +27,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     id = UInt64(Int(bitPattern: Unmanaged.passUnretained(self).toOpaque()))
     logger.info("viewDidLoad \(self.id)")
     super.viewDidLoad()
+    redirectStderr()
     initProfile()
     startFcitx(Bundle.main.bundlePath, appGroup.path)
 
@@ -169,5 +178,9 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   public func globe() {
     Fcitx.toggle()
+  }
+
+  public func setCurrentInputMethod(_ inputMethod: String) {
+    Fcitx.setCurrentInputMethod(inputMethod)
   }
 }

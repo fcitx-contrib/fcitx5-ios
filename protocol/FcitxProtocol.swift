@@ -6,4 +6,5 @@ public protocol FcitxProtocol {
   func copy()
   func paste()
   func globe()
+  func setCurrentInputMethod(_ inputMethod: String)
 }

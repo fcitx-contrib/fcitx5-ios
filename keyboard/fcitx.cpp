@@ -58,3 +58,7 @@ void reload() {
 void toggle() {
     with_fcitx([] { instance->toggle(); });
 }
+
+void setCurrentInputMethod(const char *inputMethod) {
+    with_fcitx([=] { instance->setCurrentInputMethod(inputMethod); });
+}

@@ -8,3 +8,4 @@ void focusOut(id client);
 bool processKey(const char *key, const char *code);
 void reload();
 void toggle();
+void setCurrentInputMethod(const char *inputMethod);
