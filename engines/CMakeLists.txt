@@ -58,6 +58,7 @@ endif()
 if (RIME)
     # RIME_DATA_DIR is not actually used but must exist.
     set(RIME_DATA_DIR "/usr/share/rime-data")
+    find_library(LibJSCore JavaScriptCore)
     set(Rime_dependencies
         "-L${PREBUILDER_LIB_DIR}"
         "-lleveldb"
@@ -67,6 +68,7 @@ if (RIME)
         "-lglog"
         "-llua"
         "-lqjs"
+        "${LibJSCore}"
     )
     add_library(Rime_static STATIC IMPORTED)
     set_target_properties(Rime_static PROPERTIES
