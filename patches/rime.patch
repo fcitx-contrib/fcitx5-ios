@@ -1,8 +1,8 @@
 diff --git a/src/rimeengine.cpp b/src/rimeengine.cpp
-index b335069..a65a123 100644
+index cdaaa3d..0d44e0a 100644
 --- a/src/rimeengine.cpp
 +++ b/src/rimeengine.cpp
-@@ -47,6 +47,8 @@
+@@ -48,6 +48,8 @@
  #include <utility>
  #include <vector>
  
@@ -11,7 +11,7 @@ index b335069..a65a123 100644
  FCITX_DEFINE_LOG_CATEGORY(rime_log, "rime");
  
  namespace fcitx::rime {
-@@ -197,11 +199,17 @@ RimeEngine::RimeEngine(Instance *instance)
+@@ -201,11 +203,17 @@ RimeEngine::RimeEngine(Instance *instance)
      deployAction_.setIcon("fcitx_rime_deploy");
      deployAction_.setShortText(_("Deploy"));
      deployAction_.connect<SimpleAction::Activated>([this](InputContext *ic) {
@@ -29,12 +29,12 @@ index b335069..a65a123 100644
      });
      instance_->userInterfaceManager().registerAction("fcitx-rime-deploy",
                                                       &deployAction_);
-@@ -210,11 +218,17 @@ RimeEngine::RimeEngine(Instance *instance)
+@@ -214,11 +222,17 @@ RimeEngine::RimeEngine(Instance *instance)
      syncAction_.setShortText(_("Synchronize"));
  
      syncAction_.connect<SimpleAction::Activated>([this](InputContext *ic) {
 +#if 0
-         sync();
+         sync(/*userTriggered=*/true);
          auto *state = this->state(ic);
          if (state && ic->hasFocus()) {
              state->updateUI(ic, false);
@@ -47,7 +47,7 @@ index b335069..a65a123 100644
      });
      instance_->userInterfaceManager().registerAction("fcitx-rime-sync",
                                                       &syncAction_);
-@@ -305,7 +319,10 @@ void RimeEngine::rimeStart(bool fullcheck) {
+@@ -293,7 +307,10 @@ void RimeEngine::rimeStart(bool fullcheck) {
      }
      api_->initialize(&fcitx_rime_traits);
      api_->set_notification_handler(&rimeNotificationHandler, this);
@@ -58,7 +58,7 @@ index b335069..a65a123 100644
  
      if (!api_->is_maintenance_mode()) {
          updateAppOptions();
-@@ -582,12 +599,14 @@ void RimeEngine::notify(RimeSessionId session, const std::string &messageType,
+@@ -521,12 +538,14 @@ void RimeEngine::notify(RimeSessionId session, const std::string &messageType,
      bool blockMessage = false;
      if (messageType == "deploy") {
          tipId = "fcitx-rime-deploy";
@@ -74,7 +74,7 @@ index b335069..a65a123 100644
              if (!api_->is_maintenance_mode()) {
                  if (needRefreshAppOption_) {
                      api_->deploy_config_file("fcitx5.yaml", "config_version");
-@@ -602,6 +621,7 @@ void RimeEngine::notify(RimeSessionId session, const std::string &messageType,
+@@ -541,6 +560,7 @@ void RimeEngine::notify(RimeSessionId session, const std::string &messageType,
              needRefreshAppOption_ = false;
              message = _("Rime has encountered an error. "
                          "See log for details.");
