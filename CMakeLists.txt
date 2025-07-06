@@ -104,6 +104,7 @@ function(copy_to_app cmd file relative_path)
     \")
 endfunction()
 
+set(Fcitx5Utils_DIR "${PROJECT_SOURCE_DIR}/cmake")
 add_subdirectory(engines)
 
 fcitx5_get_addon_targets(ADDON_TARGETS iosnotifications engines fcitx5 iosfrontend uipanel)

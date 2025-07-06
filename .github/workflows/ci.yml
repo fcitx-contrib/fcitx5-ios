@@ -22,7 +22,7 @@ jobs:
     needs: lint
     runs-on: macos-15
     env:
-      MOZC_SHA: 1621842243c0f43fca77697aba523fb698e865bd
+      MOZC_SHA: 642deb7ba39436d525ff680eae79c6c861ec704a
     strategy:
       fail-fast: false
       matrix:
@@ -44,9 +44,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install \
-            nlohmann-json \
-            extra-cmake-modules
           ./scripts/install-deps.sh ${{ matrix.platform }}
           wget https://github.com/fcitx-contrib/fcitx5-prebuilder/releases/download/macos/marisa-$(uname -m).tar.bz2
           sudo tar xjvf marisa-$(uname -m).tar.bz2 -C /usr/local bin/marisa-build

@@ -1,2 +1,2 @@
 set(Fcitx5Core_FOUND TRUE)
-find_package(Fcitx5Utils REQUIRED MODULE)
+find_package(Fcitx5Utils REQUIRED CONFIG)
