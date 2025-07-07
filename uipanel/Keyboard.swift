@@ -14,6 +14,7 @@ private func getFlexes(_ keys: [[String: Any]]) -> [CGFloat] {
 
 struct KeyboardView: View {
   @Binding var spaceLabel: String
+  @Binding var enterLabel: String
   @State private var rows: [[String: Any]] = []
 
   var body: some View {
@@ -67,6 +68,8 @@ struct KeyboardView: View {
               BackspaceView(width: keyWidth, height: height)
             case "globe":
               GlobeView(width: keyWidth, height: height)
+            case "enter":
+              EnterView(label: enterLabel, width: keyWidth, height: height)
             default:
               VStack {}.frame(width: keyWidth, height: height)
             }
