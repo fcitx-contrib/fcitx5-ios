@@ -49,6 +49,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   override func viewWillAppear(_ animated: Bool) {
     logger.info("viewWillAppear \(self.id)")
+    virtualKeyboardView.setReturnKeyType(textDocumentProxy.returnKeyType)
     super.viewWillAppear(animated)
     if removeFile(appGroupTmp.appendingPathComponent("reload")) {
       logger.info("Reload accepted")
@@ -87,7 +88,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   public func keyPressed(_ key: String, _ code: String) {
     // documentContextBeforeInput could be all text or text in current line before cursor.
-    // In the latter case, it will be '\n' if cursor is at the beginning of a non-first line.
+    // In the latter case, it will be '\n' if caret is at the beginning of a non-first line.
     if !processKey(key, code) {
       switch code {
       case "ArrowDown":
@@ -105,13 +106,10 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
               byCharacterOffset: min(offset, nextLineLength))
           }
         }
-        break
       case "ArrowLeft":
         textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
-        break
       case "ArrowRight":
         textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
-        break
       case "ArrowUp":
         let offset = lengthOfLastLine(textDocumentProxy.documentContextBeforeInput ?? "")
         textDocumentProxy.adjustTextPosition(byCharacterOffset: -offset)
@@ -128,18 +126,16 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
             }
           }
         }
-        break
       case "Backspace":
         textDocumentProxy.deleteBackward()
-        break
       case "End":
         let textAfter = textDocumentProxy.documentContextAfterInput ?? ""
         textDocumentProxy.adjustTextPosition(byCharacterOffset: lengthOfFirstLine(textAfter))
-        break
+      case "Enter":
+        textDocumentProxy.insertText("\n")  // \r doesn't work in Safari address bar.
       case "Home":
         let textBefore = textDocumentProxy.documentContextBeforeInput ?? ""
         textDocumentProxy.adjustTextPosition(byCharacterOffset: -lengthOfLastLine(textBefore))
-        break
       default:
         if !key.isEmpty {
           textDocumentProxy.insertText(key)
@@ -152,9 +148,8 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     textDocumentProxy.insertText(commit)
   }
 
-  public func setPreedit(_ preedit: String, _ cursor: Int) {
-    let proxy = textDocumentProxy as! UITextDocumentProxy
-    proxy.setMarkedText(preedit, selectedRange: NSRange(location: cursor, length: 0))
+  public func setPreedit(_ preedit: String, _ caret: Int) {
+    textDocumentProxy.setMarkedText(preedit, selectedRange: NSRange(location: caret, length: 0))
   }
 
   public func cut() {

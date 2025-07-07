@@ -96,3 +96,18 @@ struct GlobeView: View {
       }
   }
 }
+
+struct EnterView: View {
+  let label: String
+  let width: CGFloat
+  let height: CGFloat
+
+  var body: some View {
+    Button {
+      client.keyPressed("\r", "Enter")
+    } label: {
+      Text(label)
+        .commonContentStyle(width: width, height: height, background: functionBackground)
+    }.commonContainerStyle(width: width, height: height)
+  }
+}

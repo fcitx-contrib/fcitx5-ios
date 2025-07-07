@@ -15,6 +15,7 @@ class ViewModel: ObservableObject {
   @Published var actions = [StatusAreaAction]()
   @Published var inputMethods = [InputMethod]()
   @Published var spaceLabel = ""
+  @Published var enterLabel = ""
 }
 
 public struct VirtualKeyboardView: View {
@@ -32,7 +33,7 @@ public struct VirtualKeyboardView: View {
       } else if viewModel.mode == .edit {
         EditView()
       } else {
-        KeyboardView(spaceLabel: $viewModel.spaceLabel)
+        KeyboardView(spaceLabel: $viewModel.spaceLabel, enterLabel: $viewModel.enterLabel)
       }
     }.background(lightBackground)
   }
@@ -60,6 +61,23 @@ public struct VirtualKeyboardView: View {
         viewModel.spaceLabel = inputMethod.displayName
         break
       }
+    }
+  }
+
+  public func setReturnKeyType(_ type: UIReturnKeyType?) {
+    switch type {
+    case .done:
+      viewModel.enterLabel = NSLocalizedString("done", comment: "")
+    case .go:
+      viewModel.enterLabel = NSLocalizedString("go", comment: "")
+    case .next:
+      viewModel.enterLabel = NSLocalizedString("next", comment: "")
+    case .search:
+      viewModel.enterLabel = NSLocalizedString("search", comment: "")
+    case .send:
+      viewModel.enterLabel = NSLocalizedString("send", comment: "")
+    default:
+      viewModel.enterLabel = NSLocalizedString("return", comment: "")
     }
   }
 }
