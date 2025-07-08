@@ -13,11 +13,15 @@ private func getFlexes(_ keys: [[String: Any]]) -> [CGFloat] {
 }
 
 struct KeyboardView: View {
+  @Binding var layer: String
+  @Binding var lock: Bool
   @Binding var spaceLabel: String
   @Binding var enterLabel: String
-  @State private var rows: [[String: Any]] = []
+  @State private var defaultRows = [[String: Any]]()
+  @State private var shiftRows = [[String: Any]]()
 
   var body: some View {
+    let rows = layer == "shift" ? shiftRows : defaultRows
     GeometryReader { geometry in
       let width = geometry.size.width
       let height = keyboardHeight / CGFloat(rows.count)
@@ -36,12 +40,17 @@ struct KeyboardView: View {
     let layoutUrl = Bundle.main.bundleURL.appendingPathComponent("share/layout/qwerty.json")
     guard let content = readJSON(layoutUrl) as? [String: Any],
       let layers = content["layers"] as? [[String: Any]],
-      let defaultLayer = layers.first,
-      let rows = defaultLayer["rows"] as? [[String: Any]]
+      let defaultLayer = layers.filter({ $0["id"] as? String == "default" }).first,
+      let defaultRows = defaultLayer["rows"] as? [[String: Any]]
     else {
       return
     }
-    self.rows = rows
+    self.defaultRows = defaultRows
+    if let shiftLayer = layers.filter({ $0["id"] as? String == "shift" }).first,
+      let shiftRows = shiftLayer["rows"] as? [[String: Any]]
+    {
+      self.shiftRows = shiftRows
+    }
   }
 
   func renderRow(_ row: [String: Any], _ width: CGFloat, _ height: CGFloat) -> some View {
@@ -70,6 +79,10 @@ struct KeyboardView: View {
               GlobeView(width: keyWidth, height: height)
             case "enter":
               EnterView(label: enterLabel, width: keyWidth, height: height)
+            case "shift":
+              ShiftView(
+                state: layer == "shift" ? (lock ? .capslock : .shift) : .normal, width: keyWidth,
+                height: height)
             default:
               VStack {}.frame(width: keyWidth, height: height)
             }

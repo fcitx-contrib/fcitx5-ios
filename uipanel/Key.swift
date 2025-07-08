@@ -26,6 +26,7 @@ struct KeyView: View {
 
   var body: some View {
     Button {
+      virtualKeyboardView.resetLayerIfNotLocked()
       client.keyPressed(key, "")
     } label: {
       Text(label)
@@ -42,6 +43,7 @@ struct SpaceView: View {
 
   var body: some View {
     Button {
+      virtualKeyboardView.resetLayerIfNotLocked()
       client.keyPressed(" ", "")
     } label: {
       Text(label)
@@ -57,6 +59,7 @@ struct BackspaceView: View {
 
   var body: some View {
     Button {
+      virtualKeyboardView.resetLayerIfNotLocked()
       client.keyPressed("", "Backspace")
     } label: {
       VStack {
@@ -76,6 +79,7 @@ struct GlobeView: View {
 
   var body: some View {
     Button {
+      virtualKeyboardView.resetLayerIfNotLocked()
       client.globe()
     } label: {
       VStack {
@@ -88,6 +92,7 @@ struct GlobeView: View {
       .contextMenu {
         ForEach(virtualKeyboardView.viewModel.inputMethods, id: \.name) { inputMethod in
           Button {
+            virtualKeyboardView.resetLayerIfNotLocked()
             client.setCurrentInputMethod(inputMethod.name)
           } label: {
             Text(inputMethod.displayName)
@@ -104,10 +109,40 @@ struct EnterView: View {
 
   var body: some View {
     Button {
+      virtualKeyboardView.resetLayerIfNotLocked()
       client.keyPressed("\r", "Enter")
     } label: {
       Text(label)
         .commonContentStyle(width: width, height: height, background: functionBackground)
+    }.commonContainerStyle(width: width, height: height)
+  }
+}
+
+enum ShiftState {
+  case normal
+  case shift
+  case capslock
+}
+
+struct ShiftView: View {
+  let state: ShiftState
+  let width: CGFloat
+  let height: CGFloat
+
+  var body: some View {
+    Button {
+      virtualKeyboardView.setLayer(
+        state == .normal ? "shift" : "default"
+      )
+    } label: {
+      VStack {
+        Image(
+          systemName: state == .normal ? "shift" : state == .shift ? "shift.fill" : "capslock.fill"
+        )
+        .resizable()
+        .aspectRatio(contentMode: .fit)
+        .frame(height: height * 0.4)
+      }.commonContentStyle(width: width, height: height, background: functionBackground)
     }.commonContainerStyle(width: width, height: height)
   }
 }
