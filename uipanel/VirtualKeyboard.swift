@@ -16,6 +16,8 @@ class ViewModel: ObservableObject {
   @Published var inputMethods = [InputMethod]()
   @Published var spaceLabel = ""
   @Published var enterLabel = ""
+  @Published var layer = "default"
+  @Published var lock = false
 }
 
 public struct VirtualKeyboardView: View {
@@ -33,7 +35,9 @@ public struct VirtualKeyboardView: View {
       } else if viewModel.mode == .edit {
         EditView()
       } else {
-        KeyboardView(spaceLabel: $viewModel.spaceLabel, enterLabel: $viewModel.enterLabel)
+        KeyboardView(
+          layer: $viewModel.layer, lock: $viewModel.lock, spaceLabel: $viewModel.spaceLabel,
+          enterLabel: $viewModel.enterLabel)
       }
     }.background(lightBackground)
   }
@@ -78,6 +82,17 @@ public struct VirtualKeyboardView: View {
       viewModel.enterLabel = NSLocalizedString("send", comment: "")
     default:
       viewModel.enterLabel = NSLocalizedString("return", comment: "")
+    }
+  }
+
+  func setLayer(_ layer: String, lock: Bool = false) {
+    viewModel.layer = layer
+    viewModel.lock = lock
+  }
+
+  func resetLayerIfNotLocked() {
+    if !viewModel.lock {
+      viewModel.layer = "default"
     }
   }
 }
