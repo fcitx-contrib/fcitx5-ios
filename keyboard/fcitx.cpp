@@ -30,8 +30,10 @@ void focusOut(id client) {
 
 bool processKey(const char *key, const char *code) {
     return with_fcitx([=] {
-        return frontend->keyEvent(fcitx::js_key_to_fcitx_key(key, code, 0),
-                                  false);
+        return frontend->keyEvent(
+            fcitx::js_key_to_fcitx_key(key, code,
+                                       1 << 29 /* KeyState::Virtual */),
+            false);
     });
 }
 
