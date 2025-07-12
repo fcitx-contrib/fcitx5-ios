@@ -22,14 +22,18 @@ public func setCandidatesAsync(_ candidates: [String]) {
 public struct StatusAreaAction: Identifiable {
   public let id: Int32
   let desc: String
+  let icon: String
   let checked: Bool
   let separator: Bool
   let children: [StatusAreaAction]
 
-  public init(id: Int32, desc: String, checked: Bool, separator: Bool, children: [StatusAreaAction])
-  {
+  public init(
+    id: Int32, desc: String, icon: String, checked: Bool, separator: Bool,
+    children: [StatusAreaAction]
+  ) {
     self.id = id
     self.desc = desc
+    self.icon = icon
     self.separator = separator
     self.checked = checked
     self.children = children
