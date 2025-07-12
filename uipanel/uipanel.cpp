@@ -28,6 +28,12 @@ void UIPanel::update(UserInterfaceComponent component,
     switch (component) {
     case UserInterfaceComponent::InputPanel: {
         const InputPanel &inputPanel = inputContext->inputPanel();
+        auto auxUp = instance_->outputFilter(inputContext, inputPanel.auxUp())
+                         .toString();
+        auto preedit =
+            instance_->outputFilter(inputContext, inputPanel.preedit())
+                .toString();
+        auto caret = inputPanel.preedit().cursor();
         int size = 0;
         auto candidates = swift::Array<swift::String>::init();
         if (const auto &list = inputPanel.candidateList()) {
@@ -39,7 +45,7 @@ void UIPanel::update(UserInterfaceComponent component,
                         .toString());
             }
         }
-        KeyboardUI::setCandidatesAsync(candidates);
+        KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates);
         break;
     }
     case UserInterfaceComponent::StatusArea:
