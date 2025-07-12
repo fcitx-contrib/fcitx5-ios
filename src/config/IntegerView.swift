@@ -20,8 +20,10 @@ struct IntegerView: OptionViewProtocol {
     let minValue = Int(data["IntMin"] as? String ?? "")
     let maxValue = Int(data["IntMax"] as? String ?? "")
     HStack {
-      Text(label)
+      // Limit width of TextField and let Text expand, otherwise they take 1/3 each.
+      Text(label).frame(maxWidth: .infinity, alignment: .leading)
       TextField("", value: $number, formatter: numberFormatter).multilineTextAlignment(.trailing)
+        .frame(width: 60)
       if let minValue = minValue, let maxValue = maxValue {
         Stepper(
           value: $number,

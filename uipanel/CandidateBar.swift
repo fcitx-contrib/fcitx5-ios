@@ -3,6 +3,9 @@ import SwiftUI
 let auxPreeditRatio = 0.32  // Same with fcitx5-keyboard-web
 
 private func preeditWithCaret(_ preedit: String, _ caret: Int) -> String {
+  if preedit.isEmpty {
+    return ""
+  }
   var index = 0
   if caret > 0 {
     var utf8 = 0
