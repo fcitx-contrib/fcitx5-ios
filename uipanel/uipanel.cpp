@@ -56,8 +56,8 @@ KeyboardUI::StatusAreaAction convertAction(Action *action, InputContext *ic) {
         }
     }
     return KeyboardUI::StatusAreaAction::init(
-        action->id(), action->shortText(ic), action->isChecked(ic),
-        action->isSeparator(), children);
+        action->id(), action->shortText(ic), action->icon(ic),
+        action->isChecked(ic), action->isSeparator(), children);
 }
 
 void UIPanel::updateStatusArea(InputContext *ic) {

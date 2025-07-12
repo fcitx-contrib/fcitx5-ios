@@ -133,6 +133,11 @@ endif()
 
 copy_to_keyboard(copy_directory "${PROJECT_SOURCE_DIR}/fcitx5-keyboard-layouts/layout" "share/layout")
 
+# Assets
+add_dependencies(${BUNDLE_NAME} png_images)
+copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/full-punc.png" "share/png/full-punc.png")
+copy_to_keyboard(copy "${PROJECT_BINARY_DIR}/half-punc.png" "share/png/half-punc.png")
+
 # Embed keyboard.appex in app.
 copy_to_app(copy_directory "${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>-${SDK_NAME}/keyboard.appex" "PlugIns/keyboard.appex")
 # Copy share directory, icon and profile.

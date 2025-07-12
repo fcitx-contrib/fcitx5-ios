@@ -109,6 +109,7 @@ add_subdirectory(engines)
 
 fcitx5_get_addon_targets(ADDON_TARGETS iosnotifications engines fcitx5 iosfrontend uipanel)
 
+add_subdirectory(assets)
 add_subdirectory(common)
 add_subdirectory(keyboard)
 add_subdirectory(src)
