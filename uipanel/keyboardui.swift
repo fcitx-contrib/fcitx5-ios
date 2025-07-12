@@ -13,9 +13,11 @@ public func showKeyboardAsync(_ clientPtr: UnsafeMutableRawPointer) {
   client = obj
 }
 
-public func setCandidatesAsync(_ candidates: [String]) {
+public func setCandidatesAsync(
+  _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String]
+) {
   DispatchQueue.main.async {
-    virtualKeyboardView.setCandidates(candidates)
+    virtualKeyboardView.setCandidates(auxUp, preedit, caret, candidates)
   }
 }
 

@@ -11,6 +11,9 @@ public enum DisplayMode {
 
 class ViewModel: ObservableObject {
   @Published var mode: DisplayMode = .initial
+  @Published var auxUp = ""
+  @Published var preedit = ""
+  @Published var caret = 0
   @Published var candidates: [String] = []
   @Published var actions = [StatusAreaAction]()
   @Published var inputMethods = [InputMethod]()
@@ -28,7 +31,9 @@ public struct VirtualKeyboardView: View {
       if viewModel.mode == .initial {
         ToolbarView()
       } else if viewModel.mode == .candidates {
-        CandidateBarView(candidates: $viewModel.candidates)
+        CandidateBarView(
+          auxUp: $viewModel.auxUp, preedit: $viewModel.preedit, caret: $viewModel.caret,
+          candidates: $viewModel.candidates)
       }
       if viewModel.mode == .statusArea {
         StatusAreaView(actions: $viewModel.actions)
@@ -46,12 +51,17 @@ public struct VirtualKeyboardView: View {
     viewModel.mode = mode
   }
 
-  public func setCandidates(_ candidates: [String]) {
-    if !candidates.isEmpty {
+  public func setCandidates(
+    _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String]
+  ) {
+    if !auxUp.isEmpty || !preedit.isEmpty || !candidates.isEmpty {
       setDisplayMode(.candidates)
     } else if viewModel.mode == .candidates {
       setDisplayMode(.initial)
     }
+    viewModel.auxUp = auxUp
+    viewModel.preedit = preedit
+    viewModel.caret = Int(caret)
     viewModel.candidates = candidates
   }
 
