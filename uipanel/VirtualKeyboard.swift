@@ -15,6 +15,7 @@ class ViewModel: ObservableObject {
   @Published var preedit = ""
   @Published var caret = 0
   @Published var candidates: [String] = []
+  @Published var batch = 0  // Tell candidate container to reset state
   @Published var actions = [StatusAreaAction]()
   @Published var inputMethods = [InputMethod]()
   @Published var spaceLabel = ""
@@ -33,7 +34,7 @@ public struct VirtualKeyboardView: View {
       } else if viewModel.mode == .candidates {
         CandidateBarView(
           auxUp: $viewModel.auxUp, preedit: $viewModel.preedit, caret: $viewModel.caret,
-          candidates: $viewModel.candidates)
+          candidates: $viewModel.candidates, batch: $viewModel.batch)
       }
       if viewModel.mode == .statusArea {
         StatusAreaView(actions: $viewModel.actions)
@@ -63,6 +64,7 @@ public struct VirtualKeyboardView: View {
     viewModel.preedit = preedit
     viewModel.caret = Int(caret)
     viewModel.candidates = candidates
+    viewModel.batch = (viewModel.batch + 1) & 0xFFFF
   }
 
   public func setStatusArea(

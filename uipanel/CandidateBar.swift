@@ -25,6 +25,7 @@ struct CandidateBarView: View {
   @Binding var preedit: String
   @Binding var caret: Int
   @Binding var candidates: [String]
+  @Binding var batch: Int
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
@@ -34,15 +35,22 @@ struct CandidateBarView: View {
         )
         .padding([.leading], 4)
       }
-      ScrollView(.horizontal) {
-        HStack(spacing: 20) {
-          ForEach(Array(candidates.enumerated()), id: \.offset) { index, candidate in
-            CandidateView(text: candidate, index: index)
+      ScrollViewReader { proxy in
+        ScrollView(.horizontal) {
+          HStack(spacing: 20) {
+            ForEach(Array(candidates.enumerated()), id: \.offset) { index, candidate in
+              CandidateView(text: candidate, index: index)
+            }
+            Spacer()
+          }.frame(
+            height: barHeight * (auxUp.isEmpty && preedit.isEmpty ? 1 : (1 - auxPreeditRatio)))
+        }.scrollIndicators(.hidden)  // Hide scroll bar as native keyboard.
+          .padding([.leading], 10)
+          .onChange(of: batch) { _ in
+            // Use batch instead of candidates because we don't want to reset on loading more.
+            proxy.scrollTo(0)
           }
-          Spacer()
-        }.frame(height: barHeight * (auxUp.isEmpty && preedit.isEmpty ? 1 : (1 - auxPreeditRatio)))
-      }.scrollIndicators(.hidden)  // Hide scroll bar as native keyboard.
-        .padding([.leading], 10)
+      }
     }
   }
 }
