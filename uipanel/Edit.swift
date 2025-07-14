@@ -1,14 +1,15 @@
 import SwiftUI
 
 struct EditView: View {
+  let totalWidth: CGFloat
+
   var body: some View {
+    let height = keyboardHeight / 4
+    let width = totalWidth / 4
     VStack(spacing: 0) {
       ReturnBarView()
 
-      GeometryReader { geometry in
-        let width = geometry.size.width / 4
-        let height = keyboardHeight / 4
-
+      ZStack {
         button(
           image: "arrowtriangle.left.fill", shrink: 15, background: normalBackground, index: 0,
           width: width,

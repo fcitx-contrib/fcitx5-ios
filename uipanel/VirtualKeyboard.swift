@@ -28,24 +28,28 @@ public struct VirtualKeyboardView: View {
   @ObservedObject var viewModel = ViewModel()
 
   public var body: some View {
-    VStack(spacing: 0) {
-      if viewModel.mode == .initial {
-        ToolbarView()
-      } else if viewModel.mode == .candidates {
-        CandidateBarView(
-          auxUp: $viewModel.auxUp, preedit: $viewModel.preedit, caret: $viewModel.caret,
-          candidates: $viewModel.candidates, batch: $viewModel.batch)
-      }
-      if viewModel.mode == .statusArea {
-        StatusAreaView(actions: $viewModel.actions)
-      } else if viewModel.mode == .edit {
-        EditView()
-      } else {
-        KeyboardView(
-          layer: $viewModel.layer, lock: $viewModel.lock, spaceLabel: $viewModel.spaceLabel,
-          enterLabel: $viewModel.enterLabel)
-      }
-    }.background(lightBackground)
+    GeometryReader { geometry in
+      let width = geometry.size.width
+      VStack(spacing: 0) {
+        if viewModel.mode == .initial {
+          ToolbarView()
+        } else if viewModel.mode == .candidates {
+          CandidateBarView(
+            auxUp: $viewModel.auxUp, preedit: $viewModel.preedit, caret: $viewModel.caret,
+            candidates: $viewModel.candidates, batch: $viewModel.batch)
+        }
+        if viewModel.mode == .statusArea {
+          StatusAreaView(actions: $viewModel.actions)
+        } else if viewModel.mode == .edit {
+          EditView(totalWidth: width)
+        } else {
+          KeyboardView(
+            width: width, layer: viewModel.layer, lock: viewModel.lock,
+            spaceLabel: viewModel.spaceLabel,
+            enterLabel: viewModel.enterLabel)
+        }
+      }.background(lightBackground)
+    }.frame(height: barHeight + keyboardHeight)
   }
 
   public func setDisplayMode(_ mode: DisplayMode) {

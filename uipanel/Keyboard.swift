@@ -13,27 +13,26 @@ private func getFlexes(_ keys: [[String: Any]]) -> [CGFloat] {
 }
 
 struct KeyboardView: View {
-  @Binding var layer: String
-  @Binding var lock: Bool
-  @Binding var spaceLabel: String
-  @Binding var enterLabel: String
+  let width: CGFloat
+  let layer: String
+  let lock: Bool
+  let spaceLabel: String
+  let enterLabel: String
   @State private var defaultRows = [[String: Any]]()
   @State private var shiftRows = [[String: Any]]()
 
   var body: some View {
     let rows = layer == "shift" ? shiftRows : defaultRows
-    GeometryReader { geometry in
-      let width = geometry.size.width
-      let height = keyboardHeight / CGFloat(rows.count)
-      VStack(spacing: 0) {
-        ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-          renderRow(row, width, height)
-        }
+    let height = keyboardHeight / CGFloat(rows.count)
+    VStack(spacing: 0) {
+      ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+        renderRow(row, width, height)
       }
-      .onAppear {
-        setLayout()
-      }
-    }.frame(height: keyboardHeight)
+    }
+    .frame(height: keyboardHeight)
+    .onAppear {
+      setLayout()
+    }
   }
 
   func setLayout() {
