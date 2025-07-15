@@ -14,14 +14,10 @@ struct CandidateView: View {
   var body: some View {
     Text(text).font(.system(size: 20)).onTapGesture {
       selectCandidate(Int32(index))
-    }.contextMenu {
+    }.onContextMenu {
       let actions = deserialize([CandidateAction].self, String(getCandidateActions(Int32(index))))
-      ForEach(actions) { action in
-        Button {
-          activateCandidateAction(Int32(index), action.id)
-        } label: {
-          Text(action.text)
-        }
+      return actions.map { action in
+        MenuItem(text: action.text, action: { activateCandidateAction(Int32(index), action.id) })
       }
     }
   }

@@ -1,6 +1,7 @@
 add_library(KeyboardUI STATIC
     keyboardui.swift
     VirtualKeyboard.swift
+    ContextMenu.swift
     Key.swift
     Keyboard.swift
     Candidate.swift
