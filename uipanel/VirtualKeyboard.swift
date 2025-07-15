@@ -11,17 +11,23 @@ public enum DisplayMode {
 
 class ViewModel: ObservableObject {
   @Published var mode: DisplayMode = .initial
+
   @Published var auxUp = ""
   @Published var preedit = ""
   @Published var caret = 0
-  @Published var candidates: [String] = []
+  @Published var candidates = [String]()
   @Published var batch = 0  // Tell candidate container to reset state
+
   @Published var actions = [StatusAreaAction]()
   @Published var inputMethods = [InputMethod]()
   @Published var spaceLabel = ""
   @Published var enterLabel = ""
   @Published var layer = "default"
   @Published var lock = false
+
+  @Published var frame = CGRect()
+  @Published var menuItems = [MenuItem]()
+  @Published var showMenu = false
 }
 
 public struct VirtualKeyboardView: View {
@@ -29,26 +35,36 @@ public struct VirtualKeyboardView: View {
 
   public var body: some View {
     GeometryReader { geometry in
-      let width = geometry.size.width
-      VStack(spacing: 0) {
-        if viewModel.mode == .initial {
-          ToolbarView()
-        } else if viewModel.mode == .candidates {
-          CandidateBarView(
-            auxUp: $viewModel.auxUp, preedit: $viewModel.preedit, caret: $viewModel.caret,
-            candidates: $viewModel.candidates, batch: $viewModel.batch)
+      ZStack {
+        let width = geometry.size.width
+        VStack(spacing: 0) {
+          if viewModel.mode == .initial {
+            ToolbarView()
+          } else if viewModel.mode == .candidates {
+            CandidateBarView(
+              auxUp: $viewModel.auxUp, preedit: $viewModel.preedit, caret: $viewModel.caret,
+              candidates: $viewModel.candidates, batch: $viewModel.batch)
+          }
+          if viewModel.mode == .statusArea {
+            StatusAreaView(actions: $viewModel.actions)
+          } else if viewModel.mode == .edit {
+            EditView(totalWidth: width)
+          } else {
+            KeyboardView(
+              width: width, layer: viewModel.layer, lock: viewModel.lock,
+              spaceLabel: viewModel.spaceLabel,
+              enterLabel: viewModel.enterLabel)
+          }
+        }.background(lightBackground)
+        if viewModel.showMenu {
+          ContextMenuOverlay(
+            items: viewModel.menuItems,
+            frame: viewModel.frame,
+            containerSize: CGSize(width: width, height: barHeight + keyboardHeight),
+            onDismiss: { viewModel.showMenu = false }
+          )
         }
-        if viewModel.mode == .statusArea {
-          StatusAreaView(actions: $viewModel.actions)
-        } else if viewModel.mode == .edit {
-          EditView(totalWidth: width)
-        } else {
-          KeyboardView(
-            width: width, layer: viewModel.layer, lock: viewModel.lock,
-            spaceLabel: viewModel.spaceLabel,
-            enterLabel: viewModel.enterLabel)
-        }
-      }.background(lightBackground)
+      }
     }.frame(height: barHeight + keyboardHeight)
   }
 
@@ -110,6 +126,12 @@ public struct VirtualKeyboardView: View {
     if !viewModel.lock {
       viewModel.layer = "default"
     }
+  }
+
+  func showContextMenu(_ frame: CGRect, _ items: [MenuItem]) {
+    viewModel.frame = frame
+    viewModel.menuItems = items
+    viewModel.showMenu = true
   }
 }
 
