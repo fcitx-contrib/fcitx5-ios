@@ -21,6 +21,12 @@ public func setCandidatesAsync(
   }
 }
 
+public func scrollAsync(_ candidates: [String], _ start: Bool, _ end: Bool) {
+  DispatchQueue.main.async {
+    virtualKeyboardView.scroll(candidates, start, end)
+  }
+}
+
 public struct StatusAreaAction: Identifiable {
   public let id: Int32
   let desc: String

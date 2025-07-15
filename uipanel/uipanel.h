@@ -28,11 +28,13 @@ class UIPanel final : public VirtualKeyboardUserInterface {
     bool isVirtualKeyboardVisible() const override { return true; }
     void showVirtualKeyboard() override;
     void hideVirtualKeyboard() override {}
+    void scroll(int start, int count);
 
   private:
     Instance *instance_;
 
     void updateStatusArea(InputContext *ic);
+    void expand();
 };
 
 class UIPanelFactory : public AddonFactory {

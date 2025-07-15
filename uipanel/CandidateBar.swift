@@ -1,6 +1,8 @@
 import SwiftUI
+import UIPanel
 
 let auxPreeditRatio = 0.32  // Same with fcitx5-keyboard-web
+let candidateCountInRow = 10
 
 private func preeditWithCaret(_ preedit: String, _ caret: Int) -> String {
   if preedit.isEmpty {
@@ -21,11 +23,12 @@ private func preeditWithCaret(_ preedit: String, _ caret: Int) -> String {
 }
 
 struct CandidateBarView: View {
-  @Binding var auxUp: String
-  @Binding var preedit: String
-  @Binding var caret: Int
-  @Binding var candidates: [String]
-  @Binding var batch: Int
+  let auxUp: String
+  let preedit: String
+  let caret: Int
+  let candidates: [String]
+  let batch: Int
+  let scrollEnd: Bool
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
@@ -37,9 +40,14 @@ struct CandidateBarView: View {
       }
       ScrollViewReader { proxy in
         ScrollView(.horizontal) {
-          HStack(spacing: 20) {
+          // Use LazyHStack so that onAppear is triggered only when candidate is scrolled into view.
+          LazyHStack(spacing: 20) {
             ForEach(Array(candidates.enumerated()), id: \.offset) { index, candidate in
-              CandidateView(text: candidate, index: index)
+              CandidateView(text: candidate, index: index).onAppear {
+                if !scrollEnd && index == candidates.count - candidateCountInRow {
+                  scroll(Int32(candidates.count), Int32(candidateCountInRow))
+                }
+              }
             }
             Spacer()
           }.frame(

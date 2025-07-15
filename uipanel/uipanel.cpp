@@ -14,7 +14,9 @@
 
 namespace fcitx {
 
-UIPanel::UIPanel(Instance *instance) : instance_(instance) {}
+UIPanel *ui;
+
+UIPanel::UIPanel(Instance *instance) : instance_(instance) { ui = this; }
 
 void UIPanel::showVirtualKeyboard() {
     if (auto ic = dynamic_cast<IosInputContext *>(
@@ -37,6 +39,12 @@ void UIPanel::update(UserInterfaceComponent component,
         int size = 0;
         auto candidates = swift::Array<swift::String>::init();
         if (const auto &list = inputPanel.candidateList()) {
+            const auto &bulk = list->toBulk();
+            if (bulk) {
+                KeyboardUI::setCandidatesAsync(auxUp, preedit, caret,
+                                               candidates);
+                return expand();
+            }
             size = list->size();
             for (int i = 0; i < size; i++) {
                 const auto &candidate = list->candidate(i);
@@ -52,6 +60,37 @@ void UIPanel::update(UserInterfaceComponent component,
         updateStatusArea(inputContext);
         break;
     }
+}
+
+// Vertically 1.5 screens.
+void UIPanel::expand() { scroll(0, 48); }
+
+void UIPanel::scroll(int start, int count) {
+    auto ic = instance_->mostRecentInputContext();
+    const auto &list = ic->inputPanel().candidateList();
+    if (!list) {
+        return;
+    }
+    const auto &bulk = list->toBulk();
+    if (!bulk) {
+        return;
+    }
+    int size = bulk->totalSize();
+    int end = size < 0 ? start + count : std::min(start + count, size);
+    bool endReached = size == end;
+    auto candidates = swift::Array<swift::String>::init();
+    for (int i = start; i < end; ++i) {
+        try {
+            auto &candidate = bulk->candidateFromAll(i);
+            candidates.append(
+                instance_->outputFilter(ic, candidate.text()).toString());
+        } catch (const std::invalid_argument &e) {
+            // size == -1 but actual limit is reached
+            endReached = true;
+            break;
+        }
+    }
+    KeyboardUI::scrollAsync(candidates, start == 0, endReached);
 }
 
 KeyboardUI::StatusAreaAction convertAction(Action *action, InputContext *ic) {
@@ -80,12 +119,28 @@ void UIPanel::updateStatusArea(InputContext *ic) {
     KeyboardUI::setStatusAreaAsync(actions, im.c_str());
 }
 
+static std::string serializeActions(ActionableCandidateList *actionableList,
+                                    const CandidateWord &candidate) {
+    if (actionableList->hasAction(candidate)) {
+        auto j = nlohmann::json::array();
+        for (const auto &action : actionableList->candidateActions(candidate)) {
+            j.push_back({{"id", action.id()}, {"text", action.text()}});
+        }
+        return j.dump();
+    }
+    return "[]";
+}
+
 } // namespace fcitx
 
 FCITX_ADDON_FACTORY_V2(uipanel, fcitx::UIPanelFactory);
 
+void scroll(int start, int count) {
+    with_fcitx([start, count] { fcitx::ui->scroll(start, count); });
+}
+
 std::string getCandidateActions(int index) {
-    return with_fcitx([index] -> std::string {
+    return with_fcitx([index]() -> std::string {
         auto ic = instance->mostRecentInputContext();
         const auto &list = ic->inputPanel().candidateList();
         if (!list)
@@ -94,18 +149,21 @@ std::string getCandidateActions(int index) {
         if (!actionableList) {
             return "[]";
         }
-        try {
-            const auto &candidate = list->candidate(index);
-            if (actionableList->hasAction(candidate)) {
-                auto j = nlohmann::json::array();
-                for (const auto &action :
-                     actionableList->candidateActions(candidate)) {
-                    j.push_back({{"id", action.id()}, {"text", action.text()}});
-                }
-                return j.dump();
+        const auto &bulk = list->toBulk();
+        if (bulk) {
+            try {
+                auto &candidate = bulk->candidateFromAll(index);
+                return serializeActions(actionableList, candidate);
+            } catch (const std::invalid_argument &e) {
+                FCITX_ERROR() << "action candidate index out of range";
             }
-        } catch (const std::invalid_argument &e) {
-            FCITX_ERROR() << "action candidate index out of range";
+        } else {
+            try {
+                const auto &candidate = list->candidate(index);
+                return serializeActions(actionableList, candidate);
+            } catch (const std::invalid_argument &e) {
+                FCITX_ERROR() << "action candidate index out of range";
+            }
         }
         return "[]";
     });
@@ -120,13 +178,25 @@ void activateCandidateAction(int index, int id) {
         auto *actionableList = list->toActionable();
         if (!actionableList)
             return;
-        try {
-            const auto &candidate = list->candidate(index);
-            if (actionableList->hasAction(candidate)) {
-                actionableList->triggerAction(candidate, id);
+        const auto &bulk = list->toBulk();
+        if (bulk) {
+            try {
+                const auto &candidate = bulk->candidateFromAll(index);
+                if (actionableList->hasAction(candidate)) {
+                    actionableList->triggerAction(candidate, id);
+                }
+            } catch (const std::invalid_argument &e) {
+                FCITX_ERROR() << "action candidate index out of range";
             }
-        } catch (const std::invalid_argument &e) {
-            FCITX_ERROR() << "action candidate index out of range";
+        } else {
+            try {
+                const auto &candidate = list->candidate(index);
+                if (actionableList->hasAction(candidate)) {
+                    actionableList->triggerAction(candidate, id);
+                }
+            } catch (const std::invalid_argument &e) {
+                FCITX_ERROR() << "action candidate index out of range";
+            }
         }
     });
 }
@@ -137,11 +207,20 @@ void selectCandidate(int index) {
         const auto &list = ic->inputPanel().candidateList();
         if (!list)
             return;
-        try {
-            // Engine is responsible for updating UI
-            list->candidate(index).select(ic);
-        } catch (const std::invalid_argument &e) {
-            FCITX_ERROR() << "select candidate index out of range";
+        const auto &bulk = list->toBulk();
+        // Engine is responsible for updating UI
+        if (bulk) {
+            try {
+                bulk->candidateFromAll(index).select(ic);
+            } catch (const std::invalid_argument &e) {
+                FCITX_ERROR() << "select candidate index out of range";
+            }
+        } else {
+            try {
+                list->candidate(index).select(ic);
+            } catch (const std::invalid_argument &e) {
+                FCITX_ERROR() << "select candidate index out of range";
+            }
         }
     });
 }
