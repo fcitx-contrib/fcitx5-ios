@@ -17,6 +17,7 @@ class ViewModel: ObservableObject {
   @Published var caret = 0
   @Published var candidates = [String]()
   @Published var batch = 0  // Tell candidate container to reset state
+  @Published var scrollEnd = false
 
   @Published var actions = [StatusAreaAction]()
   @Published var inputMethods = [InputMethod]()
@@ -42,8 +43,9 @@ public struct VirtualKeyboardView: View {
             ToolbarView()
           } else if viewModel.mode == .candidates {
             CandidateBarView(
-              auxUp: $viewModel.auxUp, preedit: $viewModel.preedit, caret: $viewModel.caret,
-              candidates: $viewModel.candidates, batch: $viewModel.batch)
+              auxUp: viewModel.auxUp, preedit: viewModel.preedit, caret: viewModel.caret,
+              candidates: viewModel.candidates, batch: viewModel.batch,
+              scrollEnd: viewModel.scrollEnd)
           }
           if viewModel.mode == .statusArea {
             StatusAreaView(actions: $viewModel.actions)
@@ -85,6 +87,18 @@ public struct VirtualKeyboardView: View {
     viewModel.caret = Int(caret)
     viewModel.candidates = candidates
     viewModel.batch = (viewModel.batch + 1) & 0xFFFF
+  }
+
+  public func scroll(_ candidates: [String], _ start: Bool, _ end: Bool) {
+    if start {
+      setDisplayMode(.candidates)
+      viewModel.candidates = candidates
+      viewModel.batch = (viewModel.batch + 1) & 0xFFFF
+    } else {
+      viewModel.candidates.append(contentsOf: candidates)
+      // Don't update batch as we don't want to reset scroll position.
+    }
+    viewModel.scrollEnd = end
   }
 
   public func setStatusArea(
