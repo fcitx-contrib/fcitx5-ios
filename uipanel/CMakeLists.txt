@@ -9,6 +9,7 @@ add_library(KeyboardUI STATIC
     Toolbar.swift
     StatusArea.swift
     Edit.swift
+    Symbol.swift
     ReturnBar.swift
     ui.swift
 )
