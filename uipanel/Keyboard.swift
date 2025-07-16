@@ -82,6 +82,8 @@ struct KeyboardView: View {
               ShiftView(
                 state: layer == "shift" ? (lock ? .capslock : .shift) : .normal, width: keyWidth,
                 height: height)
+            case "symbol":
+              SymbolKeyView(width: keyWidth, height: height)
             default:
               VStack {}.frame(width: keyWidth, height: height)
             }

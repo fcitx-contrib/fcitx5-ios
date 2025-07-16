@@ -37,6 +37,10 @@ bool processKey(const char *key, const char *code) {
     });
 }
 
+void resetInput() {
+    with_fcitx([] { frontend->resetInput(); });
+}
+
 void reload() {
     with_fcitx([] {
         instance->reloadConfig();

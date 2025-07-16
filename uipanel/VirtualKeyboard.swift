@@ -7,10 +7,12 @@ public enum DisplayMode {
   case candidates
   case edit
   case statusArea
+  case symbol
 }
 
 class ViewModel: ObservableObject {
   @Published var mode: DisplayMode = .initial
+  @Published var returnMode: DisplayMode = .initial  // or .candidates
 
   @Published var auxUp = ""
   @Published var preedit = ""
@@ -51,6 +53,8 @@ public struct VirtualKeyboardView: View {
             StatusAreaView(actions: $viewModel.actions)
           } else if viewModel.mode == .edit {
             EditView(totalWidth: width)
+          } else if viewModel.mode == .symbol {
+            SymbolView(width: width)
           } else {
             KeyboardView(
               width: width, layer: viewModel.layer, lock: viewModel.lock,
@@ -71,7 +75,19 @@ public struct VirtualKeyboardView: View {
   }
 
   public func setDisplayMode(_ mode: DisplayMode) {
+    if viewModel.mode == .candidates && mode == .symbol {
+      viewModel.returnMode = .candidates
+    }
     viewModel.mode = mode
+  }
+
+  public func popDisplayMode() {
+    if viewModel.returnMode == .candidates {
+      viewModel.mode = .candidates
+      viewModel.returnMode = .initial
+    } else {
+      viewModel.mode = .initial
+    }
   }
 
   public func setCandidates(

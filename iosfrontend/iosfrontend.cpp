@@ -37,6 +37,8 @@ void IosFrontend::focusOut(id client) {
     ic_->setClient(nil);
 }
 
+void IosFrontend::resetInput() { ic_->reset(); }
+
 IosInputContext::IosInputContext(IosFrontend *frontend,
                                  InputContextManager &inputContextManager)
     : InputContext(inputContextManager, ""), frontend_(frontend) {

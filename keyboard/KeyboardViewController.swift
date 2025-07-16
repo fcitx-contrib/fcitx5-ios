@@ -144,6 +144,10 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     }
   }
 
+  public func resetInput() {
+    Fcitx.resetInput()
+  }
+
   public func commitString(_ commit: String) {
     textDocumentProxy.insertText(commit)
   }
