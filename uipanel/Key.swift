@@ -146,3 +146,17 @@ struct ShiftView: View {
     }.commonContainerStyle(width: width, height: height)
   }
 }
+
+struct SymbolKeyView: View {
+  let width: CGFloat
+  let height: CGFloat
+
+  var body: some View {
+    Button {
+      virtualKeyboardView.setDisplayMode(.symbol)
+    } label: {
+      Text("#+=")
+        .commonContentStyle(width: width, height: height, background: functionBackground)
+    }.commonContainerStyle(width: width, height: height)
+  }
+}
