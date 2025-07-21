@@ -41,9 +41,7 @@ void UIPanel::update(UserInterfaceComponent component,
         if (const auto &list = inputPanel.candidateList()) {
             const auto &bulk = list->toBulk();
             if (bulk) {
-                KeyboardUI::setCandidatesAsync(auxUp, preedit, caret,
-                                               candidates);
-                return expand();
+                return expand(auxUp, preedit, caret);
             }
             size = list->size();
             for (int i = 0; i < size; i++) {
@@ -62,34 +60,50 @@ void UIPanel::update(UserInterfaceComponent component,
     }
 }
 
-// Vertically 1.5 screens.
-void UIPanel::expand() { scroll(0, 48); }
-
-void UIPanel::scroll(int start, int count) {
-    auto ic = instance_->mostRecentInputContext();
+swift::Array<swift::String> getBulkCandidates(Instance *instance, int start,
+                                              int count,
+                                              bool *pEndReached = nullptr) {
+    auto candidates = swift::Array<swift::String>::init();
+    auto ic = instance->mostRecentInputContext();
     const auto &list = ic->inputPanel().candidateList();
     if (!list) {
-        return;
+        return candidates;
     }
     const auto &bulk = list->toBulk();
     if (!bulk) {
-        return;
+        return candidates;
     }
     int size = bulk->totalSize();
     int end = size < 0 ? start + count : std::min(start + count, size);
     bool endReached = size == end;
-    auto candidates = swift::Array<swift::String>::init();
+
     for (int i = start; i < end; ++i) {
         try {
             auto &candidate = bulk->candidateFromAll(i);
             candidates.append(
-                instance_->outputFilter(ic, candidate.text()).toString());
+                instance->outputFilter(ic, candidate.text()).toString());
         } catch (const std::invalid_argument &e) {
             // size == -1 but actual limit is reached
             endReached = true;
             break;
         }
     }
+    if (pEndReached) {
+        *pEndReached = endReached;
+    }
+    return candidates;
+}
+
+void UIPanel::expand(const std::string &auxUp, const std::string &preedit,
+                     int caret) {
+    auto candidates =
+        getBulkCandidates(instance_, 0, 72); // Vertically 2 screens.
+    KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates);
+}
+
+void UIPanel::scroll(int start, int count) {
+    bool endReached = false;
+    auto candidates = getBulkCandidates(instance_, start, count, &endReached);
     KeyboardUI::scrollAsync(candidates, start == 0, endReached);
 }
 
