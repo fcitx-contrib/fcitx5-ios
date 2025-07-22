@@ -3,6 +3,12 @@ import UIPanel
 
 let auxPreeditRatio = 0.32  // Same with fcitx5-keyboard-web
 let candidateCountInRow = 10
+let candidateCountInScreen = 36
+let expandIconRatio = 0.3
+let expandButtonRatio = 0.8
+let expandDividerRatio = 0.6
+let expandDividerColor = Color(
+  .sRGB, red: 179 / 255.0, green: 180 / 255.0, blue: 186 / 255.0, opacity: 1)
 
 private func preeditWithCaret(_ preedit: String, _ caret: Int) -> String {
   if preedit.isEmpty {
@@ -23,41 +29,145 @@ private func preeditWithCaret(_ preedit: String, _ caret: Int) -> String {
 }
 
 struct CandidateBarView: View {
+  let width: CGFloat
   let auxUp: String
   let preedit: String
   let caret: Int
   let candidates: [String]
   let batch: Int
   let scrollEnd: Bool
+  @Binding var expanded: Bool
+  @Binding var pendingScroll: Int
+  @State private var visibleCandidates = Set<Int>()
+
+  private func loadMoreCandidates(_ start: Int, _ count: Int) {
+    if pendingScroll < start {
+      pendingScroll = start
+      scroll(Int32(start), Int32(count))
+    }
+  }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      if !auxUp.isEmpty || !preedit.isEmpty {
-        Text(auxUp + preeditWithCaret(preedit, caret)).font(.system(size: 14)).frame(
-          height: barHeight * auxPreeditRatio
-        )
-        .padding([.leading], 4)
-      }
-      ScrollViewReader { proxy in
-        ScrollView(.horizontal) {
-          // Use LazyHStack so that onAppear is triggered only when candidate is scrolled into view.
-          LazyHStack(spacing: 20) {
-            ForEach(Array(candidates.enumerated()), id: \.offset) { index, candidate in
-              CandidateView(text: candidate, index: index).onAppear {
-                if !scrollEnd && index == candidates.count - candidateCountInRow {
-                  scroll(Int32(candidates.count), Int32(candidateCountInRow))
+    ScrollViewReader { proxy in
+      HStack(spacing: 0) {
+        let barHeightExcludePreedit =
+          barHeight * (auxUp.isEmpty && preedit.isEmpty ? 1 : (1 - auxPreeditRatio))
+
+        VStack(alignment: .leading, spacing: 0) {
+          if !auxUp.isEmpty || !preedit.isEmpty {
+            Text(auxUp + preeditWithCaret(preedit, caret)).font(.system(size: 14)).frame(
+              height: barHeight * auxPreeditRatio
+            )
+            .padding([.leading], 4)
+          }
+
+          if expanded {
+            ScrollView(.vertical) {
+              WrapLayout {
+                ForEach(Array(candidates.enumerated()), id: \.offset) { index, candidate in
+                  CandidateView(text: candidate, index: index, paddingLeft: 10, paddingRight: 10)
+                    .frame(minWidth: width / 8).frame(
+                      height: (barHeightExcludePreedit + keyboardHeight) / 6
+                    ).onFrameChange { frame in
+                      let isVisible =
+                        frame.minY <= barHeight + keyboardHeight - 1
+                        && frame.maxY >= (barHeight - barHeightExcludePreedit) + 1
+                      if isVisible {
+                        visibleCandidates.insert(index)
+                        if !scrollEnd && index == candidates.count - candidateCountInScreen {
+                          loadMoreCandidates(candidates.count, candidateCountInScreen)
+                        }
+                      } else {
+                        visibleCandidates.remove(index)
+                      }
+                    }
                 }
               }
-            }
-            Spacer()
-          }.frame(
-            height: barHeight * (auxUp.isEmpty && preedit.isEmpty ? 1 : (1 - auxPreeditRatio)))
-        }.scrollIndicators(.hidden)  // Hide scroll bar as native keyboard.
-          .padding([.leading], 10)
-          .onChange(of: batch) { _ in
-            // Use batch instead of candidates because we don't want to reset on loading more.
-            proxy.scrollTo(0)
+            }.frame(width: width * 4 / 5, height: barHeightExcludePreedit + keyboardHeight)
+              .scrollIndicators(.hidden)  // Hide scroll bar as native keyboard.
+              .onChange(of: batch) { _ in
+                proxy.scrollTo(0, anchor: .leading)
+              }
+          } else {
+            ScrollView(.horizontal) {
+              // Use LazyHStack so that onAppear is triggered only when candidate is scrolled into view.
+              LazyHStack(spacing: 0) {
+                ForEach(Array(candidates.enumerated()), id: \.offset) { index, candidate in
+                  CandidateView(
+                    text: candidate, index: index, paddingLeft: index == 0 ? 0 : 10,
+                    paddingRight: 10
+                  ).onAppear {
+                    if !scrollEnd && index == candidates.count - candidateCountInRow {
+                      loadMoreCandidates(candidates.count, candidateCountInRow)
+                    }
+                  }
+                }
+                Spacer()
+              }.frame(
+                height: barHeightExcludePreedit)
+            }.scrollIndicators(.hidden)  // Hide scroll bar as native keyboard.
+              .padding([.leading], 10)
+              .onChange(of: batch) { _ in
+                // Use batch instead of candidates because we don't want to reset on loading more.
+                proxy.scrollTo(0, anchor: .leading)
+              }
           }
+        }
+
+        let expandButton = VStack {
+          Image(systemName: expanded ? "chevron.up" : "chevron.down").resizable()
+            .aspectRatio(contentMode: .fit).frame(width: barHeight * expandIconRatio)
+        }.frame(width: barHeight * expandButtonRatio, height: barHeight).onTapGesture {
+          expanded.toggle()
+        }
+
+        if expanded {
+          VStack(alignment: .trailing, spacing: 0) {  // trailing for collapse button
+            expandButton
+
+            let keyHeight = keyboardHeight / 4
+            let keyWidth = width / 5
+
+            Button {
+              withAnimation {
+                proxy.scrollTo(visibleCandidates.min() ?? 0, anchor: .bottom)
+              }
+            } label: {
+              VStack {
+                Image(systemName: "arrow.up")
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+                  .frame(height: keyHeight * 0.4)
+              }
+              .commonContentStyle(
+                width: keyWidth, height: keyHeight, background: functionBackground)
+            }.commonContainerStyle(width: keyWidth, height: keyHeight)
+
+            Button {
+              withAnimation {
+                proxy.scrollTo(visibleCandidates.max() ?? 0, anchor: .top)
+              }
+            } label: {
+              VStack {
+                Image(systemName: "arrow.down")
+                  .resizable()
+                  .aspectRatio(contentMode: .fit)
+                  .frame(height: keyHeight * 0.4)
+              }
+              .commonContentStyle(
+                width: keyWidth, height: keyHeight, background: functionBackground)
+            }.commonContainerStyle(width: keyWidth, height: keyHeight)
+
+            BackspaceView(width: keyWidth, height: keyHeight)
+
+            EnterView(
+              label: NSLocalizedString("return", comment: ""), width: keyWidth, height: keyHeight)
+          }
+        } else {
+          Rectangle().frame(width: 1, height: barHeight * expandDividerRatio).foregroundColor(
+            expandDividerColor)
+          expandButton
+        }
       }
     }
   }

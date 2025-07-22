@@ -56,3 +56,4 @@ you need to add Fcitx5 in Settings -> General -> Keyboard -> Keyboards -> Add Ne
 * [ios-cmake](https://github.com/leetal/ios-cmake): BSD-3-Clause
 * [swift-cmake-examples](https://github.com/apple/swift-cmake-examples): Apache-2.0
 * [AlertToast](https://github.com/elai950/AlertToast): MIT
+* [swiftui-WrapLayout](https://github.com/FluidGroup/swiftui-WrapLayout): MIT

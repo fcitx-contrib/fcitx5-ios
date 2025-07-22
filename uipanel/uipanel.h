@@ -34,8 +34,8 @@ class UIPanel final : public VirtualKeyboardUserInterface {
     Instance *instance_;
 
     void updateStatusArea(InputContext *ic);
-    void expand(const std::string &auxUp, const std::string &preedit,
-                int caret);
+    void expand(const std::string &auxUp, const std::string &preedit, int caret,
+                bool hasClientPreedit);
 };
 
 class UIPanelFactory : public AddonFactory {

@@ -18,8 +18,12 @@ class ViewModel: ObservableObject {
   @Published var preedit = ""
   @Published var caret = 0
   @Published var candidates = [String]()
+  @Published var hasClientPreedit = false
   @Published var batch = 0  // Tell candidate container to reset state
   @Published var scrollEnd = false
+  @Published var expanded = false
+  // Have requested load more candidates starting from this index.
+  @Published var pendingScroll = 0
 
   @Published var actions = [StatusAreaAction]()
   @Published var inputMethods = [InputMethod]()
@@ -45,9 +49,11 @@ public struct VirtualKeyboardView: View {
             ToolbarView()
           } else if viewModel.mode == .candidates {
             CandidateBarView(
+              width: width,
               auxUp: viewModel.auxUp, preedit: viewModel.preedit, caret: viewModel.caret,
               candidates: viewModel.candidates, batch: viewModel.batch,
-              scrollEnd: viewModel.scrollEnd)
+              scrollEnd: viewModel.scrollEnd, expanded: $viewModel.expanded,
+              pendingScroll: $viewModel.pendingScroll)
           }
           if viewModel.mode == .statusArea {
             StatusAreaView(actions: $viewModel.actions)
@@ -91,29 +97,32 @@ public struct VirtualKeyboardView: View {
   }
 
   public func setCandidates(
-    _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String]
+    _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String],
+    _ hasClientPreedit: Bool
   ) {
     if !auxUp.isEmpty || !preedit.isEmpty || !candidates.isEmpty {
       setDisplayMode(.candidates)
+      if preedit.isEmpty && !hasClientPreedit {
+        // For prediction candidates, collapse to single bar so that user can ignore them and type keyboard.
+        viewModel.expanded = false
+      }
     } else if viewModel.mode == .candidates {
       setDisplayMode(.initial)
+      viewModel.expanded = false
     }
     viewModel.auxUp = auxUp
     viewModel.preedit = preedit
     viewModel.caret = Int(caret)
     viewModel.candidates = candidates
+    viewModel.hasClientPreedit = hasClientPreedit
     viewModel.batch = (viewModel.batch + 1) & 0xFFFF
+    viewModel.scrollEnd = false
+    viewModel.pendingScroll = 0
   }
 
-  public func scroll(_ candidates: [String], _ start: Bool, _ end: Bool) {
-    if start {
-      setDisplayMode(.candidates)
-      viewModel.candidates = candidates
-      viewModel.batch = (viewModel.batch + 1) & 0xFFFF
-    } else {
-      viewModel.candidates.append(contentsOf: candidates)
-      // Don't update batch as we don't want to reset scroll position.
-    }
+  public func scroll(_ candidates: [String], _ end: Bool) {
+    viewModel.candidates.append(contentsOf: candidates)
+    // Don't update batch as we don't want to reset scroll position.
     viewModel.scrollEnd = end
   }
 

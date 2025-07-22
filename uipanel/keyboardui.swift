@@ -14,16 +14,17 @@ public func showKeyboardAsync(_ clientPtr: UnsafeMutableRawPointer) {
 }
 
 public func setCandidatesAsync(
-  _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String]
+  _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String],
+  _ hasClientPreedit: Bool
 ) {
   DispatchQueue.main.async {
-    virtualKeyboardView.setCandidates(auxUp, preedit, caret, candidates)
+    virtualKeyboardView.setCandidates(auxUp, preedit, caret, candidates, hasClientPreedit)
   }
 }
 
-public func scrollAsync(_ candidates: [String], _ start: Bool, _ end: Bool) {
+public func scrollAsync(_ candidates: [String], _ end: Bool) {
   DispatchQueue.main.async {
-    virtualKeyboardView.scroll(candidates, start, end)
+    virtualKeyboardView.scroll(candidates, end)
   }
 }
 
