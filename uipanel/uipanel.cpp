@@ -36,12 +36,13 @@ void UIPanel::update(UserInterfaceComponent component,
             instance_->outputFilter(inputContext, inputPanel.preedit())
                 .toString();
         auto caret = inputPanel.preedit().cursor();
+        bool hasClientPreedit = !inputPanel.clientPreedit().empty();
         int size = 0;
         auto candidates = swift::Array<swift::String>::init();
         if (const auto &list = inputPanel.candidateList()) {
             const auto &bulk = list->toBulk();
             if (bulk) {
-                return expand(auxUp, preedit, caret);
+                return expand(auxUp, preedit, caret, hasClientPreedit);
             }
             size = list->size();
             for (int i = 0; i < size; i++) {
@@ -51,7 +52,8 @@ void UIPanel::update(UserInterfaceComponent component,
                         .toString());
             }
         }
-        KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates);
+        KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates,
+                                       hasClientPreedit);
         break;
     }
     case UserInterfaceComponent::StatusArea:
@@ -95,16 +97,17 @@ swift::Array<swift::String> getBulkCandidates(Instance *instance, int start,
 }
 
 void UIPanel::expand(const std::string &auxUp, const std::string &preedit,
-                     int caret) {
+                     int caret, bool hasClientPreedit) {
     auto candidates =
         getBulkCandidates(instance_, 0, 72); // Vertically 2 screens.
-    KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates);
+    KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates,
+                                   hasClientPreedit);
 }
 
 void UIPanel::scroll(int start, int count) {
     bool endReached = false;
     auto candidates = getBulkCandidates(instance_, start, count, &endReached);
-    KeyboardUI::scrollAsync(candidates, start == 0, endReached);
+    KeyboardUI::scrollAsync(candidates, endReached);
 }
 
 KeyboardUI::StatusAreaAction convertAction(Action *action, InputContext *ic) {

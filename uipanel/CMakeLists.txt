@@ -5,6 +5,8 @@ add_library(KeyboardUI STATIC
     Key.swift
     Keyboard.swift
     Candidate.swift
+    WrapLayout.swift
+    FrameChange.swift
     CandidateBar.swift
     Toolbar.swift
     StatusArea.swift
