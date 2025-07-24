@@ -67,6 +67,41 @@
         },
         {
             "type": "shell",
+            "label": "Install dependencies",
+            "command": "./scripts/install-deps.sh OS64",
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Configure",
+            "command": "cmake -B build/OS64 -G Xcode -DURL_SCHEME=fcitx -DPLATFORM=OS64",
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Build",
+            "command": "cmake --build build/OS64 --config Debug -- CODE_SIGNING_ALLOWED=NO",
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "type": "shell",
+            "label": "Pack",
+            "command": "rm -rf Payload Fcitx5.ipa && mkdir Payload && cp -r Fcitx5.app Payload && zip -r Fcitx5.ipa Payload",
+            "options": {
+                "cwd": "${workspaceFolder}/build/OS64/src/Debug-iphoneos"
+            },
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "type": "shell",
             "label": "Format",
             "command": "./scripts/format.sh",
             "group": {

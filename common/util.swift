@@ -5,8 +5,9 @@ import OSLog
 public let logger = Logger(subsystem: "org.fcitx.Fcitx5", category: "FcitxLog")
 
 public let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+// For SideStore, app group is not available, so fallback to documents.
 public let appGroup = FileManager.default.containerURL(
-  forSecurityApplicationGroupIdentifier: "org.fcitx.Fcitx5")!
+  forSecurityApplicationGroupIdentifier: "group.org.fcitx.Fcitx5") ?? documents
 public let appGroupConfig = appGroup.appendingPathComponent("config")
 public let appGroupTmp = appGroup.appendingPathComponent("tmp")
 public let appGroupData = appGroup.appendingPathComponent("data")
