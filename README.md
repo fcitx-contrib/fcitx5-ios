@@ -65,7 +65,7 @@ Below assumes you've already done with simulator.
 
 ```sh
 ./scripts/install-deps.sh OS64
-# By default enable chinese-addons only, as there is a 77 MB memory limit.
+# By default enable chinese-addons only, as there is a 77 MB memory limit for keyboard process.
 cmake -B build/OS64 -G Xcode -DURL_SCHEME=fcitx -DPLATFORM=OS64
 cmake --build build/OS64 --config Debug -- CODE_SIGNING_ALLOWED=NO
 cd build/OS64/src/Debug-iphoneos && rm -rf Payload Fcitx5.ipa && mkdir Payload
