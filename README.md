@@ -1,6 +1,14 @@
+English
+|
+[中文](README.zh-CN.md)
+
 # Fcitx5 iOS
 
 [Fcitx5](https://github.com/fcitx/fcitx5) input method framework ported to iOS.
+
+Currently developer beta. Please download [IPA](https://github.com/fcitx-contrib/fcitx5-ios/releases/tag/latest) and install with [SideStore](https://github.com/SideStore/SideStore).
+
+Note: Without developer account, certain features won't work, such as configuring keyboard in main app.
 
 ## Build for simulator
 This project is NOT managed by Xcode,
@@ -49,6 +57,20 @@ you need to add Fcitx5 in Settings -> General -> Keyboard -> Keyboards -> Add Ne
 
 * Simulator is not emulator (virtual machine). Simulator file system is mapped from host filesystem. A process in simulator is a process in macOS.
 * App and input method (custom keyboard extension) are different programs. They share a directory (via App Group) in ~/Library/Developer/CoreSimulator/Devices/UUID/data/Containers/Shared/AppGroup.
+
+## Build for iOS device
+Generate an unsigned IPA and install it with SideStore.
+
+Below assumes you've already done with simulator.
+
+```sh
+./scripts/install-deps.sh OS64
+# By default enable chinese-addons only, as there is a 77 MB memory limit.
+cmake -B build/OS64 -G Xcode -DURL_SCHEME=fcitx -DPLATFORM=OS64
+cmake --build build/OS64 --config Debug -- CODE_SIGNING_ALLOWED=NO
+cd build/OS64/src/Debug-iphoneos && rm -rf Payload Fcitx5.ipa && mkdir Payload
+cp -r Fcitx5.app Payload && zip -r Fcitx5.ipa Payload
+```
 
 ## Credits
 * [fcitx5](https://github.com/fcitx/fcitx5): LGPL-2.1-or-later

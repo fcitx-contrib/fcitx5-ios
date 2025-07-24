@@ -90,7 +90,7 @@ jobs:
           zip -r Fcitx5.ipa Payload
 
       - name: Create Nightly release
-        if: ${{ matrix.platform == 'OS64' }} # github.ref == 'refs/heads/master' &&
+        if: ${{ github.ref == 'refs/heads/master' && matrix.platform == 'OS64' }}
         uses: 'marvinpinto/action-automatic-releases@latest'
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
