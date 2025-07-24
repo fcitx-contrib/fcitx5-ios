@@ -4,7 +4,7 @@
 <dict>
   <key>com.apple.security.application-groups</key>
   <array>
-    <string>org.fcitx.Fcitx5</string>
+    <string>group.org.fcitx.Fcitx5</string>
   </array>
 </dict>
 </plist>

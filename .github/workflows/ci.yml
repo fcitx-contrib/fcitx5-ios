@@ -22,13 +22,14 @@ jobs:
     needs: lint
     runs-on: macos-15
     env:
-      MOZC_SHA: 642deb7ba39436d525ff680eae79c6c861ec704a
+      MOZC_SHA: c4a8c95865cb60a14e6c829a0a3893c3b3dac64c
     strategy:
       fail-fast: false
       matrix:
         include:
           - { platform: SIMULATORARM64 }
           - { platform: SIMULATOR64 }
+          - { platform: OS64 }
 
     steps:
       - uses: actions/checkout@v4
@@ -54,12 +55,20 @@ jobs:
           git apply --directory=fcitx5 patches/fcitx5.patch
           git apply --directory=engines/libime/src/libime/core/kenlm patches/kenlm.patch
           git apply --directory=engines/fcitx5-rime patches/rime.patch
-          cmake -B build/${{ matrix.platform }} -G Xcode \
-            -DURL_SCHEME=fcitx \
-            -DHALLELUJAH=ON \
-            -DRIME=ON \
-            -DPLATFORM=${{ matrix.platform }}
-          cmake --build build/${{ matrix.platform }} --config Release
+          if [[ "${{ matrix.platform }}" == "OS64" ]]; then
+            cmake -B build/${{ matrix.platform }} -G Xcode \
+              -DURL_SCHEME=fcitx \
+              -DPLATFORM=${{ matrix.platform }}
+            cmake --build build/${{ matrix.platform }} --config Release -- CODE_SIGNING_ALLOWED=NO
+          else
+            cmake -B build/${{ matrix.platform }} -G Xcode \
+              -DURL_SCHEME=fcitx \
+              -DHALLELUJAH=ON \
+              -DMOZC=ON \
+              -DRIME=ON \
+              -DPLATFORM=${{ matrix.platform }}
+            cmake --build build/${{ matrix.platform }} --config Release
+          fi
 
       - name: Check validity
         run: |
@@ -71,6 +80,25 @@ jobs:
           xcrun simctl boot "iPhone 16"
           xcrun simctl install booted build/${{ matrix.platform }}/src/Release-iphonesimulator/Fcitx5.app
           xcrun simctl launch booted org.fcitx.Fcitx5
+
+      - name: Pack IPA
+        if: ${{ matrix.platform == 'OS64' }}
+        working-directory: build/OS64/src/Release-iphoneos
+        run: |
+          mkdir Payload
+          cp -r Fcitx5.app Payload
+          zip -r Fcitx5.ipa Payload
+
+      - name: Create Nightly release
+        # if: ${{ github.ref == 'refs/heads/master' }}
+        uses: 'marvinpinto/action-automatic-releases@latest'
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          automatic_release_tag: latest
+          prerelease: true
+          title: "Nightly Build"
+          files: |
+            build/OS64/src/Release-iphoneos/Fcitx5.ipa
 
       - name: Setup tmate session
         if: ${{ failure() }}
