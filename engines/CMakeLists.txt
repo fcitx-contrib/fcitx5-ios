@@ -16,6 +16,7 @@ if (CHINESE_ADDONS)
 
     option(ENABLE_GUI OFF)
     add_subdirectory(fcitx5-chinese-addons)
+    target_link_libraries(chttrans "${PREBUILDER_LIB_DIR}/libmarisa.a")
     list(APPEND DEFAULT_INPUT_METHODS pinyin shuangpin wbx)
 endif()
 
@@ -26,12 +27,6 @@ if (HALLELUJAH)
         INTERFACE_INCLUDE_DIRECTORIES "${PREBUILDER_INCLUDE_DIR}"
     )
     set(MARISA_TARGET Marisa_static)
-    add_library(JsonC_static STATIC IMPORTED)
-    set_target_properties(JsonC_static PROPERTIES
-        IMPORTED_LOCATION "${PREBUILDER_LIB_DIR}/libjson-c.a"
-        INTERFACE_INCLUDE_DIRECTORIES "${PREBUILDER_INCLUDE_DIR}"
-    )
-    set(JSONC_TARGET JsonC_static)
 
     add_definitions(-DHALLELUJAH)
     add_subdirectory(fcitx5-hallelujah)
