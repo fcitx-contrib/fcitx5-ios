@@ -7,6 +7,7 @@ struct MenuItem: Identifiable {
 }
 
 struct ContextMenuOverlay: View {
+  @Environment(\.colorScheme) var colorScheme
   let items: [MenuItem]
   let frame: CGRect
   let containerSize: CGSize
@@ -32,22 +33,23 @@ struct ContextMenuOverlay: View {
             onDismiss()
           } label: {
             Text(item.text)
-              .foregroundColor(.black)
+              .foregroundColor(getNormalForeground(colorScheme))
               .padding(.vertical, 8)
-          }.frame(minWidth: 0, maxWidth: containerSize.width * 0.6)
+              .frame(minWidth: 0, maxWidth: containerSize.width * 0.6)
+          }
         }
       }
       // If we wrap with ScrollView when not needed, the height will be extended.
       if hasScroll {
         ScrollView {
-          menu.background(Color.white)
+          menu.background(getNormalBackground(colorScheme))
         }.cornerRadius(8)
           .shadow(radius: 4)
           .position(adjustedPosition)
       } else {
         menu.background(
           GeometryReader { geometry in
-            Color.white
+            getNormalBackground(colorScheme)
               .onAppear {
                 menuSize = geometry.size
                 adjustedPosition = adjustPosition()

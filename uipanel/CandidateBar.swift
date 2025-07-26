@@ -29,6 +29,7 @@ private func preeditWithCaret(_ preedit: String, _ caret: Int) -> String {
 }
 
 struct CandidateBarView: View {
+  @Environment(\.colorScheme) var colorScheme
   let width: CGFloat
   let auxUp: String
   let preedit: String
@@ -149,8 +150,10 @@ struct CandidateBarView: View {
                   .frame(height: keyHeight * 0.4)
               }
               .commonContentStyle(
-                width: keyWidth, height: keyHeight, background: functionBackground)
-            }.commonContainerStyle(width: keyWidth, height: keyHeight)
+                width: keyWidth, height: keyHeight, background: getFunctionBackground(colorScheme),
+                foreground: getNormalForeground(colorScheme))
+            }.commonContainerStyle(
+              width: keyWidth, height: keyHeight, shadow: getShadow(colorScheme))
 
             Button {
               withAnimation {
@@ -164,8 +167,10 @@ struct CandidateBarView: View {
                   .frame(height: keyHeight * 0.4)
               }
               .commonContentStyle(
-                width: keyWidth, height: keyHeight, background: functionBackground)
-            }.commonContainerStyle(width: keyWidth, height: keyHeight)
+                width: keyWidth, height: keyHeight, background: getFunctionBackground(colorScheme),
+                foreground: getNormalForeground(colorScheme))
+            }.commonContainerStyle(
+              width: keyWidth, height: keyHeight, shadow: getShadow(colorScheme))
 
             BackspaceView(width: keyWidth, height: keyHeight)
 

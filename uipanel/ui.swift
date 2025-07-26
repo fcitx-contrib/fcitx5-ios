@@ -11,6 +11,15 @@ let candidateHorizontalPadding: CGFloat = 10
 
 let lightBackground = Color(
   .sRGB, red: 210 / 255.0, green: 212 / 255.0, blue: 218 / 255.0, opacity: 1)
-let normalBackground = Color.white
-let functionBackground = Color(
+let lightNormalBackground = Color.white
+let lightFunctionBackground = Color(
   .sRGB, red: 171 / 255.0, green: 177 / 255.0, blue: 186 / 255.0, opacity: 1)
+let lightShadow = Color.gray
+
+let darkBackground = Color(
+  .sRGB, red: 43 / 255.0, green: 43 / 255.0, blue: 43 / 255.0, opacity: 1)
+let darkNormalBackground = Color(
+  .sRGB, red: 107 / 255.0, green: 107 / 255.0, blue: 107 / 255.0, opacity: 1)
+let darkFunctionBackground = Color(
+  .sRGB, red: 70 / 255.0, green: 70 / 255.0, blue: 70 / 255.0, opacity: 1)
+let darkShadow = Color(.sRGB, red: 37 / 255.0, green: 37 / 255.0, blue: 37 / 255.0, opacity: 1)

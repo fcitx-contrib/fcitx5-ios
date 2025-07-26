@@ -1,24 +1,43 @@
 import SwiftUI
 
 extension View {
-  func commonContentStyle(width: CGFloat, height: CGFloat, background: Color) -> some View {
+  func commonContentStyle(width: CGFloat, height: CGFloat, background: Color, foreground: Color)
+    -> some View
+  {
     self.frame(width: width - columnGap, height: height - rowGap)
       .background(background)
       .cornerRadius(keyCornerRadius)
-      .foregroundColor(.black)
+      .foregroundColor(foreground)
       .overlay(
         RoundedRectangle(cornerRadius: keyCornerRadius)
           .stroke(Color.clear, lineWidth: 0)
       )
   }
 
-  func commonContainerStyle(width: CGFloat, height: CGFloat) -> some View {
-    self.shadow(color: Color.gray, radius: 0, x: 0, y: 1)
+  func commonContainerStyle(width: CGFloat, height: CGFloat, shadow: Color) -> some View {
+    self.shadow(color: shadow, radius: 0, x: 0, y: 1)
       .frame(width: width, height: height)
   }
 }
 
+func getNormalBackground(_ colorScheme: ColorScheme) -> Color {
+  return colorScheme == .dark ? darkNormalBackground : lightNormalBackground
+}
+
+func getFunctionBackground(_ colorScheme: ColorScheme) -> Color {
+  return colorScheme == .dark ? darkFunctionBackground : lightFunctionBackground
+}
+
+func getNormalForeground(_ colorScheme: ColorScheme) -> Color {
+  return colorScheme == .dark ? Color.white : Color.black
+}
+
+func getShadow(_ colorScheme: ColorScheme) -> Color {
+  return colorScheme == .dark ? darkShadow : lightShadow
+}
+
 struct KeyView: View {
+  @Environment(\.colorScheme) var colorScheme
   let label: String
   let key: String
   let width: CGFloat
@@ -31,12 +50,15 @@ struct KeyView: View {
     } label: {
       Text(label)
         .font(.system(size: height * 0.5).weight(.light))
-        .commonContentStyle(width: width, height: height, background: normalBackground)
-    }.commonContainerStyle(width: width, height: height)
+        .commonContentStyle(
+          width: width, height: height, background: getNormalBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme))
+    }.commonContainerStyle(width: width, height: height, shadow: getShadow(colorScheme))
   }
 }
 
 struct SpaceView: View {
+  @Environment(\.colorScheme) var colorScheme
   let label: String
   let width: CGFloat
   let height: CGFloat
@@ -48,12 +70,15 @@ struct SpaceView: View {
     } label: {
       Text(label)
         .font(.system(size: height * 0.4))
-        .commonContentStyle(width: width, height: height, background: normalBackground)
-    }.commonContainerStyle(width: width, height: height)
+        .commonContentStyle(
+          width: width, height: height, background: getNormalBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme))
+    }.commonContainerStyle(width: width, height: height, shadow: getShadow(colorScheme))
   }
 }
 
 struct BackspaceView: View {
+  @Environment(\.colorScheme) var colorScheme
   let width: CGFloat
   let height: CGFloat
 
@@ -68,12 +93,15 @@ struct BackspaceView: View {
           .aspectRatio(contentMode: .fit)
           .frame(height: height * 0.4)
       }
-      .commonContentStyle(width: width, height: height, background: functionBackground)
-    }.commonContainerStyle(width: width, height: height)
+      .commonContentStyle(
+        width: width, height: height, background: getFunctionBackground(colorScheme),
+        foreground: getNormalForeground(colorScheme))
+    }.commonContainerStyle(width: width, height: height, shadow: getShadow(colorScheme))
   }
 }
 
 struct GlobeView: View {
+  @Environment(\.colorScheme) var colorScheme
   let width: CGFloat
   let height: CGFloat
 
@@ -87,8 +115,10 @@ struct GlobeView: View {
           .resizable()
           .aspectRatio(contentMode: .fit)
           .frame(height: height * 0.45)
-      }.commonContentStyle(width: width, height: height, background: normalBackground)
-    }.commonContainerStyle(width: width, height: height)
+      }.commonContentStyle(
+        width: width, height: height, background: getNormalBackground(colorScheme),
+        foreground: getNormalForeground(colorScheme))
+    }.commonContainerStyle(width: width, height: height, shadow: getShadow(colorScheme))
       .contextMenu {
         ForEach(virtualKeyboardView.viewModel.inputMethods, id: \.name) { inputMethod in
           Button {
@@ -103,6 +133,7 @@ struct GlobeView: View {
 }
 
 struct EnterView: View {
+  @Environment(\.colorScheme) var colorScheme
   let label: String
   let width: CGFloat
   let height: CGFloat
@@ -113,8 +144,10 @@ struct EnterView: View {
       client.keyPressed("\r", "Enter")
     } label: {
       Text(label)
-        .commonContentStyle(width: width, height: height, background: functionBackground)
-    }.commonContainerStyle(width: width, height: height)
+        .commonContentStyle(
+          width: width, height: height, background: getFunctionBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme))
+    }.commonContainerStyle(width: width, height: height, shadow: getShadow(colorScheme))
   }
 }
 
@@ -125,6 +158,7 @@ enum ShiftState {
 }
 
 struct ShiftView: View {
+  @Environment(\.colorScheme) var colorScheme
   let state: ShiftState
   let width: CGFloat
   let height: CGFloat
@@ -142,12 +176,15 @@ struct ShiftView: View {
         .resizable()
         .aspectRatio(contentMode: .fit)
         .frame(height: height * 0.4)
-      }.commonContentStyle(width: width, height: height, background: functionBackground)
-    }.commonContainerStyle(width: width, height: height)
+      }.commonContentStyle(
+        width: width, height: height, background: getFunctionBackground(colorScheme),
+        foreground: getNormalForeground(colorScheme))
+    }.commonContainerStyle(width: width, height: height, shadow: getShadow(colorScheme))
   }
 }
 
 struct SymbolKeyView: View {
+  @Environment(\.colorScheme) var colorScheme
   let width: CGFloat
   let height: CGFloat
 
@@ -156,7 +193,9 @@ struct SymbolKeyView: View {
       virtualKeyboardView.setDisplayMode(.symbol)
     } label: {
       Text("#+=")
-        .commonContentStyle(width: width, height: height, background: functionBackground)
-    }.commonContainerStyle(width: width, height: height)
+        .commonContentStyle(
+          width: width, height: height, background: getFunctionBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme))
+    }.commonContainerStyle(width: width, height: height, shadow: getShadow(colorScheme))
   }
 }
