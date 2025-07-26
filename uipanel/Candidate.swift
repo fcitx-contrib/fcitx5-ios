@@ -14,7 +14,7 @@ struct CandidateView: View {
   let paddingRight: CGFloat
 
   var body: some View {
-    Text(text).font(.system(size: 20))
+    Text(text).font(.system(size: candidateFontSize))
       .padding(.leading, paddingLeft).padding(.trailing, paddingRight)
       .onTapGesture {
         selectCandidate(Int32(index))

@@ -21,6 +21,7 @@ class ViewModel: ObservableObject {
   @Published var hasClientPreedit = false
   @Published var batch = 0  // Tell candidate container to reset state
   @Published var scrollEnd = false
+  @Published var rowItemCount = [Int]()  // number of candidates in each row
   @Published var expanded = false
   // Have requested load more candidates starting from this index.
   @Published var pendingScroll = 0
@@ -49,10 +50,11 @@ public struct VirtualKeyboardView: View {
             ToolbarView()
           } else if viewModel.mode == .candidates {
             CandidateBarView(
-              width: width,
-              auxUp: viewModel.auxUp, preedit: viewModel.preedit, caret: viewModel.caret,
-              candidates: viewModel.candidates, batch: viewModel.batch,
-              scrollEnd: viewModel.scrollEnd, expanded: $viewModel.expanded,
+              width: width, auxUp: viewModel.auxUp, preedit: viewModel.preedit,
+              caret: viewModel.caret, candidates: viewModel.candidates,
+              rowItemCount: viewModel.rowItemCount,
+              batch: viewModel.batch, scrollEnd: viewModel.scrollEnd,
+              expanded: $viewModel.expanded,
               pendingScroll: $viewModel.pendingScroll)
           }
           if viewModel.mode == .statusArea {
@@ -117,11 +119,13 @@ public struct VirtualKeyboardView: View {
     viewModel.hasClientPreedit = hasClientPreedit
     viewModel.batch = (viewModel.batch + 1) & 0xFFFF
     viewModel.scrollEnd = false
+    viewModel.rowItemCount = calculateLayout(candidates, keyboardWidth * 4 / 5)
     viewModel.pendingScroll = 0
   }
 
   public func scroll(_ candidates: [String], _ end: Bool) {
     viewModel.candidates.append(contentsOf: candidates)
+    viewModel.rowItemCount = calculateLayout(viewModel.candidates, keyboardWidth * 4 / 5)
     // Don't update batch as we don't want to reset scroll position.
     viewModel.scrollEnd = end
   }
