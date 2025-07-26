@@ -57,6 +57,7 @@ you need to add Fcitx5 in Settings -> General -> Keyboard -> Keyboards -> Add Ne
 
 * Simulator is not emulator (virtual machine). Simulator file system is mapped from host filesystem. A process in simulator is a process in macOS.
 * App and input method (custom keyboard extension) are different programs. They share a directory (via App Group) in ~/Library/Developer/CoreSimulator/Devices/UUID/data/Containers/Shared/AppGroup.
+* Simulator doesn't have memory limit for keyboard extension.
 
 ## Build for iOS device
 Generate an unsigned IPA and install it with SideStore.
@@ -72,10 +73,29 @@ cd build/OS64/src/Debug-iphoneos && rm -rf Payload Fcitx5.ipa && mkdir Payload
 cp -r Fcitx5.app Payload && zip -r Fcitx5.ipa Payload
 ```
 
+## Real device debug
+
+### OOM
+There is a 77 MB memory limit for keyboard extension.
+When memory approaches the limit, you will see in Console.app like `Received memory warning.` for the process.
+Later if memory exceeds the limit, you will see
+```
+memorystatus: keyboard [14871] exceeded mem limit: ActiveHard 77 MB (fatal)
+memorystatus: killing process 14871 [keyboard] in high band FOREGROUND (100) - memorystatus_available_pages: 121469
+keyboard[14871] Corpse allowed 1 of 5
+1817600.392 memorystatus: killing_specific_process pid 14871 [keyboard] (per-process-limit 100 16s rf:-) 78848KB - memorystatus_available_pages: 121472
+```
+
+### Memory monitor
+Use `/Applications/Xcode.app/Contents/Applications/Instruments.app`'s `Activity Monitor`.
+
+### Crash
+Crash reports are available in `Settings` -> `Privacy & Security` -> `Analytics & Improvements` -> `Analytics Data`.
+Send them to mac and open with Console.app.
+
 ## Credits
 * [fcitx5](https://github.com/fcitx/fcitx5): LGPL-2.1-or-later
 * [fcitx5-android](https://github.com/fcitx5-android/fcitx5-android): LGPL-2.1-or-later
 * [ios-cmake](https://github.com/leetal/ios-cmake): BSD-3-Clause
 * [swift-cmake-examples](https://github.com/apple/swift-cmake-examples): Apache-2.0
 * [AlertToast](https://github.com/elai950/AlertToast): MIT
-* [swiftui-WrapLayout](https://github.com/FluidGroup/swiftui-WrapLayout): MIT

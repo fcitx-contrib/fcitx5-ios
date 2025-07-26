@@ -34,11 +34,12 @@ struct CandidateBarView: View {
   let preedit: String
   let caret: Int
   let candidates: [String]
+  let rowItemCount: [Int]
   let batch: Int
   let scrollEnd: Bool
   @Binding var expanded: Bool
   @Binding var pendingScroll: Int
-  @State private var visibleCandidates = Set<Int>()
+  @State private var visibleRows = Set<Int>()
 
   private func loadMoreCandidates(_ start: Int, _ count: Int) {
     if pendingScroll < start {
@@ -55,32 +56,39 @@ struct CandidateBarView: View {
 
         VStack(alignment: .leading, spacing: 0) {
           if !auxUp.isEmpty || !preedit.isEmpty {
-            Text(auxUp + preeditWithCaret(preedit, caret)).font(.system(size: 14)).frame(
-              height: barHeight * auxPreeditRatio
-            )
-            .padding([.leading], 4)
+            Text(auxUp + preeditWithCaret(preedit, caret)).font(.system(size: candidateFontSize))
+              .frame(
+                height: barHeight * auxPreeditRatio
+              )
+              .padding([.leading], 4)
           }
 
           if expanded {
             ScrollView(.vertical) {
-              WrapLayout {
-                ForEach(Array(candidates.enumerated()), id: \.offset) { index, candidate in
-                  CandidateView(text: candidate, index: index, paddingLeft: 10, paddingRight: 10)
-                    .frame(minWidth: width / 8).frame(
-                      height: (barHeightExcludePreedit + keyboardHeight) / 6
-                    ).onFrameChange { frame in
-                      let isVisible =
-                        frame.minY <= barHeight + keyboardHeight - 1
-                        && frame.maxY >= (barHeight - barHeightExcludePreedit) + 1
-                      if isVisible {
-                        visibleCandidates.insert(index)
-                        if !scrollEnd && index == candidates.count - candidateCountInScreen {
-                          loadMoreCandidates(candidates.count, candidateCountInScreen)
-                        }
-                      } else {
-                        visibleCandidates.remove(index)
+              LazyVStack(spacing: 0) {
+                ForEach(rowItemCount.indices, id: \.self) { row in
+                  HStack(spacing: 0) {
+                    ForEach(0..<rowItemCount[row], id: \.self) { col in
+                      let index = rowItemCount.prefix(row).reduce(0, +) + col
+                      if index < candidates.count {
+                        CandidateView(
+                          text: candidates[index], index: index,
+                          paddingLeft: candidateHorizontalPadding,
+                          paddingRight: candidateHorizontalPadding
+                        )
+                        .frame(minWidth: width / 8).frame(
+                          height: (barHeightExcludePreedit + keyboardHeight) / 6
+                        )
                       }
                     }
+                  }.onAppear {
+                    visibleRows.insert(row)
+                    if !scrollEnd && row == rowItemCount.count - 5 {
+                      loadMoreCandidates(candidates.count, candidateCountInScreen)
+                    }
+                  }.onDisappear {
+                    visibleRows.remove(row)
+                  }
                 }
               }
             }.frame(width: width * 4 / 5, height: barHeightExcludePreedit + keyboardHeight)
@@ -94,8 +102,9 @@ struct CandidateBarView: View {
               LazyHStack(spacing: 0) {
                 ForEach(Array(candidates.enumerated()), id: \.offset) { index, candidate in
                   CandidateView(
-                    text: candidate, index: index, paddingLeft: index == 0 ? 0 : 10,
-                    paddingRight: 10
+                    text: candidate, index: index,
+                    paddingLeft: index == 0 ? 0 : candidateHorizontalPadding,
+                    paddingRight: candidateHorizontalPadding
                   ).onAppear {
                     if !scrollEnd && index == candidates.count - candidateCountInRow {
                       loadMoreCandidates(candidates.count, candidateCountInRow)
@@ -130,7 +139,7 @@ struct CandidateBarView: View {
 
             Button {
               withAnimation {
-                proxy.scrollTo(visibleCandidates.min() ?? 0, anchor: .bottom)
+                proxy.scrollTo(((visibleRows.min() ?? 0) - 1) / 5 * 5, anchor: .top)
               }
             } label: {
               VStack {
@@ -145,7 +154,7 @@ struct CandidateBarView: View {
 
             Button {
               withAnimation {
-                proxy.scrollTo(visibleCandidates.max() ?? 0, anchor: .top)
+                proxy.scrollTo(((visibleRows.min() ?? 0) + 1) / 5 * 5 + 5, anchor: .top)
               }
             } label: {
               VStack {
