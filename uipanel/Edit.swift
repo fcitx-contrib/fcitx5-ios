@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct EditView: View {
+  @Environment(\.colorScheme) var colorScheme
   let totalWidth: CGFloat
 
   var body: some View {
@@ -11,69 +12,92 @@ struct EditView: View {
 
       ZStack {
         button(
-          image: "arrowtriangle.left.fill", shrink: 15, background: normalBackground, index: 0,
-          width: width,
-          height: height * 3
+          image: "arrowtriangle.left.fill", shrink: 15,
+          background: getNormalBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme),
+          shadow: getShadow(colorScheme),
+          index: 0, width: width, height: height * 3
         ) {
           client.keyPressed("", "ArrowLeft")
         }
         button(
-          image: "arrowtriangle.up.fill", shrink: 15, background: normalBackground, index: 1,
-          width: width,
-          height: height * 1.5
+          image: "arrowtriangle.up.fill", shrink: 15,
+          background: getNormalBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme),
+          shadow: getShadow(colorScheme),
+          index: 1, width: width, height: height * 1.5
         ) {
           client.keyPressed("", "ArrowUp")
         }
         button(
-          image: "arrowtriangle.right.fill", shrink: 15, background: normalBackground, index: 2,
-          width: width,
-          height: height * 3
+          image: "arrowtriangle.right.fill", shrink: 15,
+          background: getNormalBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme),
+          shadow: getShadow(colorScheme),
+          index: 2, width: width, height: height * 3
         ) {
           client.keyPressed("", "ArrowRight")
         }
         button(
-          image: "scissors", shrink: 10, background: functionBackground, index: 3, width: width,
-          height: height
+          image: "scissors", shrink: 10,
+          background: getFunctionBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme),
+          shadow: getShadow(colorScheme),
+          index: 3, width: width, height: height
         ) {
           client.cut()
         }
         button(
-          image: "doc.on.doc", shrink: 10, background: functionBackground, index: 7, width: width,
-          height: height
+          image: "doc.on.doc", shrink: 10,
+          background: getFunctionBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme),
+          shadow: getShadow(colorScheme),
+          index: 7, width: width, height: height
         ) {
           client.copy()
         }
         button(
-          image: "arrowtriangle.down.fill", shrink: 15, background: normalBackground, index: 5,
-          width: width,
-          height: height * 1.5
+          image: "arrowtriangle.down.fill", shrink: 15,
+          background: getNormalBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme),
+          shadow: getShadow(colorScheme),
+          index: 5, width: width, height: height * 1.5
         ) {
           client.keyPressed("", "ArrowDown")
         }
         button(
-          image: "doc.on.clipboard", shrink: 10, background: functionBackground, index: 11,
-          width: width,
-          height: height
+          image: "doc.on.clipboard", shrink: 10,
+          background: getFunctionBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme),
+          shadow: getShadow(colorScheme),
+          index: 11, width: width, height: height
         ) {
           client.paste()
         }
         button(
-          image: "arrow.left.to.line", shrink: 15, background: normalBackground, index: 12,
-          width: width * 1.5,
-          height: height
+          image: "arrow.left.to.line", shrink: 15,
+          background: getNormalBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme),
+          shadow: getShadow(colorScheme),
+          index: 12, width: width * 1.5, height: height
         ) {
           client.keyPressed("", "Home")
         }
         button(
-          image: "arrow.right.to.line", shrink: 15, background: normalBackground, index: 13,
-          width: width * 1.5,
-          height: height
+          image: "arrow.right.to.line", shrink: 15,
+          background: getNormalBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme),
+          shadow: getShadow(colorScheme),
+          index: 13, width: width * 1.5, height: height
         ) {
           client.keyPressed("", "End")
         }
         button(
-          image: "delete.left", shrink: 10, background: functionBackground, index: 15, width: width,
-          height: height
+          image: "delete.left", shrink: 10,
+          background: getFunctionBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme),
+          shadow: getShadow(colorScheme),
+          index: 15, width: width, height: height
         ) {
           client.keyPressed("", "Backspace")
         }
@@ -88,8 +112,8 @@ struct EditView: View {
   }
 
   private func button(
-    image: String, shrink: CGFloat, background: Color, index: Int, width: CGFloat, height: CGFloat,
-    action: @escaping () -> Void
+    image: String, shrink: CGFloat, background: Color, foreground: Color, shadow: Color,
+    index: Int, width: CGFloat, height: CGFloat, action: @escaping () -> Void
   ) -> some View {
     let w = width - 8
     let h = height - 8
@@ -101,6 +125,7 @@ struct EditView: View {
         let symbol = Image(systemName: image)
           .resizable()
           .aspectRatio(contentMode: .fit)
+          .foregroundColor(foreground)
         let size = keyboardHeight / shrink
         if image == "arrowtriangle.up.fill" || image == "arrowtriangle.down.fill" {
           symbol.frame(width: size)
@@ -112,7 +137,7 @@ struct EditView: View {
         .foregroundColor(.black)
         .cornerRadius(r)
     }.buttonStyle(PlainButtonStyle())
-      .shadow(color: Color.gray, radius: 0, x: 0, y: 1)
+      .shadow(color: shadow, radius: 0, x: 0, y: 1)
       .frame(width: w, height: h)
       .overlay(
         RoundedRectangle(cornerRadius: r)

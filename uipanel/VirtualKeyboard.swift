@@ -39,6 +39,7 @@ class ViewModel: ObservableObject {
 }
 
 public struct VirtualKeyboardView: View {
+  @Environment(\.colorScheme) var colorScheme
   @ObservedObject var viewModel = ViewModel()
 
   public var body: some View {
@@ -69,7 +70,7 @@ public struct VirtualKeyboardView: View {
               spaceLabel: viewModel.spaceLabel,
               enterLabel: viewModel.enterLabel)
           }
-        }.background(lightBackground)
+        }.background(colorScheme == .dark ? darkBackground : lightBackground)
         if viewModel.showMenu {
           ContextMenuOverlay(
             items: viewModel.menuItems,

@@ -29,6 +29,7 @@ let builtinCategories: [SymbolCategory] = [
 ]
 
 struct SymbolButton: View {
+  @Environment(\.colorScheme) var colorScheme
   let symbol: String
   let action: () -> Void
 
@@ -40,7 +41,7 @@ struct SymbolButton: View {
       .font(.system(size: 24))
       .frame(height: keyboardHeight / 5)
       .frame(maxWidth: .infinity)
-      .background(isPressed ? functionBackground : Color.clear)
+      .background(isPressed ? getFunctionBackground(colorScheme) : Color.clear)
       // Use simultaneousGesture so that scrolling behavior is preserved.
       .simultaneousGesture(
         DragGesture(minimumDistance: 0)
@@ -64,6 +65,7 @@ struct SymbolButton: View {
 }
 
 struct SymbolView: View {
+  @Environment(\.colorScheme) var colorScheme
   let width: CGFloat
 
   @State private var selectedKey = builtinCategories.first!.key
@@ -79,7 +81,9 @@ struct SymbolView: View {
                 .font(.system(size: 24))
                 .frame(height: keyboardHeight / 5)
                 .frame(maxWidth: .infinity)
-                .background(selectedKey == category.key ? functionBackground : Color.clear)
+                .background(
+                  selectedKey == category.key ? getFunctionBackground(colorScheme) : Color.clear
+                )
                 .onTapGesture {
                   selectedKey = category.key
                 }
