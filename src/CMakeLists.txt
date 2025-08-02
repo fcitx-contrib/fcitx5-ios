@@ -175,6 +175,9 @@ foreach(Keyboard ${KEYBOARDS})
     copy_to_app(copy_directory "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>-${SDK_NAME}/${Keyboard}.appex/share" "share")
 endforeach()
 
+generate_profile(App "." "${DEFAULT_INPUT_METHODS}")
+add_dependencies(${BUNDLE_NAME} AppProfile)
+
 # Copy icon and profile
 copy_to_app(copy "${PROJECT_SOURCE_DIR}/assets/${ICON_FILE}" "${ICON_FILE}")
 copy_to_app(copy "${PROJECT_BINARY_DIR}/profile" profile)
