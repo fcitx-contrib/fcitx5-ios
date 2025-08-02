@@ -19,15 +19,8 @@ set(ICON_FILE "icon.icns")
 
 list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
-if (NOT URL_SCHEME)
-    message(FATAL_ERROR "Must provide URL_SCHEME")
-endif()
-
 include(InitializeSwift)
 include(AddSwift)
-
-set(KEYBOARD_NAME "Keyboard")
-set(KEYBOARD_LANGUAGE "zh-Hans")
 
 set(FIND_ROOT_PATH "${PROJECT_BINARY_DIR}/usr")
 set(PREBUILDER_INCLUDE_DIR "${FIND_ROOT_PATH}/include")
@@ -80,20 +73,20 @@ add_subdirectory(uipanel)
 add_subdirectory(ipc)
 
 option(CHINESE_ADDONS "" ON)
-option(HALLELUJAH "" OFF)
-option(MOZC "" OFF)
-option(RIME "" OFF)
+option(HALLELUJAH "" ON)
+option(MOZC "" ON)
+option(RIME "" ON)
 
-function(copy_to_keyboard cmd file relative_path)
-    add_custom_command(TARGET ${BUNDLE_NAME}
+function(copy_to_keyboard keyboard cmd file relative_path)
+    add_custom_command(TARGET "${keyboard}Extension"
         POST_BUILD COMMAND /bin/sh -c \"
         ${CMAKE_COMMAND} -E ${cmd} ${file}
-            ${PROJECT_BINARY_DIR}/keyboard/$<CONFIG>-${SDK_NAME}/keyboard.appex/${relative_path}
+            ${PROJECT_BINARY_DIR}/src/$<CONFIG>-${SDK_NAME}/${keyboard}.appex/${relative_path}
     \")
 endfunction()
 
-function(copy_share_to_keyboard cmd relative_path)
-    copy_to_keyboard(${cmd} "${PREBUILDER_SHARE_DIR}/${relative_path}" "share/${relative_path}")
+function(copy_share_to_keyboard keyboard cmd relative_path)
+    copy_to_keyboard(${keyboard} ${cmd} "${PREBUILDER_SHARE_DIR}/${relative_path}" "share/${relative_path}")
 endfunction()
 
 function(copy_to_app cmd file relative_path)
@@ -107,7 +100,7 @@ endfunction()
 set(Fcitx5Utils_DIR "${PROJECT_SOURCE_DIR}/cmake")
 add_subdirectory(engines)
 
-fcitx5_get_addon_targets(ADDON_TARGETS iosnotifications engines fcitx5 iosfrontend uipanel)
+fcitx5_get_addon_targets(COMMON_TARGETS iosnotifications fcitx5 iosfrontend uipanel)
 
 add_subdirectory(assets)
 add_subdirectory(common)

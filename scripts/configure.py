@@ -18,10 +18,10 @@ PROFILE_TAIL = '''
 0=Default
 '''
 
-directory = sys.argv[1]
+file = sys.argv[1]
 input_methods = sys.argv[2:]
 
-with open(f'{directory}/profile', 'w') as f:
+with open(f'{file}', 'w') as f:
     f.write(PROFILE_HEADER.format(input_methods[0]))
     for i, input_method in enumerate(input_methods):
         f.write(PROFILE_ITEM.format(i, input_method))

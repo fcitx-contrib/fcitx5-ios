@@ -3,17 +3,17 @@
 <plist version="1.0">
 <dict>
   <key>CFBundleIdentifier</key>
-  <string>@BUNDLE_IDENTIFIER@.keyboard</string>
+  <string>@BUNDLE_IDENTIFIER@.@keyboard@</string>
   <key>CFBundleName</key>
-  <string>keyboard</string>
+  <string>@keyboard@</string>
   <key>CFBundleDisplayName</key>
-  <string>@KEYBOARD_NAME@</string>
+  <string>@keyboard@</string>
   <key>CFBundleVersion</key>
   <string>@PROJECT_VERSION@</string>
   <key>CFBundleShortVersionString</key>
   <string>@PROJECT_VERSION@</string>
   <key>CFBundleExecutable</key>
-  <string>keyboard</string>
+  <string>@keyboard@</string>
   <key>NSExtension</key>
   <dict>
     <key>NSExtensionAttributes</key>
@@ -23,7 +23,7 @@
       <key>PrefersRightToLeft</key>
       <false/>
       <key>PrimaryLanguage</key>
-      <string>@KEYBOARD_LANGUAGE@</string>
+      <string>@language@</string>
       <key>RequestsOpenAccess</key>
       <true/>
     </dict>
