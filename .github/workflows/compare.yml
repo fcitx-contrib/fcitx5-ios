@@ -1,0 +1,51 @@
+name: Compare
+
+on:
+  workflow_call:
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install bsdtar
+        run: |
+          sudo rm /var/lib/man-db/auto-update
+          sudo apt update && sudo apt install -y libarchive-tools
+          sudo ln -sf /usr/bin/bsdtar /usr/bin/tar
+
+      - name: Download release
+        run: wget -O release.ipa https://github.com/fcitx-contrib/fcitx5-ios/releases/download/latest/Fcitx5.ipa
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Compare content
+        run: |
+          tar tf release.ipa > release.list
+          echo "## IPA comparison" >> summary.md
+          tar tf Fcitx5.ipa > pr.list
+          diff -u release.list pr.list > pr.diff || true
+          if [[ -s pr.diff ]]; then
+            echo '```diff' >> summary.md
+            cat pr.diff >> summary.md
+            echo '```' >> summary.md
+          else
+            echo "No difference." >> summary.md
+          fi
+      - name: Find comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: "IPA comparison"
+
+      - name: Create or update comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          body-path: summary.md
+          edit-mode: replace

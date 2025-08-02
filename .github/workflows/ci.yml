@@ -106,3 +106,8 @@ jobs:
       - name: Setup tmate session
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
+
+  compare:
+    if: ${{ github.event_name == 'pull_request' }}
+    needs: build
+    uses: ./.github/workflows/compare.yml
