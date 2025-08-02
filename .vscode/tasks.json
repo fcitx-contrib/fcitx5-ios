@@ -20,7 +20,7 @@
         {
             "type": "shell",
             "label": "Configure (arm64 simulator)",
-            "command": "cmake -B build/SIMULATORARM64 -G Xcode -DURL_SCHEME=fcitx -DCHINESE_ADDONS=ON -DHALLELUJAH=ON -DMOZC=ON -DRIME=ON -DPLATFORM=SIMULATORARM64",
+            "command": "cmake -B build/SIMULATORARM64 -G Xcode -DPLATFORM=SIMULATORARM64",
             "group": {
                 "kind": "build"
             }
@@ -52,7 +52,7 @@
         {
             "type": "shell",
             "label": "Configure (x86_64 simulator)",
-            "command": "cmake -B build/SIMULATOR64 -G Xcode -DURL_SCHEME=fcitx -DCHINESE_ADDONS=ON -DHALLELUJAH=ON -DMOZC=ON -DRIME=ON -DPLATFORM=SIMULATOR64",
+            "command": "cmake -B build/SIMULATOR64 -G Xcode -DPLATFORM=SIMULATOR64",
             "group": {
                 "kind": "build"
             }
@@ -84,7 +84,7 @@
         {
             "type": "shell",
             "label": "Configure",
-            "command": "cmake -B build/OS64 -G Xcode -DURL_SCHEME=fcitx -DPLATFORM=OS64",
+            "command": "cmake -B build/OS64 -G Xcode -DPLATFORM=OS64",
             "group": {
                 "kind": "build"
             }

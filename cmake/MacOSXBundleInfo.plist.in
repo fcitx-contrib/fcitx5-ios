@@ -24,7 +24,7 @@
       <string>@BUNDLE_IDENTIFIER@</string>
       <key>CFBundleURLSchemes</key>
       <array>
-        <string>@URL_SCHEME@</string>
+        <string>fcitx</string>
       </array>
     </dict>
   </array>

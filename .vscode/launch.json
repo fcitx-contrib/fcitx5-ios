@@ -11,8 +11,29 @@
         {
             "type": "lldb",
             "request": "attach",
-            "name": "Debug keyboard",
-            "program": "keyboard",
+            "name": "Debug Chinese",
+            "program": "Chinese",
+            "waitFor": true
+        },
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "Debug Hallelujah",
+            "program": "Hallelujah",
+            "waitFor": true
+        },
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "Debug Mozc",
+            "program": "Mozc",
+            "waitFor": true
+        },
+        {
+            "type": "lldb",
+            "request": "attach",
+            "name": "Debug Rime",
+            "program": "Rime",
             "waitFor": true
         }
     ]

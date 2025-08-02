@@ -57,15 +57,10 @@ jobs:
           git apply --directory=engines/fcitx5-rime patches/rime.patch
           if [[ "${{ matrix.platform }}" == "OS64" ]]; then
             cmake -B build/${{ matrix.platform }} -G Xcode \
-              -DURL_SCHEME=fcitx \
               -DPLATFORM=${{ matrix.platform }}
             cmake --build build/${{ matrix.platform }} --config Release -- CODE_SIGNING_ALLOWED=NO
           else
             cmake -B build/${{ matrix.platform }} -G Xcode \
-              -DURL_SCHEME=fcitx \
-              -DHALLELUJAH=ON \
-              -DMOZC=ON \
-              -DRIME=ON \
               -DPLATFORM=${{ matrix.platform }}
             cmake --build build/${{ matrix.platform }} --config Release
           fi
@@ -88,6 +83,14 @@ jobs:
           mkdir Payload
           cp -r Fcitx5.app Payload
           zip -r Fcitx5.ipa Payload
+
+      - name: Upload artifact
+        if: ${{ github.ref != 'refs/heads/master' && matrix.platform == 'OS64' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: Fcitx5.ipa
+          path: |
+            build/OS64/src/Release-iphoneos/Fcitx5.ipa
 
       - name: Create Nightly release
         if: ${{ github.ref == 'refs/heads/master' && matrix.platform == 'OS64' }}

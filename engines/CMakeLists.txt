@@ -1,7 +1,4 @@
-set(DEFAULT_INPUT_METHODS)
-
 if (CHINESE_ADDONS)
-    add_definitions(-DCHINESE_ADDONS)
     set(_Fcitx5Macro_SELF_DIR "${PROJECT_SOURCE_DIR}/fcitx5/src/lib/fcitx-utils")
 
     option(USE_DLOPEN "" OFF)
@@ -17,7 +14,6 @@ if (CHINESE_ADDONS)
     option(ENABLE_GUI OFF)
     add_subdirectory(fcitx5-chinese-addons)
     target_link_libraries(chttrans "${PREBUILDER_LIB_DIR}/libmarisa.a")
-    list(APPEND DEFAULT_INPUT_METHODS pinyin shuangpin wbx)
 endif()
 
 if (HALLELUJAH)
@@ -28,9 +24,7 @@ if (HALLELUJAH)
     )
     set(MARISA_TARGET Marisa_static)
 
-    add_definitions(-DHALLELUJAH)
     add_subdirectory(fcitx5-hallelujah)
-    list(APPEND DEFAULT_INPUT_METHODS hallelujah)
 endif()
 
 if (MOZC)
@@ -47,7 +41,6 @@ if (MOZC)
         "${PROJECT_SOURCE_DIR}/include"
     )
     target_compile_definitions(mozc PRIVATE -DMOZC_DISABLE_SESSION_WATCHDOG)
-    list(APPEND DEFAULT_INPUT_METHODS mozc)
 endif()
 
 if (RIME)
@@ -74,18 +67,7 @@ if (RIME)
     set(RIME_TARGET Rime_static)
     set(Rime_VERSION "1.12")
 
-    add_definitions(-DRIME)
     add_subdirectory(fcitx5-rime)
     target_include_directories(rime PRIVATE "${PROJECT_BINARY_DIR}/ipc/include")
-    add_dependencies(rime FcitxIpc)
-    list(APPEND DEFAULT_INPUT_METHODS rime)
+    target_link_libraries(rime FcitxIpc)
 endif()
-
-add_custom_command(
-    OUTPUT "${PROJECT_BINARY_DIR}/profile"
-    COMMAND python scripts/configure.py "${PROJECT_BINARY_DIR}" ${DEFAULT_INPUT_METHODS}
-    DEPENDS "${PROJECT_SOURCE_DIR}/default"
-    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-    COMMENT "Generating profile"
-)
-add_custom_target(gen_profile DEPENDS "${PROJECT_BINARY_DIR}/profile")

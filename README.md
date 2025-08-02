@@ -27,19 +27,13 @@ brew install cmake gettext pkg-config
 ```sh
 git apply --directory=fcitx5 patches/fcitx5.patch
 git apply --directory=engines/libime/src/libime/core/kenlm patches/kenlm.patch
-git apply --directory=engines/fcitx5-rime patches/rime.patch # if building with Rime
-git clone https://github.com/google/mozc engines/fcitx5-mozc/mozc --depth=1 --recurse-submodules # if building with Mozc
+git apply --directory=engines/fcitx5-rime patches/rime.patch
+git clone https://github.com/google/mozc engines/fcitx5-mozc/mozc --depth=1 --recurse-submodules
 ```
 
 ### Build with CMake
 ```sh
-cmake -B build/SIMULATORARM64 -G Xcode \
-  -DURL_SCHEME=fcitx \
-  -DCHINESE_ADDONS=ON \
-  -DHALLELUJAH=ON \
-  -DMOZC=ON \
-  -DRIME=ON \
-  -DPLATFORM=SIMULATORARM64
+cmake -B build/SIMULATORARM64 -G Xcode -DPLATFORM=SIMULATORARM64
 cmake --build build --config Debug
 ```
 
@@ -67,7 +61,7 @@ Below assumes you've already done with simulator.
 ```sh
 ./scripts/install-deps.sh OS64
 # By default enable chinese-addons only, as there is a 77 MB memory limit for keyboard process.
-cmake -B build/OS64 -G Xcode -DURL_SCHEME=fcitx -DPLATFORM=OS64
+cmake -B build/OS64 -G Xcode -DPLATFORM=OS64
 cmake --build build/OS64 --config Debug -- CODE_SIGNING_ALLOWED=NO
 cd build/OS64/src/Debug-iphoneos && rm -rf Payload Fcitx5.ipa && mkdir Payload
 cp -r Fcitx5.app Payload && zip -r Fcitx5.ipa Payload
