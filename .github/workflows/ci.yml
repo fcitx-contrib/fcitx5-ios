@@ -18,8 +18,30 @@ jobs:
       - name: Lint
         run: ./scripts/lint.sh
 
+  data:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Build rime-ice
+        uses: rimeinn/deploy-schema@master
+        with:
+          user-recipe-list: |-
+            iDvel/rime-ice:others/recipes/full
+          shared-recipe-list:
+          package-items: |-
+            build
+            lua
+            opencc
+            custom_phrase.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact.zip
+          path: |
+            /tmp/deploy-schema/artifact.zip
+
   build:
-    needs: lint
+    needs: [lint, data]
     runs-on: macos-15
     env:
       MOZC_SHA: c4a8c95865cb60a14e6c829a0a3893c3b3dac64c
@@ -54,6 +76,9 @@ jobs:
         run: |
           git apply --directory=fcitx5 patches/fcitx5.patch
           git apply --directory=engines/libime/src/libime/core/kenlm patches/kenlm.patch
+          # For developer test period use xiaohe by default.
+          git apply --directory=engines/fcitx5-chinese-addons patches/chinese-addons.patch
+          git apply --directory=engines/fcitx5-hallelujah patches/hallelujah.patch
           git apply --directory=engines/fcitx5-rime patches/rime.patch
           if [[ "${{ matrix.platform }}" == "OS64" ]]; then
             cmake -B build/${{ matrix.platform }} -G Xcode \
@@ -76,10 +101,21 @@ jobs:
           xcrun simctl install booted build/${{ matrix.platform }}/src/Release-iphonesimulator/Fcitx5.app
           xcrun simctl launch booted org.fcitx.Fcitx5
 
+      - name: Download artifact
+        if: ${{ matrix.platform == 'OS64' }}
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
       - name: Pack IPA
         if: ${{ matrix.platform == 'OS64' }}
         working-directory: build/OS64/src/Release-iphoneos
         run: |
+          # For developer test period use rime-ice.
+          mv Fcitx5.app/PlugIns/Rime.appex/share/rime-data/opencc .
+          rm -rf Fcitx5.app/PlugIns/Rime.appex/share/rime-data/*
+          mv opencc Fcitx5.app/PlugIns/Rime.appex/share/rime-data
+          tar xf ../../../../artifact.zip -C Fcitx5.app/PlugIns/Rime.appex/share/rime-data
           mkdir Payload
           cp -r Fcitx5.app Payload
           zip -r Fcitx5.ipa Payload

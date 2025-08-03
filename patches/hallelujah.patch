@@ -1,0 +1,42 @@
+diff --git a/src/hallelujah.cpp b/src/hallelujah.cpp
+index c5d0a23..f351167 100644
+--- a/src/hallelujah.cpp
++++ b/src/hallelujah.cpp
+@@ -305,6 +305,7 @@ void HallelujahEngine::loadTrie() {
+ 
+ void HallelujahEngine::loadWords() {
+     const auto &sp = fcitx::StandardPaths::global();
++#if 0
+     auto words_path =
+         sp.locate(fcitx::StandardPathsType::Data, "hallelujah/words.json");
+     if (words_path.empty()) {
+@@ -341,9 +342,21 @@ void HallelujahEngine::loadWords() {
+                                            ipa.get<std::string>(),
+                                            frequency.get<double>()));
+     }
++#else
++    auto words_path =
++        sp.locate(fcitx::StandardPathsType::Data, "hallelujah/words.tsv");
++    std::ifstream ifs(words_path);
++    std::string key;
++    double frequency;
++    while (!ifs.eof()) {
++        ifs >> key >> frequency;
++        words_.emplace(key, HallelujahWord({}, {}, frequency));
++    }
++#endif
+ }
+ 
+ void HallelujahEngine::loadPinyin() {
++#if 0
+     const auto &sp = fcitx::StandardPaths::global();
+     auto pinyin_path =
+         sp.locate(fcitx::StandardPathsType::Data, "hallelujah/cedict.json");
+@@ -372,6 +385,7 @@ void HallelujahEngine::loadPinyin() {
+         }
+         pinyin_.emplace(key, std::move(vec));
+     }
++#endif
+ }
+ 
+ void HallelujahEngine::keyEvent(const InputMethodEntry &, KeyEvent &keyEvent) {
