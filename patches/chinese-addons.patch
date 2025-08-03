@@ -1,0 +1,13 @@
+diff --git a/im/pinyin/pinyin.h b/im/pinyin/pinyin.h
+index c6e34a1..b50bbc6 100644
+--- a/im/pinyin/pinyin.h
++++ b/im/pinyin/pinyin.h
+@@ -153,7 +153,7 @@ FCITX_CONFIGURATION(
+         ShuangpinProfileEnum,
+         OptionalHideInDescriptionBase<ShuangpinProfileEnumI18NAnnotation>>
+         shuangpinProfile{this, "ShuangpinProfile", _("Shuangpin Profile"),
+-                         ShuangpinProfileEnum::Ziranma};
++                         ShuangpinProfileEnum::Xiaohe};
+     OptionWithAnnotation<bool, OptionalHideInDescription> showShuangpinMode{
+         this, "ShowShuangpinMode", _("Show current shuangpin mode"), true};
+     Option<int, IntConstrain> pageSize{

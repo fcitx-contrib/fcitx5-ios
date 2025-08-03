@@ -85,8 +85,10 @@ if (HALLELUJAH)
     set(HALLELUJAH_SOURCE_DIR "${ENGINES_SOURCE_DIR}/fcitx5-hallelujah")
     set(HALLELUJAH_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-hallelujah")
     copy_to_keyboard(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/data/google_227800_words.bin" "share/hallelujah/google_227800_words.bin")
-    copy_to_keyboard(Hallelujah copy "${HALLELUJAH_SOURCE_DIR}/data/words.json" "share/hallelujah/words.json")
-    copy_to_keyboard(Hallelujah copy "${HALLELUJAH_SOURCE_DIR}/data/cedict.json" "share/hallelujah/cedict.json")
+    # Convert json to tsv and discard ipa, translation and pinyin to avoid memory explosion.
+    execute_process(COMMAND python "${PROJECT_SOURCE_DIR}/scripts/hallelujah.py" "${HALLELUJAH_SOURCE_DIR}/data/words.json" "${HALLELUJAH_BINARY_DIR}/words.tsv")
+    copy_to_keyboard(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/words.tsv" "share/hallelujah/words.tsv")
+    # copy_to_keyboard(Hallelujah copy "${HALLELUJAH_SOURCE_DIR}/data/cedict.json" "share/hallelujah/cedict.json")
     copy_to_keyboard(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah-addon.conf" "${ADDON_PREFIX}/hallelujah.conf")
     copy_to_keyboard(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah.conf" "${IM_PREFIX}/hallelujah.conf")
 

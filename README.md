@@ -27,6 +27,7 @@ brew install cmake gettext pkg-config
 ```sh
 git apply --directory=fcitx5 patches/fcitx5.patch
 git apply --directory=engines/libime/src/libime/core/kenlm patches/kenlm.patch
+git apply --directory=engines/fcitx5-hallelujah patches/hallelujah.patch
 git apply --directory=engines/fcitx5-rime patches/rime.patch
 git clone https://github.com/google/mozc engines/fcitx5-mozc/mozc --depth=1 --recurse-submodules
 ```
