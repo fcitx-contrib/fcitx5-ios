@@ -131,13 +131,14 @@ public struct VirtualKeyboardView: View {
     viewModel.scrollEnd = end
   }
 
-  public func setStatusArea(
-    _ actions: [StatusAreaAction], _ currentInputMethod: String, _ inputMethods: [InputMethod]
-  ) {
+  public func setStatusArea(_ actions: [StatusAreaAction]) {
     viewModel.actions = actions
+  }
+
+  public func setCurrentInputMethod(_ im: String, _ inputMethods: [InputMethod]) {
     viewModel.inputMethods = inputMethods
     for inputMethod in inputMethods {
-      if inputMethod.name == currentInputMethod {
+      if inputMethod.name == im {
         viewModel.spaceLabel = inputMethod.displayName
         break
       }

@@ -16,7 +16,15 @@ namespace fcitx {
 
 UIPanel *ui;
 
-UIPanel::UIPanel(Instance *instance) : instance_(instance) { ui = this; }
+UIPanel::UIPanel(Instance *instance) : instance_(instance) {
+    ui = this;
+    eventHandler_ = instance_->watchEvent(
+        EventType::InputContextInputMethodActivated, EventWatcherPhase::Default,
+        [this](Event &event) {
+            auto im = instance_->currentInputMethod();
+            KeyboardUI::setCurrentInputMethodAsync(im.c_str());
+        });
+}
 
 void UIPanel::showVirtualKeyboard() {
     if (auto ic = dynamic_cast<IosInputContext *>(
@@ -132,8 +140,7 @@ void UIPanel::updateStatusArea(InputContext *ic) {
         }
         actions.append(convertAction(action, ic));
     }
-    auto im = instance_->currentInputMethod();
-    KeyboardUI::setStatusAreaAsync(actions, im.c_str());
+    KeyboardUI::setStatusAreaAsync(actions);
 }
 
 static std::string serializeActions(ActionableCandidateList *actionableList,

@@ -49,9 +49,15 @@ public struct StatusAreaAction: Identifiable {
   }
 }
 
-public func setStatusAreaAsync(_ actions: [StatusAreaAction], _ currentInputMethod: String) {
+public func setStatusAreaAsync(_ actions: [StatusAreaAction]) {
   DispatchQueue.main.async {
-    virtualKeyboardView.setStatusArea(
-      actions, currentInputMethod, deserialize([InputMethod].self, String(getInputMethods())))
+    virtualKeyboardView.setStatusArea(actions)
+  }
+}
+
+public func setCurrentInputMethodAsync(_ im: String) {
+  DispatchQueue.main.async {
+    virtualKeyboardView.setCurrentInputMethod(
+      im, deserialize([InputMethod].self, String(getInputMethods())))
   }
 }

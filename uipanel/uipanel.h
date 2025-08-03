@@ -32,6 +32,7 @@ class UIPanel final : public VirtualKeyboardUserInterface {
 
   private:
     Instance *instance_;
+    std::unique_ptr<HandlerTableEntry<EventHandler>> eventHandler_;
 
     void updateStatusArea(InputContext *ic);
     void expand(const std::string &auxUp, const std::string &preedit, int caret,
