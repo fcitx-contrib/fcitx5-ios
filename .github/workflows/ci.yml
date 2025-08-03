@@ -112,7 +112,9 @@ jobs:
         working-directory: build/OS64/src/Release-iphoneos
         run: |
           # For developer test period use rime-ice.
+          mv Fcitx5.app/PlugIns/Rime.appex/share/rime-data/opencc .
           rm -rf Fcitx5.app/PlugIns/Rime.appex/share/rime-data/*
+          mv opencc Fcitx5.app/PlugIns/Rime.appex/share/rime-data
           tar xf ../../../../artifact.zip -C Fcitx5.app/PlugIns/Rime.appex/share/rime-data
           mkdir Payload
           cp -r Fcitx5.app Payload
