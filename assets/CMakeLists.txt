@@ -11,3 +11,5 @@ add_custom_command(
 add_custom_target(png_images ALL
     DEPENDS "${PROJECT_BINARY_DIR}/full-punc.png" "${PROJECT_BINARY_DIR}/half-punc.png"
 )
+
+execute_process(COMMAND "${PROJECT_SOURCE_DIR}/scripts/generate-icons.sh")

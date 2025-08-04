@@ -14,8 +14,31 @@
   <string>@PROJECT_VERSION@</string>
   <key>CFBundleExecutable</key>
   <string>@BUNDLE_NAME@</string>
-  <key>CFBundleIconFile</key>
-  <string>@ICON_FILE@</string>
+  <key>CFBundleIcons</key>
+  <dict>
+    <key>CFBundlePrimaryIcon</key>
+    <dict>
+      <key>CFBundleIconFiles</key>
+      <array>
+        <string>AppIcon60x60</string>
+      </array>
+      <key>CFBundleIconName</key>
+      <string>AppIcon</string>
+    </dict>
+  </dict>
+  <key>CFBundleIcons~ipad</key>
+  <dict>
+    <key>CFBundlePrimaryIcon</key>
+    <dict>
+      <key>CFBundleIconFiles</key>
+      <array>
+        <string>AppIcon60x60</string>
+        <string>AppIcon76x76</string>
+      </array>
+      <key>CFBundleIconName</key>
+      <string>AppIcon</string>
+    </dict>
+  </dict>
   <!-- Register fcitx:// scheme. -->
   <key>CFBundleURLTypes</key>
   <array>
@@ -49,7 +72,7 @@
   <!-- A random string makes it fullscreen. -->
   <key>UILaunchScreen</key>
   <string>foo</string>
-  <!-- Show Documents direcotry (when it's not empty) in Files.app. -->
+  <!-- Show Documents directory (when it's not empty) in Files.app. -->
   <key>UISupportsDocumentBrowser</key>
   <true/>
 </dict>
