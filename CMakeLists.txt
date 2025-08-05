@@ -15,7 +15,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(BUNDLE_IDENTIFIER "org.fcitx.Fcitx5")
 set(BUNDLE_NAME "Fcitx5")
-set(ICON_FILE "icon.icns")
 
 list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
