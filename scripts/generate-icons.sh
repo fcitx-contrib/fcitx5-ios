@@ -8,7 +8,7 @@ APPICON_SET="$ASSETS_DIR/AppIcon.appiconset"
 ACTOOL_OUT="$ASSETS_DIR/actool_out"
 
 # Format: size scale name
-declare -a ICON_SPECS=(
+ICON_SPECS=(
   "20 2 icon-20x2.png"
   "20 3 icon-20x3.png"
   "29 2 icon-29x2.png"
