@@ -124,11 +124,23 @@ if (RIME)
     copy_share_to_keyboard(Rime copy_directory "rime-data")
 endif()
 
+execute_process(COMMAND git rev-parse HEAD
+    OUTPUT_VARIABLE COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(COMMAND git show --no-patch --format=%ct
+    OUTPUT_VARIABLE UNIX_TIME
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+configure_file(meta.swift.in ${CMAKE_CURRENT_SOURCE_DIR}/meta.swift @ONLY)
+
 file(GLOB CONFIG_UI_FILES CONFIGURE_DEPENDS config/*.swift)
 
 add_executable(
     ${BUNDLE_NAME}
     MACOSX_BUNDLE
+    meta.swift
+    AboutView.swift
     ContentView.swift
     InputMethodsView.swift
     AddonConfigView.swift

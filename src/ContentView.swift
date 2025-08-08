@@ -72,6 +72,12 @@ struct ContentView: View {
             Text("Addon Config")
           }
         }
+
+        Section {
+          NavigationLink(destination: AboutView()) {
+            Text("About")
+          }
+        }
       }
       .navigationTitle("Fcitx5")
     }
