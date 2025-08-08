@@ -2,3 +2,4 @@
 build
 *.tar.bz2
 *.zip
+meta.swift

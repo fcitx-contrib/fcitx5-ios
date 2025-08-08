@@ -89,8 +89,4 @@ Crash reports are available in `Settings` -> `Privacy & Security` -> `Analytics 
 Send them to mac and open with Console.app.
 
 ## Credits
-* [fcitx5](https://github.com/fcitx/fcitx5): LGPL-2.1-or-later
-* [fcitx5-android](https://github.com/fcitx5-android/fcitx5-android): LGPL-2.1-or-later
-* [ios-cmake](https://github.com/leetal/ios-cmake): BSD-3-Clause
-* [swift-cmake-examples](https://github.com/apple/swift-cmake-examples): Apache-2.0
-* [AlertToast](https://github.com/elai950/AlertToast): MIT
+Thanks to [these](./CREDITS.md) 3rd-party Open Source projects.
