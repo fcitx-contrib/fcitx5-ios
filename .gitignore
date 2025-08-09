@@ -3,3 +3,4 @@ build
 *.tar.bz2
 *.zip
 meta.swift
+assets/en.lproj/Localizable.strings

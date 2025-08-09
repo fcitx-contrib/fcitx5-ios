@@ -101,6 +101,8 @@ add_subdirectory(engines)
 
 fcitx5_get_addon_targets(COMMON_TARGETS iosnotifications fcitx5 iosfrontend uipanel)
 
+set(LOCALES en zh-Hans)
+list(TRANSFORM LOCALES APPEND ".lproj" OUTPUT_VARIABLE LPROJS)
 add_subdirectory(assets)
 add_subdirectory(common)
 add_subdirectory(keyboard)

@@ -57,7 +57,8 @@ struct AddInputMethodsView: View {
                     enabledInputMethods.map { $0.name } + [inputMethod.name]),
                   encoding: .utf8)!)
               requestReload()
-              message = "Added \(inputMethod.displayName)"
+              message = String(
+                format: NSLocalizedString("Added %@", comment: ""), inputMethod.displayName)
               showToast = true
             } label: {
               Text(inputMethod.displayName)
@@ -76,7 +77,7 @@ struct AddInputMethodsView: View {
         )
       )
     }
-    .navigationTitle("Add input methods")
+    .navigationTitle(NSLocalizedString("Add input methods", comment: ""))
     .navigationBarTitleDisplayMode(.inline)
   }
 }

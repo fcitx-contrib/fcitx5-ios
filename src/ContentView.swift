@@ -65,7 +65,8 @@ struct ContentView: View {
           }
         }
         Section {
-          ConfigLinkView(title: "Global Config", uri: globalConfigUri)
+          ConfigLinkView(
+            title: NSLocalizedString("Global Config", comment: ""), uri: globalConfigUri)
           NavigationLink(
             destination: AddonConfigView()
           ) {
@@ -79,7 +80,7 @@ struct ContentView: View {
           }
         }
       }
-      .navigationTitle("Fcitx5")
+      .navigationTitle(NSLocalizedString("Fcitx5", comment: ""))
     }
     .toast(isPresenting: $showToast, duration: duration) {
       AlertToast(

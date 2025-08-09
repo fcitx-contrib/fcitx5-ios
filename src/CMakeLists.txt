@@ -192,12 +192,15 @@ endforeach()
 generate_profile(App "." "${DEFAULT_INPUT_METHODS}")
 add_dependencies(${BUNDLE_NAME} AppProfile)
 
-# Copy icons and profile
+# Copy icons, profile and translations.
 set(ICON_FILES "AppIcon60x60@2x.png" "AppIcon76x76@2x~ipad.png" "Assets.car")
 foreach(ICON_FILE IN LISTS ICON_FILES)
     copy_to_app(copy "${PROJECT_SOURCE_DIR}/build/assets/actool_out/${ICON_FILE}" "${ICON_FILE}")
 endforeach()
 copy_to_app(copy "${PROJECT_BINARY_DIR}/profile" profile)
+foreach(LPROJ IN LISTS LPROJS)
+    copy_to_app(copy_directory "${PROJECT_SOURCE_DIR}/assets/${LPROJ}" "${LPROJ}")
+endforeach()
 
 fcitx5_import_addons(${BUNDLE_NAME}
     REGISTRY_VARNAME getStaticAddon
