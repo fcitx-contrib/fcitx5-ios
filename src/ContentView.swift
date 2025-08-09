@@ -80,7 +80,7 @@ struct ContentView: View {
           }
         }
       }
-      .navigationTitle("Fcitx5")
+      .navigationTitle(NSLocalizedString("Fcitx5", comment: ""))
     }
     .toast(isPresenting: $showToast, duration: duration) {
       AlertToast(
