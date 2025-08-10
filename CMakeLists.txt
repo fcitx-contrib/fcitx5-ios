@@ -76,24 +76,37 @@ option(HALLELUJAH "" ON)
 option(MOZC "" ON)
 option(RIME "" ON)
 
-function(copy_to_keyboard keyboard cmd file relative_path)
-    add_custom_command(TARGET "${keyboard}Extension"
+function (set_app_and_target bundle)
+    if ("${bundle}" STREQUAL "app")
+        set(app "${BUNDLE_NAME}.app" PARENT_SCOPE)
+        set(target "${BUNDLE_NAME}" PARENT_SCOPE)
+    else()
+        set(app "${bundle}.appex" PARENT_SCOPE)
+        set(target "${bundle}Extension" PARENT_SCOPE)
+    endif()
+endfunction()
+
+function(copy_to bundle cmd file relative_path)
+    set_app_and_target(${bundle})
+    add_custom_command(TARGET ${target}
         POST_BUILD COMMAND /bin/sh -c \"
         ${CMAKE_COMMAND} -E ${cmd} ${file}
-            ${PROJECT_BINARY_DIR}/src/$<CONFIG>-${SDK_NAME}/${keyboard}.appex/${relative_path}
+            ${PROJECT_BINARY_DIR}/src/$<CONFIG>-${SDK_NAME}/${app}/${relative_path}
     \")
 endfunction()
 
-function(copy_share_to_keyboard keyboard cmd relative_path)
-    copy_to_keyboard(${keyboard} ${cmd} "${PREBUILDER_SHARE_DIR}/${relative_path}" "share/${relative_path}")
+function(copy_share_to bundle cmd relative_path)
+    copy_to(${bundle} ${cmd} "${PREBUILDER_SHARE_DIR}/${relative_path}" "share/${relative_path}")
 endfunction()
 
-function(copy_to_app cmd file relative_path)
-    add_custom_command(TARGET ${BUNDLE_NAME}
-        POST_BUILD COMMAND /bin/sh -c \"
-        ${CMAKE_COMMAND} -E ${cmd} ${file}
-            ${PROJECT_BINARY_DIR}/src/$<CONFIG>-${SDK_NAME}/${BUNDLE_NAME}.app/${relative_path}
-    \")
+function(install_cxx_translations bundle po)
+    set_app_and_target(${bundle})
+    add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND ./scripts/install.sh "${app}" "${PROJECT_BINARY_DIR}/${po}"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        COMMENT "Installing C++ translations for ${bundle}"
+    )
+    copy_to(${bundle} copy_directory "${PROJECT_SOURCE_DIR}/build/po/${app}/usr/local/share/locale" "share/locale")
 endfunction()
 
 set(Fcitx5Utils_DIR "${PROJECT_SOURCE_DIR}/cmake")

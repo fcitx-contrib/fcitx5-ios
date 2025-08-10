@@ -1,4 +1,5 @@
 import Fcitx
+import FcitxCommon
 import FcitxProtocol
 import KeyboardUI
 import SwiftUI
@@ -11,6 +12,14 @@ private func redirectStderr() {
     dup2(fileno(file), STDERR_FILENO)
     fclose(file)
   }
+}
+
+private func syncLocale() -> String {
+  let localeFile = appGroupTmp.appendingPathComponent("locale")
+  if let locale = try? String(contentsOf: localeFile, encoding: .utf8) {
+    return locale
+  }
+  return getLocale()
 }
 
 class KeyboardViewController: UIInputViewController, FcitxProtocol {
@@ -29,6 +38,10 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     super.viewDidLoad()
     redirectStderr()
     initProfile()
+    // TODO: (this is tested in simulator) when user changes app locale in Settings,
+    // app and keyboards are killed, but only if app is started first can it sync
+    // locale to keyboards. Need to find a way to update locale on viewWillAppear.
+    setLocale(syncLocale())
     startFcitx(Bundle.main.bundlePath, appGroup.path)
 
     hostingController = UIHostingController(rootView: virtualKeyboardView)

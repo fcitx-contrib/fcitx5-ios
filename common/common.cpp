@@ -1,8 +1,8 @@
 #include "common.h"
 #include "../fcitx5/src/lib/fcitx/addonmanager.h"
 #include "nativestreambuf.h"
+#include <fcitx-utils/i18n.h>
 #include <filesystem>
-
 #include <thread>
 
 namespace fs = std::filesystem;
@@ -43,10 +43,48 @@ void setupEnv(const char *bundlePath, const char *appGroupPath,
     setenv("FCITX_CONFIG_HOME", fcitx_config_home.c_str(), 1);
 }
 
+// Collect all share/locale/*/LC_MESSAGES/*.mo
+std::set<std::string> getAllDomains(const fs::path &localedir) {
+    std::set<std::string> ret;
+    try {
+        for (const auto &entry : fs::directory_iterator(localedir)) {
+            if (!entry.is_directory()) {
+                continue;
+            }
+            fs::path lcMessagesPath = entry.path() / "LC_MESSAGES";
+            try {
+                for (const auto &file :
+                     fs::directory_iterator(lcMessagesPath)) {
+                    if (file.path().extension() == ".mo") {
+                        ret.insert(file.path().stem());
+                    }
+                }
+            } catch (const std::exception &e) {
+                // LC_MESSAGES not exist.
+            }
+        }
+    } catch (const std::exception &e) {
+        // localedir not exist.
+    }
+    return ret;
+}
+
+// Must be executed before creating fcitx instance, i.e. loading addons, because
+// addons register compile-time domain path, and only 1st call of registerDomain
+// counts. The .mo files must exist.
+void setupI18N(const char *bundlePath) {
+    fs::path bundle = bundlePath;
+    fs::path localedir = bundle / "share" / "locale";
+    for (const auto &domain : getAllDomains(localedir)) {
+        fcitx::registerDomain(domain.c_str(), localedir);
+    }
+}
+
 void setupFcitx(const char *bundlePath, const char *appGroupPath,
                 bool isMainApp) {
     setupLog();
     setupEnv(bundlePath, appGroupPath, isMainApp);
+    setupI18N(bundlePath);
 
     instance = std::make_unique<fcitx::Instance>(0, nullptr);
     instance->setInputMethodMode(fcitx::InputMethodMode::OnScreenKeyboard);
@@ -58,4 +96,13 @@ void setupFcitx(const char *bundlePath, const char *appGroupPath,
     dispatcher = std::make_unique<fcitx::EventDispatcher>();
     dispatcher->attach(&instance->eventLoop());
     fcitx_thread = std::thread([] { instance->eventLoop().exec(); });
+}
+
+void setLocale(const char *locale) {
+    std::string val = locale;
+    val += ":C";
+    // For config items.
+    setenv("LANGUAGE", val.c_str(), 1);
+    // For addon names.
+    setenv("FCITX_LOCALE", val.c_str(), 1);
 }

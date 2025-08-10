@@ -1,6 +1,13 @@
 import Fcitx
+import FcitxCommon
 import SwiftUtil
 import UIKit
+
+private func syncLocale(_ locale: String) {
+  mkdirP(appGroupTmp.path)
+  try? locale.write(
+    to: appGroupTmp.appendingPathComponent("locale"), atomically: true, encoding: .utf8)
+}
 
 class AppDelegate: NSObject, UIApplicationDelegate {
   func application(
@@ -8,6 +15,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     initProfile()
+    let locale = getLocale()
+    setLocale(locale)
+    syncLocale(locale)
     startFcitx(Bundle.main.bundlePath, appGroup.path)
     return true
   }

@@ -16,62 +16,64 @@ if (CHINESE_ADDONS)
     list(APPEND ENGINE_TARGETS ${CHINESE_TARGETS})
 
     # quickphrase
-    copy_to_keyboard(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/quickphrase/quickphrase.conf" "${ADDON_PREFIX}/quickphrase.conf")
-    copy_to_keyboard(Chinese copy_directory "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/quickphrase/quickphrase.d" "share/fcitx5/data/quickphrase.d")
+    copy_to(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/quickphrase/quickphrase.conf" "${ADDON_PREFIX}/quickphrase.conf")
+    copy_to(Chinese copy_directory "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/quickphrase/quickphrase.d" "share/fcitx5/data/quickphrase.d")
 
     # spell
-    copy_to_keyboard(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
-    copy_share_to_keyboard(Chinese copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
+    copy_to(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
+    copy_share_to(Chinese copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
 
     # unicode
-    copy_to_keyboard(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/unicode/unicode.conf" "${ADDON_PREFIX}/unicode.conf")
+    copy_to(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/unicode/unicode.conf" "${ADDON_PREFIX}/unicode.conf")
 
     set(LUA_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-lua")
-    copy_to_keyboard(Chinese copy "${LUA_BINARY_DIR}/src/addonloader/luaaddonloader.conf" "${ADDON_PREFIX}/luaaddonloader.conf")
-    copy_to_keyboard(Chinese copy "${LUA_BINARY_DIR}/src/imeapi/imeapi.conf" "${ADDON_PREFIX}/imeapi.conf")
-    copy_to_keyboard(Chinese copy "${ENGINES_SOURCE_DIR}/fcitx5-lua/src/imeapi/imeapi.lua" "share/fcitx5/lua/imeapi/imeapi.lua")
+    copy_to(Chinese copy "${LUA_BINARY_DIR}/src/addonloader/luaaddonloader.conf" "${ADDON_PREFIX}/luaaddonloader.conf")
+    copy_to(Chinese copy "${LUA_BINARY_DIR}/src/imeapi/imeapi.conf" "${ADDON_PREFIX}/imeapi.conf")
+    copy_to(Chinese copy "${ENGINES_SOURCE_DIR}/fcitx5-lua/src/imeapi/imeapi.lua" "share/fcitx5/lua/imeapi/imeapi.lua")
 
     set(CHINESE_ADDONS_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-chinese-addons")
 
     # Pinyin addon, im and lua
-    copy_to_keyboard(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/im/pinyin/pinyin-addon.conf" "${ADDON_PREFIX}/pinyin.conf")
-    copy_to_keyboard(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/im/pinyin/pinyin.conf" "${IM_PREFIX}/pinyin.conf")
-    copy_to_keyboard(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/im/pinyin/shuangpin.conf" "${IM_PREFIX}/shuangpin.conf")
-    copy_to_keyboard(Chinese copy "${ENGINES_SOURCE_DIR}/fcitx5-chinese-addons/im/pinyin/pinyin.lua" "share/fcitx5/lua/imeapi/extensions/pinyin.lua")
+    copy_to(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/im/pinyin/pinyin-addon.conf" "${ADDON_PREFIX}/pinyin.conf")
+    copy_to(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/im/pinyin/pinyin.conf" "${IM_PREFIX}/pinyin.conf")
+    copy_to(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/im/pinyin/shuangpin.conf" "${IM_PREFIX}/shuangpin.conf")
+    copy_to(Chinese copy "${ENGINES_SOURCE_DIR}/fcitx5-chinese-addons/im/pinyin/pinyin.lua" "share/fcitx5/lua/imeapi/extensions/pinyin.lua")
 
     # Table addon, im and dict
-    copy_to_keyboard(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/im/table/table.conf" "share/fcitx5/addon/table.conf")
+    copy_to(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/im/table/table.conf" "share/fcitx5/addon/table.conf")
     # Filter out wanfeng, erbi, cangjie and qxm.
-    copy_share_to_keyboard(Chinese copy "fcitx5/inputmethod/db.conf")
-    copy_share_to_keyboard(Chinese copy "libime/db.main.dict")
-    copy_share_to_keyboard(Chinese copy "fcitx5/inputmethod/wbx.conf")
-    copy_share_to_keyboard(Chinese copy "libime/wbx.main.dict")
-    copy_share_to_keyboard(Chinese copy "fcitx5/inputmethod/wbpy.conf")
-    copy_share_to_keyboard(Chinese copy "libime/wbpy.main.dict")
-    copy_share_to_keyboard(Chinese copy "fcitx5/inputmethod/zrm.conf")
-    copy_share_to_keyboard(Chinese copy "libime/zrm.main.dict")
+    copy_share_to(Chinese copy "fcitx5/inputmethod/db.conf")
+    copy_share_to(Chinese copy "libime/db.main.dict")
+    copy_share_to(Chinese copy "fcitx5/inputmethod/wbx.conf")
+    copy_share_to(Chinese copy "libime/wbx.main.dict")
+    copy_share_to(Chinese copy "fcitx5/inputmethod/wbpy.conf")
+    copy_share_to(Chinese copy "libime/wbpy.main.dict")
+    copy_share_to(Chinese copy "fcitx5/inputmethod/zrm.conf")
+    copy_share_to(Chinese copy "libime/zrm.main.dict")
 
     # Module addons
-    copy_to_keyboard(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/modules/pinyinhelper/pinyinhelper.conf" "share/fcitx5/addon/pinyinhelper.conf")
-    copy_to_keyboard(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/modules/fullwidth/fullwidth.conf" "share/fcitx5/addon/fullwidth.conf")
-    copy_to_keyboard(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/modules/punctuation/punctuation.conf" "share/fcitx5/addon/punctuation.conf")
-    copy_to_keyboard(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/modules/chttrans/chttrans.conf" "share/fcitx5/addon/chttrans.conf")
-    copy_to_keyboard(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/modules/cloudpinyin/cloudpinyin.conf" "share/fcitx5/addon/cloudpinyin.conf")
+    copy_to(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/modules/pinyinhelper/pinyinhelper.conf" "share/fcitx5/addon/pinyinhelper.conf")
+    copy_to(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/modules/fullwidth/fullwidth.conf" "share/fcitx5/addon/fullwidth.conf")
+    copy_to(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/modules/punctuation/punctuation.conf" "share/fcitx5/addon/punctuation.conf")
+    copy_to(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/modules/chttrans/chttrans.conf" "share/fcitx5/addon/chttrans.conf")
+    copy_to(Chinese copy "${CHINESE_ADDONS_BINARY_DIR}/modules/cloudpinyin/cloudpinyin.conf" "share/fcitx5/addon/cloudpinyin.conf")
 
     # Shared resources
-    copy_to_keyboard(Chinese copy_directory "${PREBUILDER_LIB_DIR}/libime" "lib/libime")
-    copy_share_to_keyboard(Chinese copy_directory "fcitx5/pinyin")
-    copy_share_to_keyboard(Chinese copy_directory "fcitx5/pinyinhelper")
-    copy_share_to_keyboard(Chinese copy_directory "fcitx5/punctuation")
-    copy_share_to_keyboard(Chinese copy "libime/sc.dict")
-    copy_share_to_keyboard(Chinese copy "libime/extb.dict")
-    copy_share_to_keyboard(Chinese copy_directory "fcitx5/chttrans")
-    copy_share_to_keyboard(Chinese copy_directory "opencc")
+    copy_to(Chinese copy_directory "${PREBUILDER_LIB_DIR}/libime" "lib/libime")
+    copy_share_to(Chinese copy_directory "fcitx5/pinyin")
+    copy_share_to(Chinese copy_directory "fcitx5/pinyinhelper")
+    copy_share_to(Chinese copy_directory "fcitx5/punctuation")
+    copy_share_to(Chinese copy "libime/sc.dict")
+    copy_share_to(Chinese copy "libime/extb.dict")
+    copy_share_to(Chinese copy_directory "fcitx5/chttrans")
+    copy_share_to(Chinese copy_directory "opencc")
 
     # Assets
     add_dependencies(ChineseExtension png_images)
-    copy_to_keyboard(Chinese copy "${PROJECT_BINARY_DIR}/full-punc.png" "share/png/full-punc.png")
-    copy_to_keyboard(Chinese copy "${PROJECT_BINARY_DIR}/half-punc.png" "share/png/half-punc.png")
+    copy_to(Chinese copy "${PROJECT_BINARY_DIR}/full-punc.png" "share/png/full-punc.png")
+    copy_to(Chinese copy "${PROJECT_BINARY_DIR}/half-punc.png" "share/png/half-punc.png")
+
+    install_cxx_translations(Chinese "engines/fcitx5-chinese-addons/po")
 endif()
 
 if (HALLELUJAH)
@@ -84,17 +86,17 @@ if (HALLELUJAH)
 
     set(HALLELUJAH_SOURCE_DIR "${ENGINES_SOURCE_DIR}/fcitx5-hallelujah")
     set(HALLELUJAH_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-hallelujah")
-    copy_to_keyboard(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/data/google_227800_words.bin" "share/hallelujah/google_227800_words.bin")
+    copy_to(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/data/google_227800_words.bin" "share/hallelujah/google_227800_words.bin")
     # Convert json to tsv and discard ipa, translation and pinyin to avoid memory explosion.
     execute_process(COMMAND python "${PROJECT_SOURCE_DIR}/scripts/hallelujah.py" "${HALLELUJAH_SOURCE_DIR}/data/words.json" "${HALLELUJAH_BINARY_DIR}/words.tsv")
-    copy_to_keyboard(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/words.tsv" "share/hallelujah/words.tsv")
-    # copy_to_keyboard(Hallelujah copy "${HALLELUJAH_SOURCE_DIR}/data/cedict.json" "share/hallelujah/cedict.json")
-    copy_to_keyboard(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah-addon.conf" "${ADDON_PREFIX}/hallelujah.conf")
-    copy_to_keyboard(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah.conf" "${IM_PREFIX}/hallelujah.conf")
+    copy_to(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/words.tsv" "share/hallelujah/words.tsv")
+    # copy_to(Hallelujah copy "${HALLELUJAH_SOURCE_DIR}/data/cedict.json" "share/hallelujah/cedict.json")
+    copy_to(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah-addon.conf" "${ADDON_PREFIX}/hallelujah.conf")
+    copy_to(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah.conf" "${IM_PREFIX}/hallelujah.conf")
 
     # spell
-    copy_to_keyboard(Hallelujah copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
-    copy_share_to_keyboard(Hallelujah copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
+    copy_to(Hallelujah copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
+    copy_share_to(Hallelujah copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
 endif()
 
 if (MOZC)
@@ -106,8 +108,10 @@ if (MOZC)
     list(APPEND ENGINE_TARGETS ${MOZC_TARGETS})
 
     set(MOZC_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-mozc")
-    copy_to_keyboard(Mozc copy "${MOZC_BINARY_DIR}/src/unix/fcitx5/mozc-addon.conf" "${ADDON_PREFIX}/mozc.conf")
-    copy_to_keyboard(Mozc copy "${ENGINES_SOURCE_DIR}/fcitx5-mozc/src/unix/fcitx5/mozc.conf" "${IM_PREFIX}/mozc.conf")
+    copy_to(Mozc copy "${MOZC_BINARY_DIR}/src/unix/fcitx5/mozc-addon.conf" "${ADDON_PREFIX}/mozc.conf")
+    copy_to(Mozc copy "${ENGINES_SOURCE_DIR}/fcitx5-mozc/src/unix/fcitx5/mozc.conf" "${IM_PREFIX}/mozc.conf")
+
+    install_cxx_translations(Mozc "engines/fcitx5-mozc/src/unix/fcitx5/po")
 endif()
 
 if (RIME)
@@ -119,9 +123,11 @@ if (RIME)
     list(APPEND ENGINE_TARGETS ${RIME_TARGETS})
 
     set(RIME_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-rime")
-    copy_to_keyboard(Rime copy "${RIME_BINARY_DIR}/src/rime-addon.conf" "${ADDON_PREFIX}/rime.conf")
-    copy_to_keyboard(Rime copy "${RIME_BINARY_DIR}/src/rime.conf" "${IM_PREFIX}/rime.conf")
-    copy_share_to_keyboard(Rime copy_directory "rime-data")
+    copy_to(Rime copy "${RIME_BINARY_DIR}/src/rime-addon.conf" "${ADDON_PREFIX}/rime.conf")
+    copy_to(Rime copy "${RIME_BINARY_DIR}/src/rime.conf" "${IM_PREFIX}/rime.conf")
+    copy_share_to(Rime copy_directory "rime-data")
+
+    install_cxx_translations(Rime "engines/fcitx5-rime/po")
 endif()
 
 execute_process(COMMAND git rev-parse HEAD
@@ -184,22 +190,24 @@ set_xcode_property(${BUNDLE_NAME} CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/a
 
 foreach(Keyboard ${KEYBOARDS})
     # Embed keyboard.appex in app.
-    copy_to_app(copy_directory "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>-${SDK_NAME}/${Keyboard}.appex" "PlugIns/${Keyboard}.appex")
+    copy_to(app copy_directory "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>-${SDK_NAME}/${Keyboard}.appex" "PlugIns/${Keyboard}.appex")
     # Copy share directory.
-    copy_to_app(copy_directory "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>-${SDK_NAME}/${Keyboard}.appex/share" "share")
+    copy_to(app copy_directory "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>-${SDK_NAME}/${Keyboard}.appex/share" "share")
 endforeach()
 
 generate_profile(App "." "${DEFAULT_INPUT_METHODS}")
 add_dependencies(${BUNDLE_NAME} AppProfile)
 
-# Copy icons, profile and translations.
+install_cxx_translations(app "fcitx5/po")
+
+# Copy icons, profile and Swift translations.
 set(ICON_FILES "AppIcon60x60@2x.png" "AppIcon76x76@2x~ipad.png" "Assets.car")
 foreach(ICON_FILE IN LISTS ICON_FILES)
-    copy_to_app(copy "${PROJECT_SOURCE_DIR}/build/assets/actool_out/${ICON_FILE}" "${ICON_FILE}")
+    copy_to(app copy "${PROJECT_SOURCE_DIR}/build/assets/actool_out/${ICON_FILE}" "${ICON_FILE}")
 endforeach()
-copy_to_app(copy "${PROJECT_BINARY_DIR}/profile" profile)
+copy_to(app copy "${PROJECT_BINARY_DIR}/profile" profile)
 foreach(LPROJ IN LISTS LPROJS)
-    copy_to_app(copy_directory "${PROJECT_SOURCE_DIR}/assets/${LPROJ}" "${LPROJ}")
+    copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/assets/${LPROJ}" "${LPROJ}")
 endforeach()
 
 fcitx5_import_addons(${BUNDLE_NAME}
