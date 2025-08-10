@@ -52,8 +52,8 @@ function(add_keyboard_extension keyboard language targets)
         ADDONS ${COMMON_TARGETS} ${targets}
     )
 
-    copy_to_keyboard(${keyboard} copy "${PROJECT_BINARY_DIR}/iosfrontend/iosfrontend.conf" "${ADDON_PREFIX}/iosfrontend.conf")
-    copy_to_keyboard(${keyboard} copy "${PROJECT_BINARY_DIR}/iosnotifications/notifications.conf" "${ADDON_PREFIX}/notifications.conf")
-    copy_to_keyboard(${keyboard} copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "${ADDON_PREFIX}/uipanel.conf")
-    copy_to_keyboard(${keyboard} copy_directory "${PROJECT_SOURCE_DIR}/fcitx5-keyboard-layouts/layout" "share/layout")
+    copy_to(${keyboard} copy "${PROJECT_BINARY_DIR}/iosfrontend/iosfrontend.conf" "${ADDON_PREFIX}/iosfrontend.conf")
+    copy_to(${keyboard} copy "${PROJECT_BINARY_DIR}/iosnotifications/notifications.conf" "${ADDON_PREFIX}/notifications.conf")
+    copy_to(${keyboard} copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "${ADDON_PREFIX}/uipanel.conf")
+    copy_to(${keyboard} copy_directory "${PROJECT_SOURCE_DIR}/fcitx5-keyboard-layouts/layout" "share/layout")
 endfunction()
