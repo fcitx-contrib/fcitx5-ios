@@ -10,7 +10,7 @@ public func openURL(_ urlString: String) {
 }
 
 private func listKeyboards() -> [String] {
-  let pluginsURL = Bundle.main.bundleURL.appendingPathComponent("PlugIns")
+  let pluginsURL = appBundleUrl.appendingPathComponent("PlugIns")
   var result = [String]()
   if let items = try? FileManager.default.contentsOfDirectory(
     at: pluginsURL,

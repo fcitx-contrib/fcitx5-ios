@@ -36,7 +36,7 @@ struct KeyboardView: View {
   }
 
   func setLayout() {
-    let layoutUrl = Bundle.main.bundleURL.appendingPathComponent("share/layout/qwerty.json")
+    let layoutUrl = appBundleUrl.appendingPathComponent("share/layout/qwerty.json")
     guard let content = readJSON(layoutUrl) as? [String: Any],
       let layers = content["layers"] as? [[String: Any]],
       let defaultLayer = layers.filter({ $0["id"] as? String == "default" }).first,
