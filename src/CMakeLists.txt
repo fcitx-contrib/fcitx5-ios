@@ -48,10 +48,6 @@ if (CHINESE_ADDONS)
     copy_to(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/quickphrase/quickphrase.conf" "${ADDON_PREFIX}/quickphrase.conf")
     copy_to(Chinese copy_directory "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/quickphrase/quickphrase.d" "share/fcitx5/data/quickphrase.d")
 
-    # spell
-    copy_to(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
-    copy_share_to(Chinese copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
-
     # unicode
     copy_to(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/unicode/unicode.conf" "${ADDON_PREFIX}/unicode.conf")
 
@@ -122,10 +118,6 @@ if (HALLELUJAH)
     # copy_to(Hallelujah copy "${HALLELUJAH_SOURCE_DIR}/data/cedict.json" "share/hallelujah/cedict.json")
     copy_to(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah-addon.conf" "${ADDON_PREFIX}/hallelujah.conf")
     copy_to(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah.conf" "${IM_PREFIX}/hallelujah.conf")
-
-    # spell
-    copy_to(Hallelujah copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
-    copy_share_to(Hallelujah copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
 endif()
 
 if (MOZC)
@@ -202,6 +194,9 @@ install_cxx_translations("fcitx5/po")
 copy_to(app copy "${PROJECT_BINARY_DIR}/iosfrontend/iosfrontend.conf" "${ADDON_PREFIX}/iosfrontend.conf")
 copy_to(app copy "${PROJECT_BINARY_DIR}/iosnotifications/notifications.conf" "${ADDON_PREFIX}/notifications.conf")
 copy_to(app copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "${ADDON_PREFIX}/uipanel.conf")
+# spell
+copy_to(app copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
+copy_share_to(app copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
 
 # Copy layouts, icons, profile and Swift translations.
 copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/fcitx5-keyboard-layouts/layout" "share/layout")
