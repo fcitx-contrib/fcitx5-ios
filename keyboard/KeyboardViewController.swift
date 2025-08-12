@@ -64,7 +64,8 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     logger.info("viewWillAppear \(self.id)")
     virtualKeyboardView.setReturnKeyType(textDocumentProxy.returnKeyType)
     super.viewWillAppear(animated)
-    if removeFile(appGroupTmp.appendingPathComponent("reload")) {
+    let keyboard = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
+    if removeFile(appGroupTmp.appendingPathComponent("\(keyboard).reload")) {
       logger.info("Reload accepted")
       reload()
     }

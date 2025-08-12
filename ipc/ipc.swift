@@ -9,9 +9,27 @@ public func openURL(_ urlString: String) {
   }
 }
 
+private func listKeyboards() -> [String] {
+  let pluginsURL = Bundle.main.bundleURL.appendingPathComponent("PlugIns")
+  var result = [String]()
+  if let items = try? FileManager.default.contentsOfDirectory(
+    at: pluginsURL,
+    includingPropertiesForKeys: nil,
+    options: [.skipsHiddenFiles])
+  {
+    for item in items where item.pathExtension == "appex" {
+      result.append(item.deletingPathExtension().lastPathComponent)
+    }
+  }
+  return result
+}
+
 public func requestReload() {
   mkdirP(appGroupTmp.path)
-  try? "".write(
-    to: appGroupTmp.appendingPathComponent("reload"), atomically: true, encoding: .utf8)
+  for keyboard in listKeyboards() {
+    try? "".write(
+      to: appGroupTmp.appendingPathComponent("\(keyboard).reload"), atomically: true,
+      encoding: .utf8)
+  }
   logger.info("Reload requested")
 }

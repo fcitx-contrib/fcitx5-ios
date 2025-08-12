@@ -53,8 +53,7 @@ struct AddInputMethodsView: View {
               enabledInputMethods.append(inputMethod)
               setInputMethods(
                 String(
-                  data: try! JSONEncoder().encode(
-                    enabledInputMethods.map { $0.name } + [inputMethod.name]),
+                  data: try! JSONEncoder().encode(enabledInputMethods.map { $0.name }),
                   encoding: .utf8)!)
               requestReload()
               message = String(
