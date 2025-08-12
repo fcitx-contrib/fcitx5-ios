@@ -51,8 +51,4 @@ function(add_keyboard_extension keyboard language targets)
         REGISTRY_VARNAME getStaticAddon
         ADDONS ${COMMON_TARGETS} ${targets}
     )
-
-    copy_to(${keyboard} copy "${PROJECT_BINARY_DIR}/iosfrontend/iosfrontend.conf" "${ADDON_PREFIX}/iosfrontend.conf")
-    copy_to(${keyboard} copy "${PROJECT_BINARY_DIR}/iosnotifications/notifications.conf" "${ADDON_PREFIX}/notifications.conf")
-    copy_to(${keyboard} copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "${ADDON_PREFIX}/uipanel.conf")
 endfunction()

@@ -22,13 +22,17 @@ void setupLog() {
     fcitx::Log::setLogRule("*=5,notimedate");
 }
 
-void setupEnv(const char *bundlePath, const char *appGroupPath,
-              bool isMainApp) {
+void setupEnv(const char *appBundlePath, const std::string &xdgDataDirs,
+              const char *appGroupPath, bool isMainApp) {
     setenv("F5I_ENV", isMainApp ? "main" : "keyboard", 1);
 
-    fs::path bundle = bundlePath;
-    std::string xdg_data_dirs = bundle / "share";
-    std::string libime_model_dirs = bundle / "lib/libime";
+    fs::path appBundle = appBundlePath;
+    std::string xdg_data_dirs = appBundle / "share";
+    // For app it's app share plus all keyboards' share, and for keyboard it's
+    // app share plus its own share.
+    xdg_data_dirs += ":" + xdgDataDirs;
+    std::string libime_model_dirs =
+        appBundle / "PlugIns/Chinese.appex/lib/libime";
     setenv("XDG_DATA_DIRS", xdg_data_dirs.c_str(), 1);
     setenv("LIBIME_MODEL_DIRS", libime_model_dirs.c_str(), 1);
 
@@ -72,19 +76,19 @@ std::set<std::string> getAllDomains(const fs::path &localedir) {
 // Must be executed before creating fcitx instance, i.e. loading addons, because
 // addons register compile-time domain path, and only 1st call of registerDomain
 // counts. The .mo files must exist.
-void setupI18N(const char *bundlePath) {
-    fs::path bundle = bundlePath;
+void setupI18N(const char *appBundlePath) {
+    fs::path bundle = appBundlePath;
     fs::path localedir = bundle / "share" / "locale";
     for (const auto &domain : getAllDomains(localedir)) {
         fcitx::registerDomain(domain.c_str(), localedir);
     }
 }
 
-void setupFcitx(const char *bundlePath, const char *appGroupPath,
-                bool isMainApp) {
+void setupFcitx(const char *appBundlePath, const char *xdgDataDirs,
+                const char *appGroupPath, bool isMainApp) {
     setupLog();
-    setupEnv(bundlePath, appGroupPath, isMainApp);
-    setupI18N(bundlePath);
+    setupEnv(appBundlePath, xdgDataDirs, appGroupPath, isMainApp);
+    setupI18N(appBundlePath);
 
     instance = std::make_unique<fcitx::Instance>(0, nullptr);
     instance->setInputMethodMode(fcitx::InputMethodMode::OnScreenKeyboard);

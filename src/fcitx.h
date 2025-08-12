@@ -2,7 +2,8 @@
 
 #include <string>
 
-void startFcitx(const char *bundlePath, const char *appGroupPath);
+void startFcitx(const char *appBundlePath, const char *xdgDataDirs,
+                const char *appGroupPath);
 std::string getConfig(const char *uri);
 void setConfig(const char *uri, const char *value);
 std::string getAddons();

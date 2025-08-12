@@ -6,5 +6,5 @@
 extern std::unique_ptr<fcitx::Instance> instance;
 extern std::unique_ptr<fcitx::EventDispatcher> dispatcher;
 
-void setupFcitx(const char *bundlePath, const char *appGroupPath,
-                bool isMainApp);
+void setupFcitx(const char *appBundlePath, const char *xdgDataDirs,
+                const char *appGroupPath, bool isMainApp);

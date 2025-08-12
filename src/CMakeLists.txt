@@ -191,14 +191,17 @@ set_xcode_property(${BUNDLE_NAME} CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/a
 foreach(Keyboard ${KEYBOARDS})
     # Embed keyboard.appex in app.
     copy_to(app copy_directory "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>-${SDK_NAME}/${Keyboard}.appex" "PlugIns/${Keyboard}.appex")
-    # Copy share directory.
-    copy_to(app copy_directory "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>-${SDK_NAME}/${Keyboard}.appex/share" "share")
 endforeach()
 
 generate_profile(App "." "${DEFAULT_INPUT_METHODS}")
 add_dependencies(${BUNDLE_NAME} AppProfile)
 
 install_cxx_translations("fcitx5/po")
+
+# Global addons
+copy_to(app copy "${PROJECT_BINARY_DIR}/iosfrontend/iosfrontend.conf" "${ADDON_PREFIX}/iosfrontend.conf")
+copy_to(app copy "${PROJECT_BINARY_DIR}/iosnotifications/notifications.conf" "${ADDON_PREFIX}/notifications.conf")
+copy_to(app copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "${ADDON_PREFIX}/uipanel.conf")
 
 # Copy layouts, icons, profile and Swift translations.
 copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/fcitx5-keyboard-layouts/layout" "share/layout")
