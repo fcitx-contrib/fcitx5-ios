@@ -9,11 +9,12 @@
 
 fcitx::IosFrontend *frontend;
 
-void startFcitx(const char *bundlePath, const char *appGroupPath) {
+void startFcitx(const char *appBundlePath, const char *xdgDataDirs,
+                const char *appGroupPath) {
     if (instance) {
         return;
     }
-    setupFcitx(bundlePath, appGroupPath, false);
+    setupFcitx(appBundlePath, xdgDataDirs, appGroupPath, false);
     auto &addonMgr = instance->addonManager();
     frontend =
         dynamic_cast<fcitx::IosFrontend *>(addonMgr.addon("iosfrontend"));

@@ -1,3 +1,32 @@
+execute_process(COMMAND git rev-parse HEAD
+    OUTPUT_VARIABLE COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+execute_process(COMMAND git show --no-patch --format=%ct
+    OUTPUT_VARIABLE UNIX_TIME
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+configure_file(meta.swift.in ${CMAKE_CURRENT_SOURCE_DIR}/meta.swift @ONLY)
+
+file(GLOB CONFIG_UI_FILES CONFIGURE_DEPENDS config/*.swift)
+
+add_executable(
+    ${BUNDLE_NAME}
+    MACOSX_BUNDLE
+    meta.swift
+    AboutView.swift
+    ContentView.swift
+    InputMethodsView.swift
+    AddonConfigView.swift
+    ConfigView.swift
+    App.swift
+    AppDelegate.swift
+    SceneDelegate.swift
+    ${CONFIG_UI_FILES}
+    fcitx.cpp
+    config.cpp
+)
+
 set(ADDON_PREFIX "share/fcitx5/addon")
 set(IM_PREFIX "share/fcitx5/inputmethod")
 set(ENGINES_SOURCE_DIR "${PROJECT_SOURCE_DIR}/engines")
@@ -18,10 +47,6 @@ if (CHINESE_ADDONS)
     # quickphrase
     copy_to(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/quickphrase/quickphrase.conf" "${ADDON_PREFIX}/quickphrase.conf")
     copy_to(Chinese copy_directory "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/quickphrase/quickphrase.d" "share/fcitx5/data/quickphrase.d")
-
-    # spell
-    copy_to(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
-    copy_share_to(Chinese copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
 
     # unicode
     copy_to(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/unicode/unicode.conf" "${ADDON_PREFIX}/unicode.conf")
@@ -73,7 +98,7 @@ if (CHINESE_ADDONS)
     copy_to(Chinese copy "${PROJECT_BINARY_DIR}/full-punc.png" "share/png/full-punc.png")
     copy_to(Chinese copy "${PROJECT_BINARY_DIR}/half-punc.png" "share/png/half-punc.png")
 
-    install_cxx_translations(Chinese "engines/fcitx5-chinese-addons/po")
+    install_cxx_translations("engines/fcitx5-chinese-addons/po")
 endif()
 
 if (HALLELUJAH)
@@ -93,10 +118,6 @@ if (HALLELUJAH)
     # copy_to(Hallelujah copy "${HALLELUJAH_SOURCE_DIR}/data/cedict.json" "share/hallelujah/cedict.json")
     copy_to(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah-addon.conf" "${ADDON_PREFIX}/hallelujah.conf")
     copy_to(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah.conf" "${IM_PREFIX}/hallelujah.conf")
-
-    # spell
-    copy_to(Hallelujah copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
-    copy_share_to(Hallelujah copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
 endif()
 
 if (MOZC)
@@ -111,7 +132,7 @@ if (MOZC)
     copy_to(Mozc copy "${MOZC_BINARY_DIR}/src/unix/fcitx5/mozc-addon.conf" "${ADDON_PREFIX}/mozc.conf")
     copy_to(Mozc copy "${ENGINES_SOURCE_DIR}/fcitx5-mozc/src/unix/fcitx5/mozc.conf" "${IM_PREFIX}/mozc.conf")
 
-    install_cxx_translations(Mozc "engines/fcitx5-mozc/src/unix/fcitx5/po")
+    install_cxx_translations("engines/fcitx5-mozc/src/unix/fcitx5/po")
 endif()
 
 if (RIME)
@@ -127,37 +148,8 @@ if (RIME)
     copy_to(Rime copy "${RIME_BINARY_DIR}/src/rime.conf" "${IM_PREFIX}/rime.conf")
     copy_share_to(Rime copy_directory "rime-data")
 
-    install_cxx_translations(Rime "engines/fcitx5-rime/po")
+    install_cxx_translations("engines/fcitx5-rime/po")
 endif()
-
-execute_process(COMMAND git rev-parse HEAD
-    OUTPUT_VARIABLE COMMIT
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-execute_process(COMMAND git show --no-patch --format=%ct
-    OUTPUT_VARIABLE UNIX_TIME
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-configure_file(meta.swift.in ${CMAKE_CURRENT_SOURCE_DIR}/meta.swift @ONLY)
-
-file(GLOB CONFIG_UI_FILES CONFIGURE_DEPENDS config/*.swift)
-
-add_executable(
-    ${BUNDLE_NAME}
-    MACOSX_BUNDLE
-    meta.swift
-    AboutView.swift
-    ContentView.swift
-    InputMethodsView.swift
-    AddonConfigView.swift
-    ConfigView.swift
-    App.swift
-    AppDelegate.swift
-    SceneDelegate.swift
-    ${CONFIG_UI_FILES}
-    fcitx.cpp
-    config.cpp
-)
 
 target_include_directories(${BUNDLE_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -191,21 +183,31 @@ set_xcode_property(${BUNDLE_NAME} CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/a
 foreach(Keyboard ${KEYBOARDS})
     # Embed keyboard.appex in app.
     copy_to(app copy_directory "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>-${SDK_NAME}/${Keyboard}.appex" "PlugIns/${Keyboard}.appex")
-    # Copy share directory.
-    copy_to(app copy_directory "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>-${SDK_NAME}/${Keyboard}.appex/share" "share")
 endforeach()
 
 generate_profile(App "." "${DEFAULT_INPUT_METHODS}")
 add_dependencies(${BUNDLE_NAME} AppProfile)
 
-install_cxx_translations(app "fcitx5/po")
+install_cxx_translations("fcitx5/po")
 
-# Copy icons, profile and Swift translations.
+# Global addons
+copy_to(app copy "${PROJECT_BINARY_DIR}/iosfrontend/iosfrontend.conf" "${ADDON_PREFIX}/iosfrontend.conf")
+copy_to(app copy "${PROJECT_BINARY_DIR}/iosnotifications/notifications.conf" "${ADDON_PREFIX}/notifications.conf")
+copy_to(app copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "${ADDON_PREFIX}/uipanel.conf")
+# spell
+copy_to(app copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
+copy_share_to(app copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
+
+# Copy layouts, icons, profile and Swift translations.
+copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/fcitx5-keyboard-layouts/layout" "share/layout")
+
 set(ICON_FILES "AppIcon60x60@2x.png" "AppIcon76x76@2x~ipad.png" "Assets.car")
 foreach(ICON_FILE IN LISTS ICON_FILES)
     copy_to(app copy "${PROJECT_SOURCE_DIR}/build/assets/actool_out/${ICON_FILE}" "${ICON_FILE}")
 endforeach()
+
 copy_to(app copy "${PROJECT_BINARY_DIR}/profile" profile)
+
 foreach(LPROJ IN LISTS LPROJS)
     copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/assets/${LPROJ}" "${LPROJ}")
 endforeach()

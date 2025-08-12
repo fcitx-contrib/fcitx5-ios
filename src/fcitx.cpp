@@ -4,11 +4,12 @@
 #include <fcitx/inputmethodmanager.h>
 #include <nlohmann/json.hpp>
 
-void startFcitx(const char *bundlePath, const char *appGroupPath) {
+void startFcitx(const char *appBundlePath, const char *xdgDataDirs,
+                const char *appGroupPath) {
     if (instance) {
         return;
     }
-    setupFcitx(bundlePath, appGroupPath, true);
+    setupFcitx(appBundlePath, xdgDataDirs, appGroupPath, true);
 }
 
 void setInputMethods(const char *json) {
@@ -28,7 +29,7 @@ void setInputMethods(const char *json) {
 
 std::string getAllInputMethods() {
     return with_fcitx([] {
-        nlohmann::json j;
+        auto j = nlohmann::json::array();
         auto &imMgr = instance->inputMethodManager();
         imMgr.foreachEntries([&j](const fcitx::InputMethodEntry &entry) {
             j.push_back(jsonDescribeIm(&entry));

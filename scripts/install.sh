@@ -1,2 +1,2 @@
-export DESTDIR=build/po/$1
-cmake --install $2
+export DESTDIR=build/po
+cmake --install $1

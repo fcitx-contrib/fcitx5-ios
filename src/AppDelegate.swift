@@ -1,5 +1,6 @@
 import Fcitx
 import FcitxCommon
+import FcitxIpc
 import SwiftUtil
 import UIKit
 
@@ -18,7 +19,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     let locale = getLocale()
     setLocale(locale)
     syncLocale(locale)
-    startFcitx(Bundle.main.bundlePath, appGroup.path)
+    startFcitx(
+      appBundlePath,
+      listKeyboards().map { keyboard in "\(appBundlePath)/PlugIns/\(keyboard).appex/share" }.joined(
+        separator: ":"), appGroup.path)
     return true
   }
 

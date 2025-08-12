@@ -76,18 +76,14 @@ option(HALLELUJAH "" ON)
 option(MOZC "" ON)
 option(RIME "" ON)
 
-function (set_app_and_target bundle)
-    if ("${bundle}" STREQUAL "app")
-        set(app "${BUNDLE_NAME}.app" PARENT_SCOPE)
-        set(target "${BUNDLE_NAME}" PARENT_SCOPE)
-    else()
-        set(app "${bundle}.appex" PARENT_SCOPE)
-        set(target "${bundle}Extension" PARENT_SCOPE)
-    endif()
-endfunction()
-
 function(copy_to bundle cmd file relative_path)
-    set_app_and_target(${bundle})
+    if ("${bundle}" STREQUAL "app")
+        set(app "${BUNDLE_NAME}.app")
+        set(target "${BUNDLE_NAME}")
+    else()
+        set(app "${bundle}.appex")
+        set(target "${bundle}Extension")
+    endif()
     add_custom_command(TARGET ${target}
         POST_BUILD COMMAND /bin/sh -c \"
         ${CMAKE_COMMAND} -E ${cmd} ${file}
@@ -99,14 +95,13 @@ function(copy_share_to bundle cmd relative_path)
     copy_to(${bundle} ${cmd} "${PREBUILDER_SHARE_DIR}/${relative_path}" "share/${relative_path}")
 endfunction()
 
-function(install_cxx_translations bundle po)
-    set_app_and_target(${bundle})
-    add_custom_command(TARGET ${target} POST_BUILD
-        COMMAND ./scripts/install.sh "${app}" "${PROJECT_BINARY_DIR}/${po}"
+function(install_cxx_translations po)
+    add_custom_command(TARGET ${BUNDLE_NAME} POST_BUILD
+        COMMAND ./scripts/install.sh "${PROJECT_BINARY_DIR}/${po}"
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-        COMMENT "Installing C++ translations for ${bundle}"
+        COMMENT "Installing C++ translations from ${po}"
     )
-    copy_to(${bundle} copy_directory "${PROJECT_SOURCE_DIR}/build/po/${app}/usr/local/share/locale" "share/locale")
+    copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/build/po/${app}/usr/local/share/locale" "share/locale")
 endfunction()
 
 set(Fcitx5Utils_DIR "${PROJECT_SOURCE_DIR}/cmake")

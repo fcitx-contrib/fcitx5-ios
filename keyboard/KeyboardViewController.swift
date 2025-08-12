@@ -42,7 +42,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     // app and keyboards are killed, but only if app is started first can it sync
     // locale to keyboards. Need to find a way to update locale on viewWillAppear.
     setLocale(syncLocale())
-    startFcitx(Bundle.main.bundlePath, appGroup.path)
+    startFcitx(appBundlePath, "\(Bundle.main.bundlePath)/share", appGroup.path)
 
     hostingController = UIHostingController(rootView: virtualKeyboardView)
     addChild(hostingController)

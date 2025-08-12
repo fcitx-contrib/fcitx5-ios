@@ -12,6 +12,17 @@ public let appGroupConfig = appGroup.appendingPathComponent("config")
 public let appGroupTmp = appGroup.appendingPathComponent("tmp")
 public let appGroupData = appGroup.appendingPathComponent("data")
 
+private func getAppBundleUrl() -> URL {
+  if Bundle.main.bundlePath.hasSuffix(".appex") {
+    // From Fcitx5.app/Plugins/*.appex to Fcitx5.app
+    return Bundle.main.bundleURL.deletingLastPathComponent().deletingLastPathComponent()
+  }
+  return Bundle.main.bundleURL
+}
+
+public let appBundleUrl = getAppBundleUrl()
+public let appBundlePath = appBundleUrl.path
+
 extension URL {
   var isDirectory: Bool {
     (try? resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true
