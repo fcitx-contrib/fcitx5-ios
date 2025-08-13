@@ -2,9 +2,11 @@ import SwiftUI
 
 struct ToolbarView: View {
   @Environment(\.colorScheme) var colorScheme
+  let width: CGFloat
 
   var body: some View {
-    HStack {
+    HStack(spacing: width / 6) {
+      Spacer()
       Button {
         virtualKeyboardView.setDisplayMode(.edit)
       } label: {
@@ -18,6 +20,14 @@ struct ToolbarView: View {
         Image(systemName: "ellipsis")
           .foregroundColor(getNormalForeground(colorScheme))
           .frame(width: barHeight, height: barHeight)
+      }
+      Button {
+        client.dismissKeyboard()
+      } label: {
+        Image(systemName: "chevron.down").resizable()
+          .foregroundColor(getNormalForeground(colorScheme))
+          .aspectRatio(contentMode: .fit).frame(width: barHeight * expandIconRatio)
+          .frame(width: barHeight * expandButtonRatio, height: barHeight)
       }
     }
   }

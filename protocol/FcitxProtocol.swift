@@ -8,4 +8,5 @@ public protocol FcitxProtocol {
   func paste()
   func globe()
   func setCurrentInputMethod(_ inputMethod: String)
+  func dismissKeyboard()
 }

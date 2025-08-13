@@ -48,7 +48,7 @@ public struct VirtualKeyboardView: View {
         let width = geometry.size.width
         VStack(spacing: 0) {
           if viewModel.mode == .initial {
-            ToolbarView()
+            ToolbarView(width: width)
           } else if viewModel.mode == .candidates {
             CandidateBarView(
               width: width, auxUp: viewModel.auxUp, preedit: viewModel.preedit,
