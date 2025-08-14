@@ -7,15 +7,22 @@ struct CandidateAction: Codable, Identifiable {
   let text: String
 }
 
+func getHighlightBackground(_ colorScheme: ColorScheme) -> Color {
+  return colorScheme == .dark ? darkHighlightBackground : lightHighlightBackground
+}
+
 struct CandidateView: View {
+  @Environment(\.colorScheme) var colorScheme
   let text: String
   let index: Int
-  let paddingLeft: CGFloat
-  let paddingRight: CGFloat
+  let highlighted: Int
 
   var body: some View {
     Text(text).font(.system(size: candidateFontSize))
-      .padding(.leading, paddingLeft).padding(.trailing, paddingRight)
+      .padding([.leading, .trailing], candidateHorizontalPadding)
+      .padding([.top, .bottom], candidateVerticalPadding)
+      .background(index == highlighted ? getHighlightBackground(colorScheme) : .clear)
+      .cornerRadius(keyCornerRadius)
       .onTapGesture {
         selectCandidate(Int32(index))
       }.onContextMenu {

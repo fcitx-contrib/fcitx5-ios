@@ -18,6 +18,7 @@ class ViewModel: ObservableObject {
   @Published var preedit = ""
   @Published var caret = 0
   @Published var candidates = [String]()
+  @Published var highlighted = -1
   @Published var hasClientPreedit = false
   @Published var batch = 0  // Tell candidate container to reset state
   @Published var scrollEnd = false
@@ -53,6 +54,7 @@ public struct VirtualKeyboardView: View {
             CandidateBarView(
               width: width, auxUp: viewModel.auxUp, preedit: viewModel.preedit,
               caret: viewModel.caret, candidates: viewModel.candidates,
+              highlighted: viewModel.highlighted,
               rowItemCount: viewModel.rowItemCount,
               batch: viewModel.batch, scrollEnd: viewModel.scrollEnd,
               expanded: $viewModel.expanded,
@@ -101,7 +103,7 @@ public struct VirtualKeyboardView: View {
 
   public func setCandidates(
     _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String],
-    _ hasClientPreedit: Bool
+    _ highlighted: Int32, _ hasClientPreedit: Bool
   ) {
     if !auxUp.isEmpty || !preedit.isEmpty || !candidates.isEmpty {
       setDisplayMode(.candidates)
@@ -117,6 +119,7 @@ public struct VirtualKeyboardView: View {
     viewModel.preedit = preedit
     viewModel.caret = Int(caret)
     viewModel.candidates = candidates
+    viewModel.highlighted = Int(highlighted)
     viewModel.hasClientPreedit = hasClientPreedit
     viewModel.batch = (viewModel.batch + 1) & 0xFFFF
     viewModel.scrollEnd = false

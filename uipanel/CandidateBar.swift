@@ -35,6 +35,7 @@ struct CandidateBarView: View {
   let preedit: String
   let caret: Int
   let candidates: [String]
+  let highlighted: Int
   let rowItemCount: [Int]
   let batch: Int
   let scrollEnd: Bool
@@ -57,7 +58,7 @@ struct CandidateBarView: View {
 
         VStack(alignment: .leading, spacing: 0) {
           if !auxUp.isEmpty || !preedit.isEmpty {
-            Text(auxUp + preeditWithCaret(preedit, caret)).font(.system(size: candidateFontSize))
+            Text(auxUp + preeditWithCaret(preedit, caret)).font(.system(size: preeditFontSize))
               .frame(
                 height: barHeight * auxPreeditRatio
               )
@@ -73,9 +74,7 @@ struct CandidateBarView: View {
                       let index = rowItemCount.prefix(row).reduce(0, +) + col
                       if index < candidates.count {
                         CandidateView(
-                          text: candidates[index], index: index,
-                          paddingLeft: candidateHorizontalPadding,
-                          paddingRight: candidateHorizontalPadding
+                          text: candidates[index], index: index, highlighted: highlighted
                         )
                         .frame(minWidth: width / 8).frame(
                           height: (barHeightExcludePreedit + keyboardHeight) / 6
@@ -100,12 +99,10 @@ struct CandidateBarView: View {
           } else {
             ScrollView(.horizontal) {
               // Use LazyHStack so that onAppear is triggered only when candidate is scrolled into view.
-              LazyHStack(spacing: 0) {
+              LazyHStack(spacing: candidateGap) {
                 ForEach(Array(candidates.enumerated()), id: \.offset) { index, candidate in
                   CandidateView(
-                    text: candidate, index: index,
-                    paddingLeft: index == 0 ? 0 : candidateHorizontalPadding,
-                    paddingRight: candidateHorizontalPadding
+                    text: candidate, index: index, highlighted: highlighted
                   ).onAppear {
                     if !scrollEnd && index == candidates.count - candidateCountInRow {
                       loadMoreCandidates(candidates.count, candidateCountInRow)
@@ -116,7 +113,7 @@ struct CandidateBarView: View {
               }.frame(
                 height: barHeightExcludePreedit)
             }.scrollIndicators(.hidden)  // Hide scroll bar as native keyboard.
-              .padding([.leading], 10)
+              .padding([.leading], columnGap / 2)
               .onChange(of: batch) { _ in
                 // Use batch instead of candidates because we don't want to reset on loading more.
                 proxy.scrollTo(0, anchor: .leading)

@@ -47,6 +47,7 @@ void UIPanel::update(UserInterfaceComponent component,
         bool hasClientPreedit = !inputPanel.clientPreedit().empty();
         int size = 0;
         auto candidates = swift::Array<swift::String>::init();
+        int highlighted = -1;
         if (const auto &list = inputPanel.candidateList()) {
             const auto &bulk = list->toBulk();
             if (bulk) {
@@ -59,9 +60,10 @@ void UIPanel::update(UserInterfaceComponent component,
                     instance_->outputFilter(inputContext, candidate.text())
                         .toString());
             }
+            highlighted = list->cursorIndex();
         }
         KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates,
-                                       hasClientPreedit);
+                                       highlighted, hasClientPreedit);
         break;
     }
     case UserInterfaceComponent::StatusArea:
@@ -108,7 +110,7 @@ void UIPanel::expand(const std::string &auxUp, const std::string &preedit,
                      int caret, bool hasClientPreedit) {
     auto candidates =
         getBulkCandidates(instance_, 0, 72); // Vertically 2 screens.
-    KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates,
+    KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates, 0,
                                    hasClientPreedit);
 }
 
