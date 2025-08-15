@@ -81,6 +81,9 @@ public struct VirtualKeyboardView: View {
             onDismiss: { viewModel.showMenu = false }
           )
         }
+      }.onDisappear {
+        // Otherwise switch to another IM and switch back, it's still there.
+        viewModel.showMenu = false
       }
     }.frame(height: barHeight + keyboardHeight)
   }
