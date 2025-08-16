@@ -25,6 +25,7 @@ private func syncLocale() -> String {
 class KeyboardViewController: UIInputViewController, FcitxProtocol {
   var id: UInt64!
   var hostingController: UIHostingController<VirtualKeyboardView>!
+  var removedBySlide = ""
 
   override func updateViewConstraints() {
     super.updateViewConstraints()
@@ -195,5 +196,24 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   public func setCurrentInputMethod(_ inputMethod: String) {
     Fcitx.setCurrentInputMethod(inputMethod)
+  }
+
+  public func slideBackspace(_ step: Int) {
+    if step == 0 {
+      removedBySlide = ""
+    } else if step < 0 {
+      let textBefore = textDocumentProxy.documentContextBeforeInput ?? ""
+      let newRemoval = String(textBefore.suffix(-step))
+      removedBySlide = newRemoval + removedBySlide
+      for _ in 0..<newRemoval.count {
+        textDocumentProxy.deleteBackward()
+      }
+    } else {
+      let refillCount = min(step, removedBySlide.count)
+      let index = removedBySlide.index(removedBySlide.startIndex, offsetBy: refillCount)
+      let refill = String(removedBySlide[..<index])
+      removedBySlide = String(removedBySlide[index...])
+      textDocumentProxy.insertText(refill)
+    }
   }
 }

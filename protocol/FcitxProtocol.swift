@@ -9,4 +9,5 @@ public protocol FcitxProtocol {
   func globe()
   func setCurrentInputMethod(_ inputMethod: String)
   func dismissKeyboard()
+  func slideBackspace(_ step: Int)
 }

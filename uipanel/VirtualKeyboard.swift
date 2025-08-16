@@ -184,6 +184,16 @@ public struct VirtualKeyboardView: View {
     viewModel.menuItems = items
     viewModel.showMenu = true
   }
+
+  func slideBackspace(_ step: Int) {
+    if !viewModel.preedit.isEmpty || viewModel.hasClientPreedit || !viewModel.candidates.isEmpty {
+      if step == 0 {
+        client.resetInput()
+      }
+      return
+    }
+    client.slideBackspace(step)
+  }
 }
 
 public let virtualKeyboardView = VirtualKeyboardView()

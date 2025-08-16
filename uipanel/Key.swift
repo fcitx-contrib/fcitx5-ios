@@ -98,7 +98,13 @@ struct KeyModifier: ViewModifier {
 
             let dx = value.location.x - (startLocation?.x ?? 0)
             let dy = value.location.y - (startLocation?.y ?? 0)
-            let threshold: CGFloat = 30
+
+            if slideActivated {
+              if let onSlide = action.onSlide {
+                onSlide(0)
+                return
+              }
+            }
 
             if didMoveFarEnough {
               if !didTriggerLongPress {
@@ -227,20 +233,28 @@ struct BackspaceView: View {
   let height: CGFloat
 
   var body: some View {
-    Button {
-      virtualKeyboardView.resetLayerIfNotLocked()
-      client.keyPressed("", "Backspace")
-    } label: {
-      VStack {
-        Image(systemName: "delete.left")
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(height: height * 0.4)
-      }
-      .commonContentStyle(
-        width: width, height: height, background: getFunctionBackground(colorScheme),
-        foreground: getNormalForeground(colorScheme))
-    }.commonContainerStyle(width: width, height: height, shadow: getShadow(colorScheme))
+    VStack {
+      Image(systemName: "delete.left")
+        .resizable()
+        .aspectRatio(contentMode: .fit)
+        .frame(height: height * 0.4)
+    }
+    .keyProperties(
+      width: width, height: height,
+      background: getFunctionBackground(colorScheme),
+      press: getNormalBackground(colorScheme),
+      foreground: getNormalForeground(colorScheme),
+      shadow: getShadow(colorScheme),
+      action: GestureAction(
+        onTap: {
+          virtualKeyboardView.resetLayerIfNotLocked()
+          client.keyPressed("", "Backspace")
+        },
+        onSlide: { step in
+          virtualKeyboardView.slideBackspace(step)
+        }
+      )
+    )
   }
 }
 
