@@ -4,6 +4,7 @@ struct GestureAction {
   var onTap: (() -> Void)? = nil
   var onLongPress: (() -> Void)? = nil
   var onSwipe: ((SwipeDirection) -> Void)? = nil
+  var onSlide: ((Int) -> Void)? = nil
 }
 
 enum SwipeDirection {
@@ -11,10 +12,15 @@ enum SwipeDirection {
 }
 
 struct KeyModifier: ViewModifier {
+  let threshold: CGFloat = 30
+  let stepSize: CGFloat = 15
+
   @State private var isPressed = false
   @State private var didTriggerLongPress = false
   @State private var didMoveFarEnough = false
   @State private var startLocation: CGPoint?
+  @State private var lastLocation: CGFloat?
+  @State private var slideActivated = false
 
   let width: CGFloat
   let height: CGFloat
@@ -41,29 +47,54 @@ struct KeyModifier: ViewModifier {
           .onChanged { value in
             if startLocation == nil {
               startLocation = value.startLocation
+              lastLocation = value.startLocation.x
               isPressed = true
               didTriggerLongPress = false
               didMoveFarEnough = false
 
+              // Schedule long press that can be interrupted by move.
               DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 if isPressed && !didTriggerLongPress && !didMoveFarEnough {
                   didTriggerLongPress = true
                   action.onLongPress?()
                 }
               }
-            } else if !didTriggerLongPress && !didMoveFarEnough {
+            } else {
               let dx = value.location.x - (startLocation?.x ?? 0)
               let dy = value.location.y - (startLocation?.y ?? 0)
-              let threshold: CGFloat = 10
 
-              if abs(dx) > threshold || abs(dy) > threshold {
-                didMoveFarEnough = true
+              if !didTriggerLongPress && !didMoveFarEnough {
+                if abs(dx) > threshold || abs(dy) > threshold {
+                  didMoveFarEnough = true
+                }
+              }
+              // Process slide.
+              if !slideActivated {
+                if abs(dx) >= threshold, let start = startLocation {
+                  slideActivated = true
+                  lastLocation = start.x + (dx > 0 ? threshold : -threshold)
+                }
+              }
+              if slideActivated {
+                if let start = startLocation, let last = lastLocation {
+                  let totalPast = Int(floor((last - start.x) / stepSize))
+                  let totalNow = Int(floor((value.location.x - start.x) / stepSize))
+                  let delta = totalNow - totalPast
+                  if delta != 0 {
+                    action.onSlide?(delta)
+                  }
+                  lastLocation = value.location.x
+                }
               }
             }
           }
           .onEnded { value in
             isPressed = false
-            defer { startLocation = nil }
+            defer {
+              startLocation = nil
+              lastLocation = nil
+              slideActivated = false
+            }
 
             let dx = value.location.x - (startLocation?.x ?? 0)
             let dy = value.location.y - (startLocation?.y ?? 0)
@@ -161,16 +192,32 @@ struct SpaceView: View {
   let height: CGFloat
 
   var body: some View {
-    Button {
-      virtualKeyboardView.resetLayerIfNotLocked()
-      client.keyPressed(" ", "")
-    } label: {
-      Text(label)
-        .font(.system(size: height * 0.4))
-        .commonContentStyle(
-          width: width, height: height, background: getNormalBackground(colorScheme),
-          foreground: getNormalForeground(colorScheme))
-    }.commonContainerStyle(width: width, height: height, shadow: getShadow(colorScheme))
+    Text(label)
+      .font(.system(size: height * 0.4))
+      .keyProperties(
+        width: width, height: height,
+        background: getNormalBackground(colorScheme),
+        press: getFunctionBackground(colorScheme),
+        foreground: getNormalForeground(colorScheme),
+        shadow: getShadow(colorScheme),
+        action: GestureAction(
+          onTap: {
+            virtualKeyboardView.resetLayerIfNotLocked()
+            client.keyPressed(" ", "")
+          },
+          onSlide: { step in
+            if step > 0 {
+              for i in 0..<step {
+                client.keyPressed("", "ArrowRight")
+              }
+            } else {
+              for i in 0..<(-step) {
+                client.keyPressed("", "ArrowLeft")
+              }
+            }
+          }
+        )
+      )
   }
 }
 
