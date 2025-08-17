@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftUtil
 
 struct GestureAction {
   var onTap: (() -> Void)? = nil
@@ -29,6 +30,7 @@ struct KeyModifier: ViewModifier {
   let foreground: Color
   let shadow: Color
   let action: GestureAction
+  let topRight: String?
 
   func body(content: Content) -> some View {
     content
@@ -36,11 +38,12 @@ struct KeyModifier: ViewModifier {
       .background(isPressed ? press : background)
       .cornerRadius(keyCornerRadius)
       .foregroundColor(foreground)
-      .overlay(
-        RoundedRectangle(cornerRadius: keyCornerRadius)
-          .stroke(Color.clear, lineWidth: 0)
-      )
       .shadow(color: shadow, radius: 0, x: 0, y: 1)
+      .condition(topRight != nil) {
+        $0.overlay(
+          Text(topRight ?? "").font(.system(size: height * 0.25)), alignment: .topTrailing
+        )
+      }
       .frame(width: width, height: height)
       .gesture(
         DragGesture(minimumDistance: 0)
@@ -125,14 +128,28 @@ struct KeyModifier: ViewModifier {
 }
 
 extension View {
+  @ViewBuilder
+  func condition<Content: View>(
+    _ isActive: Bool,
+    transform: (Self) -> Content
+  ) -> some View {
+    if isActive {
+      transform(self)
+    } else {
+      self
+    }
+  }
+
   func keyProperties(
     width: CGFloat, height: CGFloat, background: Color, press: Color, foreground: Color,
-    shadow: Color, action: GestureAction
+    shadow: Color, action: GestureAction, topRight: String? = nil
   ) -> some View {
     self.modifier(
       KeyModifier(
         width: width, height: height, background: background, press: press, foreground: foreground,
-        shadow: shadow, action: action))
+        shadow: shadow, action: action, topRight: topRight
+      )
+    )
   }
 
   func commonContentStyle(width: CGFloat, height: CGFloat, background: Color, foreground: Color)
@@ -170,24 +187,54 @@ func getShadow(_ colorScheme: ColorScheme) -> Color {
   return colorScheme == .dark ? darkShadow : lightShadow
 }
 
+func executeActions(_ actions: [[String: String]]) {
+  for action in actions {
+    if let type = action["type"] {
+      switch type {
+      case "key":
+        let key = action["key"] ?? ""
+        let code = action["code"] ?? ""
+        client.keyPressed(key, code)
+      default:
+        logger.error("Unknown action type: \(type)")
+      }
+    }
+  }
+}
+
 struct KeyView: View {
   @Environment(\.colorScheme) var colorScheme
   let label: String
   let key: String
+  let subLabel: [String: String]?
+  let swipeUp: [String: Any]?
   let width: CGFloat
   let height: CGFloat
 
   var body: some View {
-    Button {
-      virtualKeyboardView.resetLayerIfNotLocked()
-      client.keyPressed(key, "")
-    } label: {
-      Text(label)
-        .font(.system(size: height * 0.5).weight(.light))
-        .commonContentStyle(
-          width: width, height: height, background: getNormalBackground(colorScheme),
-          foreground: getNormalForeground(colorScheme))
-    }.commonContainerStyle(width: width, height: height, shadow: getShadow(colorScheme))
+    Text(label)
+      .font(.system(size: height * 0.5).weight(.light))
+      .keyProperties(
+        width: width, height: height,
+        background: getNormalBackground(colorScheme),
+        press: getFunctionBackground(colorScheme),
+        foreground: getNormalForeground(colorScheme),
+        shadow: getShadow(colorScheme),
+        action: GestureAction(
+          onTap: {
+            virtualKeyboardView.resetLayerIfNotLocked()
+            client.keyPressed(key, "")
+          },
+          onSwipe: { direction in
+            if direction == .up, let swipeUp = swipeUp,
+              let actions = swipeUp["actions"] as? [[String: String]]
+            {
+              executeActions(actions)
+            }
+          }
+        ),
+        topRight: subLabel?["topRight"] as? String
+      )
   }
 }
 

@@ -68,7 +68,11 @@ struct KeyboardView: View {
               if let label = key["label"] as? String,
                 let k = key["key"] as? String
               {
-                KeyView(label: label, key: k, width: keyWidth, height: height)
+                let subLabel = key["subLabel"] as? [String: String]
+                let swipeUp = key["swipeUp"] as? [String: Any]
+                KeyView(
+                  label: label, key: k, subLabel: subLabel, swipeUp: swipeUp, width: keyWidth,
+                  height: height)
               }
             case "space":
               SpaceView(label: spaceLabel, width: keyWidth, height: height)
