@@ -26,22 +26,30 @@ struct KeyModifier: ViewModifier {
   let width: CGFloat
   let height: CGFloat
   let background: Color
-  let press: Color
+  let pressedBackground: Color
   let foreground: Color
   let shadow: Color
   let action: GestureAction
+  let pressedView: (any View)?
   let topRight: String?
 
   func body(content: Content) -> some View {
-    content
-      .frame(width: width - columnGap, height: height - rowGap)
-      .background(isPressed ? press : background)
+    VStack {
+      if isPressed, let pressedView = pressedView {
+        AnyView(pressedView)
+      } else {
+        content
+      }
+    }.frame(width: width - columnGap, height: height - rowGap)
+      .background(isPressed ? pressedBackground : background)
       .cornerRadius(keyCornerRadius)
       .foregroundColor(foreground)
       .shadow(color: shadow, radius: 0, x: 0, y: 1)
       .condition(topRight != nil) {
         $0.overlay(
-          Text(topRight ?? "").font(.system(size: height * 0.25)), alignment: .topTrailing
+          // padding right so that / doesn't overflow
+          Text(topRight ?? "").font(.system(size: height * 0.25)).padding(.trailing, 1),
+          alignment: .topTrailing
         )
       }
       .frame(width: width, height: height)
@@ -141,13 +149,14 @@ extension View {
   }
 
   func keyProperties(
-    width: CGFloat, height: CGFloat, background: Color, press: Color, foreground: Color,
-    shadow: Color, action: GestureAction, topRight: String? = nil
+    width: CGFloat, height: CGFloat, background: Color, pressedBackground: Color, foreground: Color,
+    shadow: Color, action: GestureAction, pressedView: (any View)? = nil, topRight: String? = nil
   ) -> some View {
     self.modifier(
       KeyModifier(
-        width: width, height: height, background: background, press: press, foreground: foreground,
-        shadow: shadow, action: action, topRight: topRight
+        width: width, height: height, background: background, pressedBackground: pressedBackground,
+        foreground: foreground,
+        shadow: shadow, action: action, pressedView: pressedView, topRight: topRight
       )
     )
   }
@@ -217,7 +226,7 @@ struct KeyView: View {
       .keyProperties(
         width: width, height: height,
         background: getNormalBackground(colorScheme),
-        press: getFunctionBackground(colorScheme),
+        pressedBackground: getFunctionBackground(colorScheme),
         foreground: getNormalForeground(colorScheme),
         shadow: getShadow(colorScheme),
         action: GestureAction(
@@ -250,7 +259,7 @@ struct SpaceView: View {
       .keyProperties(
         width: width, height: height,
         background: getNormalBackground(colorScheme),
-        press: getFunctionBackground(colorScheme),
+        pressedBackground: getFunctionBackground(colorScheme),
         foreground: getNormalForeground(colorScheme),
         shadow: getShadow(colorScheme),
         action: GestureAction(
@@ -280,28 +289,30 @@ struct BackspaceView: View {
   let height: CGFloat
 
   var body: some View {
-    VStack {
-      Image(systemName: "delete.left")
-        .resizable()
-        .aspectRatio(contentMode: .fit)
-        .frame(height: height * 0.4)
-    }
-    .keyProperties(
-      width: width, height: height,
-      background: getFunctionBackground(colorScheme),
-      press: getNormalBackground(colorScheme),
-      foreground: getNormalForeground(colorScheme),
-      shadow: getShadow(colorScheme),
-      action: GestureAction(
-        onTap: {
-          virtualKeyboardView.resetLayerIfNotLocked()
-          client.keyPressed("", "Backspace")
-        },
-        onSlide: { step in
-          virtualKeyboardView.slideBackspace(step)
-        }
+    Image(systemName: "delete.left")
+      .resizable()
+      .aspectRatio(contentMode: .fit)
+      .frame(height: height * 0.4)
+      .keyProperties(
+        width: width, height: height,
+        background: getFunctionBackground(colorScheme),
+        pressedBackground: getNormalBackground(colorScheme),
+        foreground: getNormalForeground(colorScheme),
+        shadow: getShadow(colorScheme),
+        action: GestureAction(
+          onTap: {
+            virtualKeyboardView.resetLayerIfNotLocked()
+            client.keyPressed("", "Backspace")
+          },
+          onSlide: { step in
+            virtualKeyboardView.slideBackspace(step)
+          }
+        ),
+        pressedView: Image(systemName: "delete.left.fill")
+          .resizable()
+          .aspectRatio(contentMode: .fit)
+          .frame(height: height * 0.4)
       )
-    )
   }
 }
 
@@ -312,39 +323,37 @@ struct GlobeView: View {
 
   var body: some View {
     GeometryReader { geometry in
-      VStack {
-        Image(systemName: "globe")
-          .resizable()
-          .aspectRatio(contentMode: .fit)
-          .frame(height: height * 0.45)
-      }
-      .keyProperties(
-        width: width, height: height,
-        background: getNormalBackground(colorScheme),
-        press: getFunctionBackground(colorScheme),
-        foreground: getNormalForeground(colorScheme),
-        shadow: getShadow(colorScheme),
-        action: GestureAction(
-          onTap: {
-            virtualKeyboardView.resetLayerIfNotLocked()
-            client.globe()
-          },
-          onLongPress: {
-            let items = virtualKeyboardView.viewModel.inputMethods.map { inputMethod in
-              MenuItem(
-                text: inputMethod.displayName,
-                action: {
-                  virtualKeyboardView.resetLayerIfNotLocked()
-                  client.setCurrentInputMethod(inputMethod.name)
-                })
+      Image(systemName: "globe")
+        .resizable()
+        .aspectRatio(contentMode: .fit)
+        .frame(height: height * 0.45)
+        .keyProperties(
+          width: width, height: height,
+          background: getNormalBackground(colorScheme),
+          pressedBackground: getFunctionBackground(colorScheme),
+          foreground: getNormalForeground(colorScheme),
+          shadow: getShadow(colorScheme),
+          action: GestureAction(
+            onTap: {
+              virtualKeyboardView.resetLayerIfNotLocked()
+              client.globe()
+            },
+            onLongPress: {
+              let items = virtualKeyboardView.viewModel.inputMethods.map { inputMethod in
+                MenuItem(
+                  text: inputMethod.displayName,
+                  action: {
+                    virtualKeyboardView.resetLayerIfNotLocked()
+                    client.setCurrentInputMethod(inputMethod.name)
+                  })
+              }
+              if !items.isEmpty {
+                let frame = geometry.frame(in: .global)
+                virtualKeyboardView.showContextMenu(frame, items)
+              }
             }
-            if !items.isEmpty {
-              let frame = geometry.frame(in: .global)
-              virtualKeyboardView.showContextMenu(frame, items)
-            }
-          }
+          )
         )
-      )
     }
   }
 }
