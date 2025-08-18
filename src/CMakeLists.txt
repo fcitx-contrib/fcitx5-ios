@@ -208,9 +208,7 @@ endforeach()
 
 copy_to(app copy "${PROJECT_BINARY_DIR}/profile" profile)
 
-foreach(LPROJ IN LISTS LPROJS)
-    copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/assets/${LPROJ}" "${LPROJ}")
-endforeach()
+copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/assets/SwiftTranslations/Main" "")
 
 fcitx5_import_addons(${BUNDLE_NAME}
     REGISTRY_VARNAME getStaticAddon
