@@ -51,4 +51,7 @@ function(add_keyboard_extension keyboard language targets)
         REGISTRY_VARNAME getStaticAddon
         ADDONS ${COMMON_TARGETS} ${targets}
     )
+
+    copy_to(${keyboard} copy_directory "${PROJECT_SOURCE_DIR}/assets/SwiftTranslations/${keyboard}" "")
+    copy_to(${keyboard} copy_directory "${PROJECT_SOURCE_DIR}/assets/SwiftTranslations/Keyboard" "")
 endfunction()

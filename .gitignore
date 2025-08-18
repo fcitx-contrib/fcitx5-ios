@@ -3,4 +3,5 @@ build
 *.tar.bz2
 *.zip
 meta.swift
-assets/en.lproj/Localizable.strings
+assets/SwiftTranslations/Main/en.lproj/Localizable.strings
+assets/SwiftTranslations/Keyboard/en.lproj/Localizable.strings
