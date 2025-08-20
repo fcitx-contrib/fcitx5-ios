@@ -27,6 +27,14 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   var hostingController: UIHostingController<VirtualKeyboardView>!
   var removedBySlide = ""
 
+  private func updateTextIsEmpty() {
+    let text =
+      (textDocumentProxy.documentContextBeforeInput ?? "")
+      + (textDocumentProxy.selectedText ?? "")
+      + (textDocumentProxy.documentContextAfterInput ?? "")
+    virtualKeyboardView.setTextIsEmpty(text.isEmpty)
+  }
+
   override func updateViewConstraints() {
     super.updateViewConstraints()
 
@@ -99,6 +107,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   override func textDidChange(_ textInput: UITextInput?) {
     // The app has just changed the document's contents, the document context has been updated.
+    updateTextIsEmpty()
   }
 
   public func keyPressed(_ key: String, _ code: String) {
@@ -143,17 +152,18 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
         }
       case "Backspace":
         textDocumentProxy.deleteBackward()
+        updateTextIsEmpty()
       case "End":
         let textAfter = textDocumentProxy.documentContextAfterInput ?? ""
         textDocumentProxy.adjustTextPosition(byCharacterOffset: lengthOfFirstLine(textAfter))
       case "Enter":
-        textDocumentProxy.insertText("\n")  // \r doesn't work in Safari address bar.
+        commitString("\n")  // \r doesn't work in Safari address bar.
       case "Home":
         let textBefore = textDocumentProxy.documentContextBeforeInput ?? ""
         textDocumentProxy.adjustTextPosition(byCharacterOffset: -lengthOfLastLine(textBefore))
       default:
         if !key.isEmpty {
-          textDocumentProxy.insertText(key)
+          commitString(key)
         }
       }
     }
@@ -165,6 +175,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   public func commitString(_ commit: String) {
     textDocumentProxy.insertText(commit)
+    updateTextIsEmpty()
   }
 
   public func setPreedit(_ preedit: String, _ caret: Int) {
@@ -175,6 +186,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     if let text = textDocumentProxy.selectedText {
       UIPasteboard.general.string = text
       textDocumentProxy.deleteBackward()
+      updateTextIsEmpty()
     }
   }
 
@@ -186,7 +198,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   public func paste() {
     if let text = UIPasteboard.general.string {
-      textDocumentProxy.insertText(text)
+      commitString(text)
     }
   }
 
@@ -208,12 +220,13 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       for _ in 0..<newRemoval.count {
         textDocumentProxy.deleteBackward()
       }
+      updateTextIsEmpty()
     } else {
       let refillCount = min(step, removedBySlide.count)
       let index = removedBySlide.index(removedBySlide.startIndex, offsetBy: refillCount)
       let refill = String(removedBySlide[..<index])
       removedBySlide = String(removedBySlide[index...])
-      textDocumentProxy.insertText(refill)
+      commitString(refill)
     }
   }
 }

@@ -39,6 +39,9 @@ struct CandidateBarView: View {
   let rowItemCount: [Int]
   let batch: Int
   let scrollEnd: Bool
+  let enterLabel: String
+  let enterHighlight: Bool
+  let hasPreedit: Bool
   @Binding var expanded: Bool
   @Binding var pendingScroll: Int
   @State private var visibleRows = Set<Int>()
@@ -172,7 +175,8 @@ struct CandidateBarView: View {
             BackspaceView(width: keyWidth, height: keyHeight)
 
             EnterView(
-              label: NSLocalizedString("return", comment: ""), width: keyWidth, height: keyHeight)
+              label: enterLabel, width: keyWidth, height: keyHeight, cr: hasPreedit,
+              disable: false, highlight: enterHighlight)
           }
         } else {
           Rectangle().frame(width: 1, height: barHeight * expandDividerRatio).foregroundColor(

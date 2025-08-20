@@ -31,3 +31,8 @@ let darkFunctionBackground = Color(
 let darkShadow = Color(.sRGB, red: 37 / 255.0, green: 37 / 255.0, blue: 37 / 255.0, opacity: 1)
 let darkHighlightBackground = Color(
   .sRGB, red: 67 / 255.0, green: 67 / 255.0, blue: 70 / 255.0, opacity: 1)
+
+let disabledForeground = Color.gray
+let highlightForeground = Color.white
+let highlightBackground = Color(
+  .sRGB, red: 0, green: 122 / 255.0, blue: 1, opacity: 1)

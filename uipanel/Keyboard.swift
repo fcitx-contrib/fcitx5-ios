@@ -18,6 +18,9 @@ struct KeyboardView: View {
   let lock: Bool
   let spaceLabel: String
   let enterLabel: String
+  let textIsEmpty: Bool
+  let enterHighlight: Bool
+  let hasPreedit: Bool
   @State private var defaultRows = [[String: Any]]()
   @State private var shiftRows = [[String: Any]]()
 
@@ -81,7 +84,9 @@ struct KeyboardView: View {
             case "globe":
               GlobeView(width: keyWidth, height: height)
             case "enter":
-              EnterView(label: enterLabel, width: keyWidth, height: height)
+              EnterView(
+                label: enterLabel, width: keyWidth, height: height, cr: hasPreedit,
+                disable: textIsEmpty && enterHighlight, highlight: enterHighlight)
             case "shift":
               ShiftView(
                 state: layer == "shift" ? (lock ? .capslock : .shift) : .normal, width: keyWidth,

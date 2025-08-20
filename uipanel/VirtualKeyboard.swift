@@ -31,12 +31,16 @@ class ViewModel: ObservableObject {
   @Published var inputMethods = [InputMethod]()
   @Published var spaceLabel = ""
   @Published var enterLabel = ""
+  @Published var enterHighlight = false
+  @Published var textIsEmpty = false
   @Published var layer = "default"
   @Published var lock = false
 
   @Published var frame = CGRect()
   @Published var menuItems = [MenuItem]()
   @Published var showMenu = false
+
+  var hasPreedit: Bool { !preedit.isEmpty || hasClientPreedit }
 }
 
 public struct VirtualKeyboardView: View {
@@ -57,6 +61,9 @@ public struct VirtualKeyboardView: View {
               highlighted: viewModel.highlighted,
               rowItemCount: viewModel.rowItemCount,
               batch: viewModel.batch, scrollEnd: viewModel.scrollEnd,
+              enterLabel: viewModel.enterLabel,
+              enterHighlight: viewModel.enterHighlight,
+              hasPreedit: viewModel.hasPreedit,
               expanded: $viewModel.expanded,
               pendingScroll: $viewModel.pendingScroll)
           }
@@ -70,7 +77,10 @@ public struct VirtualKeyboardView: View {
             KeyboardView(
               width: width, layer: viewModel.layer, lock: viewModel.lock,
               spaceLabel: viewModel.spaceLabel,
-              enterLabel: viewModel.enterLabel)
+              enterLabel: viewModel.enterLabel,
+              textIsEmpty: viewModel.textIsEmpty,
+              enterHighlight: viewModel.enterHighlight,
+              hasPreedit: viewModel.hasPreedit)
           }
         }.background(colorScheme == .dark ? darkBackground : lightBackground)
         if viewModel.showMenu {
@@ -151,7 +161,12 @@ public struct VirtualKeyboardView: View {
     }
   }
 
+  public func setTextIsEmpty(_ isEmpty: Bool) {
+    viewModel.textIsEmpty = isEmpty
+  }
+
   public func setReturnKeyType(_ type: UIReturnKeyType?) {
+    viewModel.enterHighlight = true
     switch type {
     case .done:
       viewModel.enterLabel = NSLocalizedString("done", comment: "")
@@ -165,6 +180,7 @@ public struct VirtualKeyboardView: View {
       viewModel.enterLabel = NSLocalizedString("send", comment: "")
     default:
       viewModel.enterLabel = NSLocalizedString("return", comment: "")
+      viewModel.enterHighlight = false
     }
   }
 
@@ -186,7 +202,7 @@ public struct VirtualKeyboardView: View {
   }
 
   func slideBackspace(_ step: Int) {
-    if !viewModel.preedit.isEmpty || viewModel.hasClientPreedit || !viewModel.candidates.isEmpty {
+    if viewModel.hasPreedit || !viewModel.candidates.isEmpty {
       if step == 0 {
         client.resetInput()
       }

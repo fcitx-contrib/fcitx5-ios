@@ -28,6 +28,7 @@ struct KeyModifier: ViewModifier {
   let background: Color
   let pressedBackground: Color
   let foreground: Color
+  let pressedForeground: Color
   let shadow: Color
   let action: GestureAction
   let pressedView: (any View)?
@@ -43,7 +44,7 @@ struct KeyModifier: ViewModifier {
     }.frame(width: width - columnGap, height: height - rowGap)
       .background(isPressed ? pressedBackground : background)
       .cornerRadius(keyCornerRadius)
-      .foregroundColor(foreground)
+      .foregroundColor(isPressed ? pressedForeground : foreground)
       .shadow(color: shadow, radius: 0, x: 0, y: 1)
       .condition(topRight != nil) {
         $0.overlay(
@@ -150,12 +151,13 @@ extension View {
 
   func keyProperties(
     width: CGFloat, height: CGFloat, background: Color, pressedBackground: Color, foreground: Color,
-    shadow: Color, action: GestureAction, pressedView: (any View)? = nil, topRight: String? = nil
+    shadow: Color, action: GestureAction, pressedForeground: Color? = nil,
+    pressedView: (any View)? = nil, topRight: String? = nil
   ) -> some View {
     self.modifier(
       KeyModifier(
         width: width, height: height, background: background, pressedBackground: pressedBackground,
-        foreground: foreground,
+        foreground: foreground, pressedForeground: pressedForeground ?? foreground,
         shadow: shadow, action: action, pressedView: pressedView, topRight: topRight
       )
     )
@@ -363,17 +365,42 @@ struct EnterView: View {
   let label: String
   let width: CGFloat
   let height: CGFloat
+  let cr: Bool
+  let disable: Bool
+  let highlight: Bool
 
   var body: some View {
-    Button {
-      virtualKeyboardView.resetLayerIfNotLocked()
-      client.keyPressed("\r", "Enter")
-    } label: {
-      Text(label)
-        .commonContentStyle(
-          width: width, height: height, background: getFunctionBackground(colorScheme),
-          foreground: getNormalForeground(colorScheme))
-    }.commonContainerStyle(width: width, height: height, shadow: getShadow(colorScheme))
+    VStack {
+      if cr {
+        Image(systemName: "return")
+          .resizable()
+          .aspectRatio(contentMode: .fit)
+          .frame(height: height * 0.4)
+      } else {
+        Text(label)
+      }
+    }
+    .keyProperties(
+      width: width, height: height,
+      background: !cr && !disable && highlight
+        ? highlightBackground : getFunctionBackground(colorScheme),
+      pressedBackground: !cr && disable
+        ? getFunctionBackground(colorScheme) : getNormalBackground(colorScheme),
+      foreground: !cr && disable
+        ? disabledForeground
+        : (!cr && highlight ? highlightForeground : getNormalForeground(colorScheme)),
+      shadow: getShadow(colorScheme),
+      action: GestureAction(
+        onTap: {
+          // When !cr && disable, still allow key press, because text empty detection is not reliable.
+          // e.g. In WeChat when the first line is empty and caret is there and the second line is not empty,
+          // it says text is empty but should be sendable.
+          virtualKeyboardView.resetLayerIfNotLocked()
+          client.keyPressed("\r", "Enter")
+        }
+      ),
+      pressedForeground: !cr && !disable && highlight ? getNormalForeground(colorScheme) : nil
+    )
   }
 }
 
