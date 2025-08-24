@@ -3,6 +3,7 @@ add_library(KeyboardUI STATIC
     VirtualKeyboard.swift
     ContextMenu.swift
     Key.swift
+    KeyModifier.swift
     Keyboard.swift
     Candidate.swift
     WrapLayout.swift

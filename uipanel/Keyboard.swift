@@ -12,6 +12,20 @@ private func getFlexes(_ keys: [[String: Any]]) -> [CGFloat] {
   })
 }
 
+extension Array where Element == CGFloat {
+  func partialSums() -> [CGFloat] {
+    var result: [CGFloat] = [0]
+    result.reserveCapacity(self.count)
+
+    var running: CGFloat = 0
+    for x in self.dropLast() {
+      running += x
+      result.append(running)
+    }
+    return result
+  }
+}
+
 struct KeyboardView: View {
   let width: CGFloat
   let layer: String
@@ -27,9 +41,9 @@ struct KeyboardView: View {
   var body: some View {
     let rows = layer == "shift" ? shiftRows : defaultRows
     let height = keyboardHeight / CGFloat(rows.count)
-    VStack(spacing: 0) {
-      ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-        renderRow(row, width, height)
+    ZStack {
+      ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
+        renderRow(row, CGFloat(i) * height, width, height)
       }
     }
     .frame(height: keyboardHeight)
@@ -55,49 +69,53 @@ struct KeyboardView: View {
     }
   }
 
-  func renderRow(_ row: [String: Any], _ width: CGFloat, _ height: CGFloat) -> some View {
+  func renderRow(_ row: [String: Any], _ y: CGFloat, _ width: CGFloat, _ height: CGFloat)
+    -> some View
+  {
     guard let keys = row["keys"] as? [[String: Any]] else {
       return AnyView(EmptyView())
     }
     let flexes = getFlexes(keys)
+    let flexSums = flexes.partialSums()
     let unit = width / flexes.reduce(0, +)
     return AnyView(
-      HStack(spacing: 0) {
-        ForEach(Array(keys.enumerated()), id: \.offset) { i, key in
-          let keyWidth = flexes[i] * unit
-          if let type = key["type"] as? String {
-            switch type {
-            case "key":
-              if let label = key["label"] as? String,
-                let k = key["key"] as? String
-              {
-                let subLabel = key["subLabel"] as? [String: String]
-                let swipeUp = key["swipeUp"] as? [String: Any]
-                KeyView(
-                  label: label, key: k, subLabel: subLabel, swipeUp: swipeUp, width: keyWidth,
-                  height: height)
-              }
-            case "space":
-              SpaceView(label: spaceLabel, width: keyWidth, height: height)
-            case "backspace":
-              BackspaceView(width: keyWidth, height: height)
-            case "globe":
-              GlobeView(width: keyWidth, height: height)
-            case "enter":
-              EnterView(
-                label: enterLabel, width: keyWidth, height: height, cr: hasPreedit,
-                disable: textIsEmpty && enterHighlight, highlight: enterHighlight)
-            case "shift":
-              ShiftView(
-                state: layer == "shift" ? (lock ? .capslock : .shift) : .normal, width: keyWidth,
-                height: height)
-            case "symbol":
-              SymbolKeyView(width: keyWidth, height: height)
-            default:
-              VStack {}.frame(width: keyWidth, height: height)
+      ForEach(Array(keys.enumerated()), id: \.offset) { i, key in
+        let keyWidth = flexes[i] * unit
+        let x = flexSums[i] * unit
+        if let type = key["type"] as? String {
+          switch type {
+          case "key":
+            if let label = key["label"] as? String,
+              let k = key["key"] as? String
+            {
+              let subLabel = key["subLabel"] as? [String: String]
+              let swipeUp = key["swipeUp"] as? [String: Any]
+              KeyView(
+                x: x, y: y, width: keyWidth, height: height,
+                label: label, key: k, subLabel: subLabel, swipeUp: swipeUp)
             }
+          case "space":
+            SpaceView(x: x, y: y, width: keyWidth, height: height, label: spaceLabel)
+          case "backspace":
+            BackspaceView(x: x, y: y, width: keyWidth, height: height)
+          case "globe":
+            GlobeView(x: x, y: y, width: keyWidth, height: height)
+          case "enter":
+            EnterView(
+              x: x, y: y, width: keyWidth, height: height,
+              label: enterLabel, cr: hasPreedit,
+              disable: textIsEmpty && enterHighlight, highlight: enterHighlight)
+          case "shift":
+            ShiftView(
+              x: x, y: y, width: keyWidth, height: height,
+              state: layer == "shift" ? (lock ? .capslock : .shift) : .normal)
+          case "symbol":
+            SymbolKeyView(x: x, y: y, width: keyWidth, height: height)
+          default:
+            EmptyView()
           }
         }
-      }.frame(width: width, height: height))
+      }
+    )
   }
 }

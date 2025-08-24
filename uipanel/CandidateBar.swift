@@ -138,44 +138,49 @@ struct CandidateBarView: View {
             let keyHeight = keyboardHeight / 4
             let keyWidth = width / 5
 
-            Button {
-              withAnimation {
-                proxy.scrollTo(((visibleRows.min() ?? 0) - 1) / 5 * 5, anchor: .top)
-              }
-            } label: {
-              VStack {
-                Image(systemName: "arrow.up")
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .frame(height: keyHeight * 0.4)
-              }
-              .commonContentStyle(
-                width: keyWidth, height: keyHeight, background: getFunctionBackground(colorScheme),
-                foreground: getNormalForeground(colorScheme))
-            }.commonContainerStyle(
-              width: keyWidth, height: keyHeight, shadow: getShadow(colorScheme))
+            Image(systemName: "arrow.up")
+              .resizable()
+              .aspectRatio(contentMode: .fit)
+              .frame(height: keyHeight * 0.4)
+              .keyProperties(
+                x: 0, y: 0, width: keyWidth, height: keyHeight,
+                background: getFunctionBackground(colorScheme),
+                pressedBackground: getNormalBackground(colorScheme),
+                foreground: getNormalForeground(colorScheme),
+                shadow: getShadow(colorScheme),
+                action: GestureAction(
+                  onTap: {
+                    withAnimation {
+                      proxy.scrollTo(((visibleRows.min() ?? 0) - 1) / 5 * 5, anchor: .top)
+                    }
+                  }
+                )
+              )
 
-            Button {
-              withAnimation {
-                proxy.scrollTo(((visibleRows.min() ?? 0) + 1) / 5 * 5 + 5, anchor: .top)
-              }
-            } label: {
-              VStack {
-                Image(systemName: "arrow.down")
-                  .resizable()
-                  .aspectRatio(contentMode: .fit)
-                  .frame(height: keyHeight * 0.4)
-              }
-              .commonContentStyle(
-                width: keyWidth, height: keyHeight, background: getFunctionBackground(colorScheme),
-                foreground: getNormalForeground(colorScheme))
-            }.commonContainerStyle(
-              width: keyWidth, height: keyHeight, shadow: getShadow(colorScheme))
+            Image(systemName: "arrow.down")
+              .resizable()
+              .aspectRatio(contentMode: .fit)
+              .frame(height: keyHeight * 0.4)
+              .keyProperties(
+                x: 0, y: 0, width: keyWidth, height: keyHeight,
+                background: getFunctionBackground(colorScheme),
+                pressedBackground: getNormalBackground(colorScheme),
+                foreground: getNormalForeground(colorScheme),
+                shadow: getShadow(colorScheme),
+                action: GestureAction(
+                  onTap: {
+                    withAnimation {
+                      proxy.scrollTo(((visibleRows.min() ?? 0) + 1) / 5 * 5 + 5, anchor: .top)
+                    }
+                  }
+                )
+              )
 
-            BackspaceView(width: keyWidth, height: keyHeight)
+            BackspaceView(x: 0, y: 0, width: keyWidth, height: keyHeight)
 
             EnterView(
-              label: enterLabel, width: keyWidth, height: keyHeight, cr: hasPreedit,
+              x: 0, y: 0, width: keyWidth, height: keyHeight,
+              label: enterLabel, cr: hasPreedit,
               disable: false, highlight: enterHighlight)
           }
         } else {
