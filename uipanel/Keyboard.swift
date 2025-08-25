@@ -35,6 +35,15 @@ struct KeyboardView: View {
   let textIsEmpty: Bool
   let enterHighlight: Bool
   let hasPreedit: Bool
+
+  let bubbleX: CGFloat
+  let bubbleY: CGFloat
+  let bubbleWidth: CGFloat
+  let bubbleHeight: CGFloat
+  let bubbleBackground: Color
+  let bubbleShadow: Color
+  let bubbleLabel: String?
+
   @State private var defaultRows = [[String: Any]]()
   @State private var shiftRows = [[String: Any]]()
 
@@ -44,6 +53,12 @@ struct KeyboardView: View {
     ZStack {
       ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
         renderRow(row, CGFloat(i) * height, width, height)
+      }
+      if bubbleLabel != nil {
+        BubbleView(
+          x: bubbleX, y: bubbleY, width: bubbleWidth, height: bubbleHeight,
+          keyboardWidth: width, background: bubbleBackground, shadow: bubbleShadow,
+          label: bubbleLabel)
       }
     }
     .frame(height: keyboardHeight)

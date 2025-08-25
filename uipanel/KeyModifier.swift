@@ -12,6 +12,17 @@ enum SwipeDirection {
   case up, down, left, right
 }
 
+private func getSwipeDirection(_ dx: CGFloat, _ dy: CGFloat) -> SwipeDirection {
+  if abs(dx) > abs(dy) {
+    return dx > 0 ? .right : .left
+  }
+  return dy > 0 ? .down : .up
+}
+
+private func clearBubble() {
+  virtualKeyboardView.setBubble(0, 0, 0, 0, .clear, .clear, nil)
+}
+
 struct KeyModifier: ViewModifier {
   let threshold: CGFloat = 30
   let stepSize: CGFloat = 15
@@ -35,6 +46,8 @@ struct KeyModifier: ViewModifier {
   let action: GestureAction
   let pressedView: (any View)?
   let topRight: String?
+  let bubbleLabel: String?
+  let swipeUpLabel: String?
 
   func body(content: Content) -> some View {
     VStack {
@@ -59,17 +72,25 @@ struct KeyModifier: ViewModifier {
       .gesture(
         DragGesture(minimumDistance: 0)
           .onChanged { value in
+            let bubbleX = x + width / 2
+            let bubbleY = y + height / 2
+            let bubbleWidth = width - columnGap
+            let bubbleHeight = height - rowGap
+
             if startLocation == nil {
               startLocation = value.startLocation
               lastLocation = value.startLocation.x
               isPressed = true
               didTriggerLongPress = false
               didMoveFarEnough = false
+              virtualKeyboardView.setBubble(
+                bubbleX, bubbleY, bubbleWidth, bubbleHeight, background, shadow, bubbleLabel)
 
               // Schedule long press that can be interrupted by move.
               DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 if isPressed && !didTriggerLongPress && !didMoveFarEnough {
                   didTriggerLongPress = true
+                  clearBubble()
                   action.onLongPress?()
                 }
               }
@@ -77,33 +98,42 @@ struct KeyModifier: ViewModifier {
               let dx = value.location.x - (startLocation?.x ?? 0)
               let dy = value.location.y - (startLocation?.y ?? 0)
 
-              if !didTriggerLongPress && !didMoveFarEnough {
-                if abs(dx) > threshold || abs(dy) > threshold {
+              if !didTriggerLongPress {
+                if !didMoveFarEnough && (abs(dx) > threshold || abs(dy) > threshold) {
                   didMoveFarEnough = true
+                }
+                if getSwipeDirection(dx, dy) == .up {
+                  virtualKeyboardView.setBubble(
+                    bubbleX, bubbleY, bubbleWidth, bubbleHeight, background, shadow, swipeUpLabel)
+                } else {
+                  clearBubble()
                 }
               }
               // Process slide.
-              if !slideActivated {
-                if abs(dx) >= threshold, let start = startLocation {
-                  slideActivated = true
-                  lastLocation = start.x + (dx > 0 ? threshold : -threshold)
-                }
-              }
-              if slideActivated {
-                if let start = startLocation, let last = lastLocation {
-                  let totalPast = Int(floor((last - start.x) / stepSize))
-                  let totalNow = Int(floor((value.location.x - start.x) / stepSize))
-                  let delta = totalNow - totalPast
-                  if delta != 0 {
-                    action.onSlide?(delta)
+              if let onSlide = action.onSlide {
+                if !slideActivated {
+                  if abs(dx) >= threshold, let start = startLocation {
+                    slideActivated = true
+                    lastLocation = start.x + (dx > 0 ? threshold : -threshold)
                   }
-                  lastLocation = value.location.x
+                }
+                if slideActivated {
+                  if let start = startLocation, let last = lastLocation {
+                    let totalPast = Int(floor((last - start.x) / stepSize))
+                    let totalNow = Int(floor((value.location.x - start.x) / stepSize))
+                    let delta = totalNow - totalPast
+                    if delta != 0 {
+                      onSlide(delta)
+                    }
+                    lastLocation = value.location.x
+                  }
                 }
               }
             }
           }
           .onEnded { value in
             isPressed = false
+            clearBubble()
             defer {
               startLocation = nil
               lastLocation = nil
@@ -122,11 +152,7 @@ struct KeyModifier: ViewModifier {
 
             if didMoveFarEnough {
               if !didTriggerLongPress {
-                if abs(dx) > abs(dy) {
-                  action.onSwipe?(dx > 0 ? .right : .left)
-                } else {
-                  action.onSwipe?(dy > 0 ? .down : .up)
-                }
+                action.onSwipe?(getSwipeDirection(dx, dy))
               }
             } else {
               if !didTriggerLongPress {
@@ -155,14 +181,16 @@ extension View {
     x: CGFloat = 0, y: CGFloat = 0,
     width: CGFloat, height: CGFloat, background: Color, pressedBackground: Color, foreground: Color,
     shadow: Color, action: GestureAction, pressedForeground: Color? = nil,
-    pressedView: (any View)? = nil, topRight: String? = nil
+    pressedView: (any View)? = nil, topRight: String? = nil, bubbleLabel: String? = nil,
+    swipeUpLabel: String? = nil
   ) -> some View {
     self.modifier(
       KeyModifier(
         x: x, y: y, width: width, height: height, background: background,
         pressedBackground: pressedBackground,
         foreground: foreground, pressedForeground: pressedForeground ?? foreground,
-        shadow: shadow, action: action, pressedView: pressedView, topRight: topRight
+        shadow: shadow, action: action, pressedView: pressedView, topRight: topRight,
+        bubbleLabel: bubbleLabel, swipeUpLabel: swipeUpLabel
       )
     )
   }

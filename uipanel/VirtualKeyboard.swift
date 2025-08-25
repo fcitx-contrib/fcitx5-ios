@@ -40,6 +40,14 @@ class ViewModel: ObservableObject {
   @Published var menuItems = [MenuItem]()
   @Published var showMenu = false
 
+  @Published var bubbleX: CGFloat = 0
+  @Published var bubbleY: CGFloat = 0
+  @Published var bubbleWidth: CGFloat = 0
+  @Published var bubbleHeight: CGFloat = 0
+  @Published var bubbleBackground: Color = .clear
+  @Published var bubbleShadow: Color = .clear
+  @Published var bubbleLabel: String? = nil
+
   var hasPreedit: Bool { !preedit.isEmpty || hasClientPreedit }
 }
 
@@ -80,7 +88,14 @@ public struct VirtualKeyboardView: View {
               enterLabel: viewModel.enterLabel,
               textIsEmpty: viewModel.textIsEmpty,
               enterHighlight: viewModel.enterHighlight,
-              hasPreedit: viewModel.hasPreedit)
+              hasPreedit: viewModel.hasPreedit,
+              bubbleX: viewModel.bubbleX,
+              bubbleY: viewModel.bubbleY,
+              bubbleWidth: viewModel.bubbleWidth,
+              bubbleHeight: viewModel.bubbleHeight,
+              bubbleBackground: viewModel.bubbleBackground,
+              bubbleShadow: viewModel.bubbleShadow,
+              bubbleLabel: viewModel.bubbleLabel)
           }
         }.background(colorScheme == .dark ? darkBackground : lightBackground)
         if viewModel.showMenu {
@@ -209,6 +224,19 @@ public struct VirtualKeyboardView: View {
       return
     }
     client.slideBackspace(step)
+  }
+
+  func setBubble(
+    _ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat, _ background: Color,
+    _ shadow: Color, _ label: String?
+  ) {
+    viewModel.bubbleX = x
+    viewModel.bubbleY = y
+    viewModel.bubbleWidth = width
+    viewModel.bubbleHeight = height
+    viewModel.bubbleBackground = background
+    viewModel.bubbleShadow = shadow
+    viewModel.bubbleLabel = label
   }
 }
 

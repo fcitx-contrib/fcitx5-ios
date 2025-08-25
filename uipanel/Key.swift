@@ -50,7 +50,9 @@ struct KeyView: View {
             }
           }
         ),
-        topRight: subLabel?["topRight"] as? String
+        topRight: subLabel?["topRight"] as? String,
+        bubbleLabel: label,
+        swipeUpLabel: swipeUp?["label"] as? String
       )
   }
 }
@@ -137,39 +139,37 @@ struct GlobeView: View {
   let height: CGFloat
 
   var body: some View {
-    GeometryReader { geometry in
-      Image(systemName: "globe")
-        .resizable()
-        .aspectRatio(contentMode: .fit)
-        .frame(height: height * 0.45)
-        .keyProperties(
-          x: x, y: y, width: width, height: height,
-          background: getNormalBackground(colorScheme),
-          pressedBackground: getFunctionBackground(colorScheme),
-          foreground: getNormalForeground(colorScheme),
-          shadow: getShadow(colorScheme),
-          action: GestureAction(
-            onTap: {
-              virtualKeyboardView.resetLayerIfNotLocked()
-              client.globe()
-            },
-            onLongPress: {
-              let items = virtualKeyboardView.viewModel.inputMethods.map { inputMethod in
-                MenuItem(
-                  text: inputMethod.displayName,
-                  action: {
-                    virtualKeyboardView.resetLayerIfNotLocked()
-                    client.setCurrentInputMethod(inputMethod.name)
-                  })
-              }
-              if !items.isEmpty {
-                let frame = geometry.frame(in: .global)
-                virtualKeyboardView.showContextMenu(frame, items)
-              }
+    Image(systemName: "globe")
+      .resizable()
+      .aspectRatio(contentMode: .fit)
+      .frame(height: height * 0.45)
+      .keyProperties(
+        x: x, y: y, width: width, height: height,
+        background: getNormalBackground(colorScheme),
+        pressedBackground: getFunctionBackground(colorScheme),
+        foreground: getNormalForeground(colorScheme),
+        shadow: getShadow(colorScheme),
+        action: GestureAction(
+          onTap: {
+            virtualKeyboardView.resetLayerIfNotLocked()
+            client.globe()
+          },
+          onLongPress: {
+            let items = virtualKeyboardView.viewModel.inputMethods.map { inputMethod in
+              MenuItem(
+                text: inputMethod.displayName,
+                action: {
+                  virtualKeyboardView.resetLayerIfNotLocked()
+                  client.setCurrentInputMethod(inputMethod.name)
+                })
             }
-          )
+            if !items.isEmpty {
+              let frame = CGRect(x: x, y: y + barHeight, width: width, height: height)
+              virtualKeyboardView.showContextMenu(frame, items)
+            }
+          }
         )
-    }
+      )
   }
 }
 
