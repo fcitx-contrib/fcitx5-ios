@@ -27,11 +27,12 @@ struct KeyModifier: ViewModifier {
   let threshold: CGFloat = 30
   let stepSize: CGFloat = 15
 
+  @State private var touchId = 0
   @State private var isPressed = false
-  @State private var didTriggerLongPress = false
-  @State private var didMoveFarEnough = false
   @State private var startLocation: CGPoint?
   @State private var lastLocation: CGFloat?
+  @State private var didTriggerLongPress = false
+  @State private var didMoveFarEnough = false
   @State private var slideActivated = false
 
   let x: CGFloat
@@ -77,24 +78,29 @@ struct KeyModifier: ViewModifier {
             let bubbleWidth = width - columnGap
             let bubbleHeight = height - rowGap
 
-            if startLocation == nil {
+            if !isPressed {  // touch start
+              touchId = (touchId + 1) & 0xFFFF
+              let currentTouchId = touchId
+              isPressed = true
               startLocation = value.startLocation
               lastLocation = value.startLocation.x
-              isPressed = true
-              didTriggerLongPress = false
-              didMoveFarEnough = false
+
               virtualKeyboardView.setBubble(
                 bubbleX, bubbleY, bubbleWidth, bubbleHeight, background, shadow, bubbleLabel)
 
               // Schedule long press that can be interrupted by move.
               DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                if touchId != currentTouchId {
+                  // Called from a previous touch.
+                  return
+                }
                 if isPressed && !didTriggerLongPress && !didMoveFarEnough {
                   didTriggerLongPress = true
                   clearBubble()
                   action.onLongPress?()
                 }
               }
-            } else {
+            } else {  // touch move
               let dx = value.location.x - (startLocation?.x ?? 0)
               let dy = value.location.y - (startLocation?.y ?? 0)
 
@@ -132,11 +138,13 @@ struct KeyModifier: ViewModifier {
             }
           }
           .onEnded { value in
-            isPressed = false
             clearBubble()
             defer {
+              isPressed = false
               startLocation = nil
               lastLocation = nil
+              didTriggerLongPress = false
+              didMoveFarEnough = false
               slideActivated = false
             }
 
