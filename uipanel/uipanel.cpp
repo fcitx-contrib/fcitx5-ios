@@ -162,7 +162,7 @@ static std::string serializeActions(ActionableCandidateList *actionableList,
 FCITX_ADDON_FACTORY_V2(uipanel, fcitx::UIPanelFactory);
 
 void scroll(int start, int count) {
-    with_fcitx([start, count] { fcitx::ui->scroll(start, count); });
+    dispatcher->schedule([start, count] { fcitx::ui->scroll(start, count); });
 }
 
 std::string getCandidateActions(int index) {
@@ -228,7 +228,7 @@ void activateCandidateAction(int index, int id) {
 }
 
 void selectCandidate(int index) {
-    with_fcitx([index] {
+    dispatcher->schedule([index] {
         auto ic = instance->mostRecentInputContext();
         const auto &list = ic->inputPanel().candidateList();
         if (!list)
@@ -252,7 +252,7 @@ void selectCandidate(int index) {
 }
 
 void activateStatusAreaAction(int id) {
-    with_fcitx([id] {
+    dispatcher->schedule([id] {
         if (auto *ic = instance->mostRecentInputContext()) {
             auto *action =
                 instance->userInterfaceManager().lookupActionById(id);

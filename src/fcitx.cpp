@@ -12,8 +12,9 @@ void startFcitx(const char *appBundlePath, const char *xdgDataDirs,
     setupFcitx(appBundlePath, xdgDataDirs, appGroupPath, true);
 }
 
-void setInputMethods(const char *json) {
-    with_fcitx([=] {
+void setInputMethods(const char *s) {
+    std::string json = s;
+    dispatcher->schedule([=] {
         auto &imMgr = instance->inputMethodManager();
         auto group = imMgr.currentGroup();
         auto &imList = group.inputMethodList();

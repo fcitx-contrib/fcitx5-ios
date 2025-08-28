@@ -111,60 +111,62 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   public func keyPressed(_ key: String, _ code: String) {
+    processKey(key, code)
+  }
+
+  public func forwardKey(_ key: String, _ code: String) {
     // documentContextBeforeInput could be all text or text in current line before cursor.
     // In the latter case, it will be '\n' if caret is at the beginning of a non-first line.
-    if !processKey(key, code) {
-      switch code {
-      case "ArrowDown":
-        let offset = lengthOfLastLine(textDocumentProxy.documentContextBeforeInput ?? "")
-        let step = lengthOfFirstLine(textDocumentProxy.documentContextAfterInput ?? "")
-        textDocumentProxy.adjustTextPosition(byCharacterOffset: step)
-        DispatchQueue.main.async {
-          // Move to the start of next line if exists.
-          self.textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
-          // Must have a delay, otherwise nextLineLength is always 0.
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            let nextLineLength = lengthOfFirstLine(
-              self.textDocumentProxy.documentContextAfterInput ?? "")
+    switch code {
+    case "ArrowDown":
+      let offset = lengthOfLastLine(textDocumentProxy.documentContextBeforeInput ?? "")
+      let step = lengthOfFirstLine(textDocumentProxy.documentContextAfterInput ?? "")
+      textDocumentProxy.adjustTextPosition(byCharacterOffset: step)
+      DispatchQueue.main.async {
+        // Move to the start of next line if exists.
+        self.textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
+        // Must have a delay, otherwise nextLineLength is always 0.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+          let nextLineLength = lengthOfFirstLine(
+            self.textDocumentProxy.documentContextAfterInput ?? "")
+          self.textDocumentProxy.adjustTextPosition(
+            byCharacterOffset: min(offset, nextLineLength))
+        }
+      }
+    case "ArrowLeft":
+      textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
+    case "ArrowRight":
+      textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
+    case "ArrowUp":
+      let offset = lengthOfLastLine(textDocumentProxy.documentContextBeforeInput ?? "")
+      textDocumentProxy.adjustTextPosition(byCharacterOffset: -offset)
+      DispatchQueue.main.async {
+        // Move to the end of previous line if exists.
+        self.textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
+        // Must have a delay, otherwise previousLineLength may always be 0.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+          let previousLineLength = lengthOfLastLine(
+            self.textDocumentProxy.documentContextBeforeInput ?? "")
+          if previousLineLength > offset {
             self.textDocumentProxy.adjustTextPosition(
-              byCharacterOffset: min(offset, nextLineLength))
+              byCharacterOffset: -(previousLineLength - offset))
           }
         }
-      case "ArrowLeft":
-        textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
-      case "ArrowRight":
-        textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
-      case "ArrowUp":
-        let offset = lengthOfLastLine(textDocumentProxy.documentContextBeforeInput ?? "")
-        textDocumentProxy.adjustTextPosition(byCharacterOffset: -offset)
-        DispatchQueue.main.async {
-          // Move to the end of previous line if exists.
-          self.textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
-          // Must have a delay, otherwise previousLineLength may always be 0.
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            let previousLineLength = lengthOfLastLine(
-              self.textDocumentProxy.documentContextBeforeInput ?? "")
-            if previousLineLength > offset {
-              self.textDocumentProxy.adjustTextPosition(
-                byCharacterOffset: -(previousLineLength - offset))
-            }
-          }
-        }
-      case "Backspace":
-        textDocumentProxy.deleteBackward()
-        updateTextIsEmpty()
-      case "End":
-        let textAfter = textDocumentProxy.documentContextAfterInput ?? ""
-        textDocumentProxy.adjustTextPosition(byCharacterOffset: lengthOfFirstLine(textAfter))
-      case "Enter":
-        commitString("\n")  // \r doesn't work in Safari address bar.
-      case "Home":
-        let textBefore = textDocumentProxy.documentContextBeforeInput ?? ""
-        textDocumentProxy.adjustTextPosition(byCharacterOffset: -lengthOfLastLine(textBefore))
-      default:
-        if !key.isEmpty {
-          commitString(key)
-        }
+      }
+    case "Backspace":
+      textDocumentProxy.deleteBackward()
+      updateTextIsEmpty()
+    case "End":
+      let textAfter = textDocumentProxy.documentContextAfterInput ?? ""
+      textDocumentProxy.adjustTextPosition(byCharacterOffset: lengthOfFirstLine(textAfter))
+    case "Enter":
+      commitString("\n")  // \r doesn't work in Safari address bar.
+    case "Home":
+      let textBefore = textDocumentProxy.documentContextBeforeInput ?? ""
+      textDocumentProxy.adjustTextPosition(byCharacterOffset: -lengthOfLastLine(textBefore))
+    default:
+      if !key.isEmpty {
+        commitString(key)
       }
     }
   }

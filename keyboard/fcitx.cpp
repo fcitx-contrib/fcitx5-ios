@@ -22,28 +22,32 @@ void startFcitx(const char *appBundlePath, const char *xdgDataDirs,
 }
 
 void focusIn(id client) {
-    return with_fcitx([client] { frontend->focusIn(client); });
+    return dispatcher->schedule([client] { frontend->focusIn(client); });
 }
 
 void focusOut(id client) {
-    return with_fcitx([client] { frontend->focusOut(client); });
+    return dispatcher->schedule([client] { frontend->focusOut(client); });
 }
 
-bool processKey(const char *key, const char *code) {
-    return with_fcitx([=] {
-        return frontend->keyEvent(
-            fcitx::js_key_to_fcitx_key(key, code,
-                                       1 << 29 /* KeyState::Virtual */),
-            false);
+void processKey(const char *k, const char *c) {
+    std::string key = k, code = c;
+    dispatcher->schedule([=] {
+        bool accepted =
+            frontend->keyEvent(fcitx::js_key_to_fcitx_key(
+                                   key, code, 1 << 29 /* KeyState::Virtual */),
+                               false);
+        if (!accepted) {
+            frontend->forwardKey(key, code);
+        }
     });
 }
 
 void resetInput() {
-    with_fcitx([] { frontend->resetInput(); });
+    dispatcher->schedule([] { frontend->resetInput(); });
 }
 
 void reload() {
-    with_fcitx([] {
+    dispatcher->schedule([] {
         instance->reloadConfig();
         instance->refresh();
         auto &addonManager = instance->addonManager();
@@ -63,9 +67,10 @@ void reload() {
 }
 
 void toggle() {
-    with_fcitx([] { instance->toggle(); });
+    dispatcher->schedule([] { instance->toggle(); });
 }
 
-void setCurrentInputMethod(const char *inputMethod) {
-    with_fcitx([=] { instance->setCurrentInputMethod(inputMethod); });
+void setCurrentInputMethod(const char *im) {
+    std::string inputMethod = im;
+    dispatcher->schedule([=] { instance->setCurrentInputMethod(inputMethod); });
 }

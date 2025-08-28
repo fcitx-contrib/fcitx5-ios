@@ -1,9 +1,13 @@
 import FcitxProtocol
 import Foundation
 
-public func commitStringAsync(_ clientPtr: UnsafeMutableRawPointer, _ commit: String) {
+private func getClient(_ clientPtr: UnsafeMutableRawPointer) -> FcitxProtocol? {
   let client: AnyObject = Unmanaged.fromOpaque(clientPtr).takeUnretainedValue()
-  guard let client = client as? FcitxProtocol else {
+  return client as? FcitxProtocol
+}
+
+public func commitStringAsync(_ clientPtr: UnsafeMutableRawPointer, _ commit: String) {
+  guard let client = getClient(clientPtr) else {
     return
   }
   DispatchQueue.main.async {
@@ -13,11 +17,19 @@ public func commitStringAsync(_ clientPtr: UnsafeMutableRawPointer, _ commit: St
 
 public func setPreeditAsync(_ clientPtr: UnsafeMutableRawPointer, _ preedit: String, _ cursor: Int)
 {
-  let client: AnyObject = Unmanaged.fromOpaque(clientPtr).takeUnretainedValue()
-  guard let client = client as? FcitxProtocol else {
+  guard let client = getClient(clientPtr) else {
     return
   }
   DispatchQueue.main.async {
     client.setPreedit(preedit, cursor)
+  }
+}
+
+public func forwardKeyAsync(_ clientPtr: UnsafeMutableRawPointer, _ key: String, _ code: String) {
+  guard let client = getClient(clientPtr) else {
+    return
+  }
+  DispatchQueue.main.async {
+    client.forwardKey(key, code)
   }
 }

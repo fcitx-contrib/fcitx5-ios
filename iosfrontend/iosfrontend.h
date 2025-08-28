@@ -24,6 +24,7 @@ class IosFrontend : public AddonInstance {
 
     void createInputContext();
     bool keyEvent(const Key &key, bool isRelease);
+    void forwardKey(const std::string &key, const std::string &code);
     void focusIn(id client);
     void focusOut(id client);
     void resetInput();

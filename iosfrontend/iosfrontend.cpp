@@ -19,6 +19,10 @@ bool IosFrontend::keyEvent(const Key &key, bool isRelease) {
     return event.accepted();
 }
 
+void IosFrontend::forwardKey(const std::string &key, const std::string &code) {
+    SwiftFrontend::forwardKeyAsync(ic_->getClient(), key, code);
+}
+
 void IosFrontend::focusIn(id client) {
     ic_->setClient(client);
     ic_->focusIn();
