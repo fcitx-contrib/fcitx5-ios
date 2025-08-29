@@ -19,7 +19,7 @@ struct ContextMenuOverlay: View {
 
   var body: some View {
     ZStack {
-      Color.black.opacity(0.001)
+      Color.black.opacity(0.2)
         .ignoresSafeArea()
         .onTapGesture {
           hasScroll = false
