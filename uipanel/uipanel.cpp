@@ -63,7 +63,7 @@ void UIPanel::update(UserInterfaceComponent component,
             highlighted = list->cursorIndex();
         }
         KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates,
-                                       highlighted, hasClientPreedit);
+                                       highlighted, false, hasClientPreedit);
         break;
     }
     case UserInterfaceComponent::StatusArea:
@@ -110,7 +110,7 @@ void UIPanel::expand(const std::string &auxUp, const std::string &preedit,
                      int caret, bool hasClientPreedit) {
     auto candidates =
         getBulkCandidates(instance_, 0, 72); // Vertically 2 screens.
-    KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates, 0,
+    KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates, 0, true,
                                    hasClientPreedit);
 }
 
@@ -118,6 +118,19 @@ void UIPanel::scroll(int start, int count) {
     bool endReached = false;
     auto candidates = getBulkCandidates(instance_, start, count, &endReached);
     KeyboardUI::scrollAsync(candidates, endReached);
+}
+
+void UIPanel::page(bool next) {
+    auto ic = instance_->mostRecentInputContext();
+    const auto &list = ic->inputPanel().candidateList();
+    if (!list)
+        return;
+    auto *pageableList = list->toPageable();
+    if (!pageableList)
+        return;
+    next ? pageableList->next() : pageableList->prev();
+    // UI is responsible for updating UI
+    ic->updateUserInterface(UserInterfaceComponent::InputPanel);
 }
 
 KeyboardUI::StatusAreaAction convertAction(Action *action, InputContext *ic) {
@@ -163,6 +176,10 @@ FCITX_ADDON_FACTORY_V2(uipanel, fcitx::UIPanelFactory);
 
 void scroll(int start, int count) {
     dispatcher->schedule([start, count] { fcitx::ui->scroll(start, count); });
+}
+
+void page(bool next) {
+    dispatcher->schedule([next] { fcitx::ui->page(next); });
 }
 
 std::string getCandidateActions(int index) {

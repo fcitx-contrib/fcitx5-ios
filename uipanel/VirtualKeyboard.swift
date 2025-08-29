@@ -24,7 +24,7 @@ class ViewModel: ObservableObject {
   @Published var scrollEnd = false
   @Published var rowItemCount = [Int]()  // number of candidates in each row
   @Published var expanded = false
-  // Have requested load more candidates starting from this index.
+  // Have requested load more candidates starting from this index. -1 means not scrollable.
   @Published var pendingScroll = 0
 
   @Published var actions = [StatusAreaAction]()
@@ -131,7 +131,7 @@ public struct VirtualKeyboardView: View {
 
   public func setCandidates(
     _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String],
-    _ highlighted: Int32, _ hasClientPreedit: Bool
+    _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool
   ) {
     if !auxUp.isEmpty || !preedit.isEmpty || !candidates.isEmpty {
       setDisplayMode(.candidates)
@@ -152,7 +152,7 @@ public struct VirtualKeyboardView: View {
     viewModel.batch = (viewModel.batch + 1) & 0xFFFF
     viewModel.scrollEnd = false
     viewModel.rowItemCount = calculateLayout(candidates, keyboardWidth * 4 / 5)
-    viewModel.pendingScroll = 0
+    viewModel.pendingScroll = bulk ? 0 : -1
   }
 
   public func scroll(_ candidates: [String], _ end: Bool) {

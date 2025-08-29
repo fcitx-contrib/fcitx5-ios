@@ -86,7 +86,7 @@ struct CandidateBarView: View {
                     }
                   }.onAppear {
                     visibleRows.insert(row)
-                    if !scrollEnd && row == rowItemCount.count - 5 {
+                    if pendingScroll >= 0 && !scrollEnd && row == rowItemCount.count - 5 {
                       loadMoreCandidates(candidates.count, candidateCountInScreen)
                     }
                   }.onDisappear {
@@ -107,7 +107,9 @@ struct CandidateBarView: View {
                   CandidateView(
                     text: candidate, index: index, highlighted: highlighted
                   ).onAppear {
-                    if !scrollEnd && index == candidates.count - candidateCountInRow {
+                    if pendingScroll >= 0 && !scrollEnd
+                      && index == candidates.count - candidateCountInRow
+                    {
                       loadMoreCandidates(candidates.count, candidateCountInRow)
                     }
                   }
@@ -150,8 +152,12 @@ struct CandidateBarView: View {
                 shadow: getShadow(colorScheme),
                 action: GestureAction(
                   onTap: {
-                    withAnimation {
-                      proxy.scrollTo(((visibleRows.min() ?? 0) - 1) / 5 * 5, anchor: .top)
+                    if pendingScroll >= 0 {
+                      withAnimation {
+                        proxy.scrollTo(((visibleRows.min() ?? 0) - 1) / 5 * 5, anchor: .top)
+                      }
+                    } else {
+                      page(false)
                     }
                   }
                 )
@@ -169,8 +175,12 @@ struct CandidateBarView: View {
                 shadow: getShadow(colorScheme),
                 action: GestureAction(
                   onTap: {
-                    withAnimation {
-                      proxy.scrollTo(((visibleRows.min() ?? 0) + 1) / 5 * 5 + 5, anchor: .top)
+                    if pendingScroll >= 0 {
+                      withAnimation {
+                        proxy.scrollTo(((visibleRows.min() ?? 0) + 1) / 5 * 5 + 5, anchor: .top)
+                      }
+                    } else {
+                      page(true)
                     }
                   }
                 )

@@ -29,6 +29,7 @@ class UIPanel final : public VirtualKeyboardUserInterface {
     void showVirtualKeyboard() override;
     void hideVirtualKeyboard() override {}
     void scroll(int start, int count);
+    void page(bool next);
 
   private:
     Instance *instance_;
