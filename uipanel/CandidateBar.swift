@@ -116,12 +116,19 @@ struct CandidateBarView: View {
                 }
                 Spacer()
               }.frame(
-                height: barHeightExcludePreedit)
+                height: barHeightExcludePreedit
+              )
+              // Force re-render, otherwise scrolling to the first candidate may fail due to the first isn't rendered.
+              .id(batch)
             }.scrollIndicators(.hidden)  // Hide scroll bar as native keyboard.
               .padding([.leading], columnGap / 2)
-              .onChange(of: batch) { _ in
-                // Use batch instead of candidates because we don't want to reset on loading more.
-                proxy.scrollTo(0, anchor: .leading)
+              .onChange(of: [batch, highlighted]) { newValues in
+                // Watch batch instead of candidates because we don't want to reset on loading more.
+                let newHighlighted = newValues[1]
+                // Test in mozc by typing mizu and space through all candidates.
+                proxy.scrollTo(
+                  newHighlighted,
+                  anchor: newHighlighted == candidates.count - 1 ? .leading : .trailing)
               }
           }
         }
