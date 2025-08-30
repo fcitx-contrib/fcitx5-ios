@@ -39,6 +39,9 @@ struct KeyModifier: ViewModifier {
   let y: CGFloat
   let width: CGFloat
   let height: CGFloat
+  let hMargin: CGFloat
+  let vMargin: CGFloat
+  let radius: CGFloat
   let background: Color
   let pressedBackground: Color
   let foreground: Color
@@ -57,9 +60,9 @@ struct KeyModifier: ViewModifier {
       } else {
         content
       }
-    }.frame(width: width - columnGap, height: height - rowGap)
+    }.frame(width: width - hMargin, height: height - rowGap)
       .background(isPressed ? pressedBackground : background)
-      .cornerRadius(keyCornerRadius)
+      .cornerRadius(radius)
       .foregroundColor(isPressed ? pressedForeground : foreground)
       .shadow(color: shadow, radius: 0, x: 0, y: 1)
       .condition(topRight != nil) {
@@ -75,7 +78,7 @@ struct KeyModifier: ViewModifier {
           .onChanged { value in
             let bubbleX = x + width / 2
             let bubbleY = y + height / 2
-            let bubbleWidth = width - columnGap
+            let bubbleWidth = width - hMargin
             let bubbleHeight = height - rowGap
 
             if !isPressed {  // touch start
@@ -187,15 +190,17 @@ extension View {
 
   func keyProperties(
     x: CGFloat = 0, y: CGFloat = 0,
-    width: CGFloat, height: CGFloat, background: Color, pressedBackground: Color, foreground: Color,
-    shadow: Color, action: GestureAction, pressedForeground: Color? = nil,
+    width: CGFloat, height: CGFloat, hMargin: CGFloat = columnGap, vMargin: CGFloat = rowGap,
+    radius: CGFloat = keyCornerRadius, background: Color, pressedBackground: Color,
+    foreground: Color, shadow: Color, action: GestureAction, pressedForeground: Color? = nil,
     pressedView: (any View)? = nil, topRight: String? = nil, bubbleLabel: String? = nil,
     swipeUpLabel: String? = nil
   ) -> some View {
     self.modifier(
       KeyModifier(
-        x: x, y: y, width: width, height: height, background: background,
-        pressedBackground: pressedBackground,
+        x: x, y: y, width: width, height: height, hMargin: hMargin, vMargin: vMargin,
+        radius: radius,
+        background: background, pressedBackground: pressedBackground,
         foreground: foreground, pressedForeground: pressedForeground ?? foreground,
         shadow: shadow, action: action, pressedView: pressedView, topRight: topRight,
         bubbleLabel: bubbleLabel, swipeUpLabel: swipeUpLabel

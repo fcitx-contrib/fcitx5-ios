@@ -102,6 +102,9 @@ struct BackspaceView: View {
   let y: CGFloat
   let width: CGFloat
   let height: CGFloat
+  var hMargin: CGFloat? = nil
+  var vMargin: CGFloat? = nil
+  var radius: CGFloat? = nil
 
   var body: some View {
     Image(systemName: "delete.left")
@@ -110,6 +113,9 @@ struct BackspaceView: View {
       .frame(height: height * 0.4)
       .keyProperties(
         x: x, y: y, width: width, height: height,
+        hMargin: hMargin ?? columnGap,
+        vMargin: vMargin ?? rowGap,
+        radius: radius ?? keyCornerRadius,
         background: getFunctionBackground(colorScheme),
         pressedBackground: getNormalBackground(colorScheme),
         foreground: getNormalForeground(colorScheme),
