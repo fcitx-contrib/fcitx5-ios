@@ -1,5 +1,9 @@
 import SwiftUI
 
+func getBackground(_ colorScheme: ColorScheme) -> Color {
+  return colorScheme == .dark ? darkBackground : lightBackground
+}
+
 struct MenuItem: Identifiable {
   let id = UUID()
   let text: String
@@ -39,17 +43,20 @@ struct ContextMenuOverlay: View {
           }
         }
       }
+
+      let background = getNormalBackground(colorScheme).blend(with: getBackground(colorScheme))
+
       // If we wrap with ScrollView when not needed, the height will be extended.
       if hasScroll {
         ScrollView {
-          menu.background(getNormalBackground(colorScheme))
+          menu.background(background)
         }.cornerRadius(8)
           .shadow(radius: 4)
           .position(adjustedPosition)
       } else {
         menu.background(
           GeometryReader { geometry in
-            getNormalBackground(colorScheme)
+            background
               .onAppear {
                 menuSize = geometry.size
                 adjustedPosition = adjustPosition()

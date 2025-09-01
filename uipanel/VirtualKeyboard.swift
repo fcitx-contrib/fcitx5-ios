@@ -52,7 +52,6 @@ class ViewModel: ObservableObject {
 }
 
 public struct VirtualKeyboardView: View {
-  @Environment(\.colorScheme) var colorScheme
   @ObservedObject var viewModel = ViewModel()
 
   public var body: some View {
@@ -97,7 +96,7 @@ public struct VirtualKeyboardView: View {
               bubbleShadow: viewModel.bubbleShadow,
               bubbleLabel: viewModel.bubbleLabel)
           }
-        }.background(colorScheme == .dark ? darkBackground : lightBackground)
+        }.background(transparent)  // .clear will make gaps between candidates not scrollable.
         if viewModel.showMenu {
           ContextMenuOverlay(
             items: viewModel.menuItems,
@@ -228,13 +227,15 @@ public struct VirtualKeyboardView: View {
 
   func setBubble(
     _ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat, _ background: Color,
-    _ shadow: Color, _ label: String?
+    _ colorScheme: ColorScheme, _ shadow: Color, _ label: String?
   ) {
     viewModel.bubbleX = x
     viewModel.bubbleY = y
     viewModel.bubbleWidth = width
     viewModel.bubbleHeight = height
-    viewModel.bubbleBackground = background
+    // This only guarantees same color with key when system background is pure
+    // white/dark or key is opaque. In Spotlight, color discrepancy is expected.
+    viewModel.bubbleBackground = background.blend(with: getBackground(colorScheme))
     viewModel.bubbleShadow = shadow
     viewModel.bubbleLabel = label
   }

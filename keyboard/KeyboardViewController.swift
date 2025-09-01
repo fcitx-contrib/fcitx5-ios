@@ -57,6 +57,11 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     addChild(hostingController)
 
     hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+
+    // Spotlight shows that system keyboard has transparent background.
+    hostingController.view.backgroundColor = .clear
+    view.backgroundColor = .clear
+
     view.addSubview(hostingController.view)
 
     NSLayoutConstraint.activate([

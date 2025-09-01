@@ -20,10 +20,12 @@ private func getSwipeDirection(_ dx: CGFloat, _ dy: CGFloat) -> SwipeDirection {
 }
 
 private func clearBubble() {
-  virtualKeyboardView.setBubble(0, 0, 0, 0, .clear, .clear, nil)
+  virtualKeyboardView.setBubble(0, 0, 0, 0, .clear, .light, .clear, nil)
 }
 
 struct KeyModifier: ViewModifier {
+  @Environment(\.colorScheme) var colorScheme
+
   let threshold: CGFloat = 30
   let stepSize: CGFloat = 15
 
@@ -60,11 +62,14 @@ struct KeyModifier: ViewModifier {
       } else {
         content
       }
-    }.frame(width: width - hMargin, height: height - rowGap)
+    }.frame(width: width - hMargin, height: height - vMargin)
       .background(isPressed ? pressedBackground : background)
       .cornerRadius(radius)
       .foregroundColor(isPressed ? pressedForeground : foreground)
-      .shadow(color: shadow, radius: 0, x: 0, y: 1)
+      .overlay(
+        ShadowView(width: width - hMargin, height: 1, radius: radius, color: shadow)
+          .offset(y: (height - vMargin - radius + 1) / 2)
+      )
       .condition(topRight != nil) {
         $0.overlay(
           // padding right so that / doesn't overflow
@@ -89,7 +94,9 @@ struct KeyModifier: ViewModifier {
               lastLocation = value.startLocation.x
 
               virtualKeyboardView.setBubble(
-                bubbleX, bubbleY, bubbleWidth, bubbleHeight, background, shadow, bubbleLabel)
+                bubbleX, bubbleY, bubbleWidth, bubbleHeight,
+                background, colorScheme, shadow,
+                bubbleLabel)
 
               // Schedule long press that can be interrupted by move.
               DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -113,7 +120,8 @@ struct KeyModifier: ViewModifier {
                 }
                 if getSwipeDirection(dx, dy) == .up {
                   virtualKeyboardView.setBubble(
-                    bubbleX, bubbleY, bubbleWidth, bubbleHeight, background, shadow, swipeUpLabel)
+                    bubbleX, bubbleY, bubbleWidth, bubbleHeight, background, colorScheme,
+                    shadow, swipeUpLabel)
                 } else {
                   clearBubble()
                 }
