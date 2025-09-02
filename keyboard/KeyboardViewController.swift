@@ -26,6 +26,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   var id: UInt64!
   var hostingController: UIHostingController<VirtualKeyboardView>!
   var removedBySlide = ""
+  static private var clipboardText = ""
 
   private func updateTextIsEmpty() {
     let text =
@@ -189,9 +190,17 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     textDocumentProxy.setMarkedText(preedit, selectedRange: NSRange(location: caret, length: 0))
   }
 
+  private func writeToClipboard(_ text: String) {
+    if hasFullAccess {
+      // On real device, this fails silently if full access is not granted. Simulator works which is misleading.
+      UIPasteboard.general.string = text
+    }
+    KeyboardViewController.clipboardText = text
+  }
+
   public func cut() {
     if let text = textDocumentProxy.selectedText {
-      UIPasteboard.general.string = text
+      writeToClipboard(text)
       textDocumentProxy.deleteBackward()
       updateTextIsEmpty()
     }
@@ -199,13 +208,16 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   public func copy() {
     if let text = textDocumentProxy.selectedText {
-      UIPasteboard.general.string = text
+      writeToClipboard(text)
     }
   }
 
   public func paste() {
     if let text = UIPasteboard.general.string {
       commitString(text)
+      // No need to store it, as when user turns off full access, system restarts keyboard.
+    } else if !KeyboardViewController.clipboardText.isEmpty {
+      commitString(KeyboardViewController.clipboardText)
     }
   }
 
