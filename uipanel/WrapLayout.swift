@@ -1,5 +1,11 @@
 import UIKit
 
+func getTextWidth(_ text: String, _ fontSize: CGFloat) -> CGFloat {
+  return (text as NSString).size(withAttributes: [
+    .font: UIFont.systemFont(ofSize: fontSize)
+  ]).width
+}
+
 func calculateLayout(_ candidates: [String], _ width: CGFloat) -> [Int] {
   var rowItemCount = [Int]()
   var currentRowCount = 0
@@ -8,9 +14,7 @@ func calculateLayout(_ candidates: [String], _ width: CGFloat) -> [Int] {
 
   for candidate in candidates {
     let itemWidth = max(
-      (candidate as NSString).size(withAttributes: [
-        .font: UIFont.systemFont(ofSize: candidateFontSize)
-      ]).width + 2 * candidateHorizontalPadding, minWidth)
+      getTextWidth(candidate, candidateFontSize) + 2 * candidateHorizontalPadding, minWidth)
     if currentRowWidth + itemWidth <= width {
       currentRowWidth += itemWidth
       currentRowCount += 1

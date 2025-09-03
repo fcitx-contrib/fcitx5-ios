@@ -16,6 +16,11 @@ func getShadow(_ colorScheme: ColorScheme) -> Color {
   return colorScheme == .dark ? darkShadow : lightShadow
 }
 
+func adjustFontSize(_ text: String, _ fontSize: CGFloat, _ widthLimit: CGFloat) -> CGFloat {
+  let textWidth = getTextWidth(text, fontSize)
+  return textWidth <= widthLimit ? fontSize : fontSize * widthLimit / textWidth
+}
+
 struct KeyView: View {
   @Environment(\.colorScheme) var colorScheme
   let x: CGFloat
@@ -199,7 +204,8 @@ struct EnterView: View {
           .aspectRatio(contentMode: .fit)
           .frame(height: height * 0.4)
       } else {
-        Text(label)
+        Text(label).font(
+          .system(size: adjustFontSize(label, height * 0.32, (width - columnGap) * 0.95)))
       }
     }
     .keyProperties(
