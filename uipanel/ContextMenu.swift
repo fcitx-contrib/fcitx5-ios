@@ -89,15 +89,17 @@ struct ContextMenuOverlay: View {
 
 // To get element frame on long press.
 struct LongPressMeasureModifier: ViewModifier {
+  let onPressingChanged: ((Bool) -> Void)?
   let getMenuItems: () -> [MenuItem]
   @State private var showMeasurement = false
 
   func body(content: Content) -> some View {
     ZStack {
       content
-        .onLongPressGesture {
-          showMeasurement = true
-        }
+        .onLongPressGesture(
+          perform: {
+            showMeasurement = true
+          }, onPressingChanged: onPressingChanged)
 
       if showMeasurement {
         GeometryReader { geometry in
@@ -118,7 +120,10 @@ struct LongPressMeasureModifier: ViewModifier {
 }
 
 extension View {
-  func onContextMenu(_ getMenuItems: @escaping () -> [MenuItem]) -> some View {
-    self.modifier(LongPressMeasureModifier(getMenuItems: getMenuItems))
+  func onContextMenu(
+    onPressingChanged: ((Bool) -> Void)? = nil, _ getMenuItems: @escaping () -> [MenuItem]
+  ) -> some View {
+    self.modifier(
+      LongPressMeasureModifier(onPressingChanged: onPressingChanged, getMenuItems: getMenuItems))
   }
 }

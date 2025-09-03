@@ -16,20 +16,27 @@ struct CandidateView: View {
   let text: String
   let index: Int
   let highlighted: Int
+  @State private var isPressed = false
 
   var body: some View {
     Text(text).font(.system(size: candidateFontSize))
       .padding([.leading, .trailing], candidateHorizontalPadding)
       .padding([.top, .bottom], candidateVerticalPadding)
-      .background(index == highlighted ? getHighlightBackground(colorScheme) : .clear)
+      .background(index == highlighted || isPressed ? getHighlightBackground(colorScheme) : .clear)
       .cornerRadius(keyCornerRadius)
       .onTapGesture {
         selectCandidate(Int32(index))
-      }.onContextMenu {
-        let actions = deserialize([CandidateAction].self, String(getCandidateActions(Int32(index))))
-        return actions.map { action in
-          MenuItem(text: action.text, action: { activateCandidateAction(Int32(index), action.id) })
-        }
-      }
+      }.onContextMenu(
+        onPressingChanged: { pressing in
+          isPressed = pressing
+        },
+        {
+          let actions = deserialize(
+            [CandidateAction].self, String(getCandidateActions(Int32(index))))
+          return actions.map { action in
+            MenuItem(
+              text: action.text, action: { activateCandidateAction(Int32(index), action.id) })
+          }
+        })
   }
 }
