@@ -55,14 +55,18 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     startFcitx(appBundlePath, "\(Bundle.main.bundlePath)/share", appGroup.path)
 
     hostingController = UIHostingController(rootView: virtualKeyboardView)
-    addChild(hostingController)
-
     hostingController.view.translatesAutoresizingMaskIntoConstraints = false
 
     // Spotlight shows that system keyboard has transparent background.
     hostingController.view.backgroundColor = .clear
     view.backgroundColor = .clear
+  }
 
+  override func viewWillAppear(_ animated: Bool) {
+    logger.info("viewWillAppear \(self.id)")
+
+    // If setting view in viewDidLoad instead, it will cause huge layout shift.
+    addChild(hostingController)
     view.addSubview(hostingController.view)
 
     NSLayoutConstraint.activate([
@@ -73,10 +77,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     ])
 
     hostingController.didMove(toParent: self)
-  }
 
-  override func viewWillAppear(_ animated: Bool) {
-    logger.info("viewWillAppear \(self.id)")
     virtualKeyboardView.setReturnKeyType(textDocumentProxy.returnKeyType)
     super.viewWillAppear(animated)
     let keyboard = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
@@ -92,13 +93,13 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     logger.info("viewWillDisappear \(self.id)")
     super.viewWillDisappear(animated)
     focusOut(self)
+    hostingController.willMove(toParent: nil)
+    hostingController.view.removeFromSuperview()
+    hostingController.removeFromParent()
   }
 
   deinit {
     logger.info("deinit \(self.id)")
-    hostingController.willMove(toParent: nil)
-    hostingController.view.removeFromSuperview()
-    hostingController.removeFromParent()
     hostingController = nil
   }
 
