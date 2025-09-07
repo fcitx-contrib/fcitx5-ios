@@ -83,22 +83,24 @@ public struct VirtualKeyboardView: View {
             EditView(totalWidth: width)
           } else if viewModel.mode == .symbol {
             SymbolView(width: width)
-          } else {
-            KeyboardView(
-              width: width, layer: viewModel.layer, lock: viewModel.lock,
-              spaceLabel: viewModel.spaceLabel,
-              enterLabel: viewModel.enterLabel,
-              textIsEmpty: viewModel.textIsEmpty,
-              enterHighlight: viewModel.enterHighlight,
-              hasPreedit: viewModel.hasPreedit,
-              bubbleX: viewModel.bubbleX,
-              bubbleY: viewModel.bubbleY,
-              bubbleWidth: viewModel.bubbleWidth,
-              bubbleHeight: viewModel.bubbleHeight,
-              bubbleBackground: viewModel.bubbleBackground,
-              bubbleShadow: viewModel.bubbleShadow,
-              bubbleLabel: viewModel.bubbleLabel)
           }
+          KeyboardView(
+            width: width, layer: viewModel.layer, lock: viewModel.lock,
+            spaceLabel: viewModel.spaceLabel,
+            enterLabel: viewModel.enterLabel,
+            textIsEmpty: viewModel.textIsEmpty,
+            enterHighlight: viewModel.enterHighlight,
+            hasPreedit: viewModel.hasPreedit,
+            bubbleX: viewModel.bubbleX,
+            bubbleY: viewModel.bubbleY,
+            bubbleWidth: viewModel.bubbleWidth,
+            bubbleHeight: viewModel.bubbleHeight,
+            bubbleBackground: viewModel.bubbleBackground,
+            bubbleShadow: viewModel.bubbleShadow,
+            bubbleLabel: viewModel.bubbleLabel
+          ).opacity(
+            viewModel.mode == .initial || (viewModel.mode == .candidates && !viewModel.expanded)
+              ? 1 : 0)  // Don't recreate KeyboardView when mode changes.
         }.background(transparent)  // .clear will make gaps between candidates not scrollable.
         if viewModel.showMenu {
           ContextMenuOverlay(

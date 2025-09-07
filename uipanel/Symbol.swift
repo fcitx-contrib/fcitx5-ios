@@ -115,7 +115,7 @@ struct SymbolView: View {
             }.frame(width: width * 4 / 5)
           }
         }
-      }
+      }.frame(height: getKeyboardHeight(totalHeight))
     }
   }
 }
