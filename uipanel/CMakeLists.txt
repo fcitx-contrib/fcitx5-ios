@@ -17,6 +17,7 @@ add_library(KeyboardUI STATIC
     Symbol.swift
     ReturnBar.swift
     ui.swift
+    height.swift
 )
 set_target_properties(KeyboardUI PROPERTIES Swift_MODULE_NAME KeyboardUI)
 target_compile_options(KeyboardUI PUBLIC "$<$<COMPILE_LANGUAGE:Swift>:-cxx-interoperability-mode=default>")

@@ -5,11 +5,14 @@ let editKeyGap: CGFloat = 8
 
 struct EditView: View {
   @Environment(\.colorScheme) var colorScheme
+  @Environment(\.totalHeight) var totalHeight
   let totalWidth: CGFloat
 
   var body: some View {
+    let keyboardHeight = getKeyboardHeight(totalHeight)
     let height = keyboardHeight / 4
     let width = totalWidth / 4
+
     VStack(spacing: 0) {
       ReturnBarView()
 
@@ -91,7 +94,7 @@ struct EditView: View {
       normal ? getFunctionBackground(colorScheme) : getNormalBackground(colorScheme)
     let foreground = getNormalForeground(colorScheme)
     let p = position(index, width, height)
-    let size = keyboardHeight / shrink
+    let size = getKeyboardHeight(totalHeight) / shrink
     let useWidth = image == "arrowtriangle.up.fill" || image == "arrowtriangle.down.fill"
     let symbol = Image(systemName: image)
       .resizable()

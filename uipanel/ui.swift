@@ -1,8 +1,5 @@
 import SwiftUI
 
-let barHeight: CGFloat = 52
-let keyboardWidth: CGFloat = UIScreen.main.bounds.width
-let keyboardHeight: CGFloat = 208
 let keyCornerRadius: CGFloat = 5
 let rowGap: CGFloat = 8
 let columnGap: CGFloat = 5

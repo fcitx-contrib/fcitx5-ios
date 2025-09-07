@@ -36,6 +36,9 @@ class ViewModel: ObservableObject {
   @Published var layer = "default"
   @Published var lock = false
 
+  // XXX: In floating state for iPad simulator, switching to fcitx5 causes layout shift due to unstable width.
+  @Published var totalHeight: CGFloat = getDefaultTotalHeight()
+  @Published var totalWidth: CGFloat = UIScreen.main.bounds.width
   @Published var frame = CGRect()
   @Published var menuItems = [MenuItem]()
   @Published var showMenu = false
@@ -101,15 +104,30 @@ public struct VirtualKeyboardView: View {
           ContextMenuOverlay(
             items: viewModel.menuItems,
             frame: viewModel.frame,
-            containerSize: CGSize(width: width, height: barHeight + keyboardHeight),
+            containerSize: CGSize(width: width, height: viewModel.totalHeight),
             onDismiss: { viewModel.showMenu = false }
           )
         }
       }.onDisappear {
         // Otherwise switch to another IM and switch back, it's still there.
         viewModel.showMenu = false
+      }.onAppear {
+        updateSize(geometry.size.width)
+      }.onChange(of: geometry.size.width) { newWidth in
+        // Floating has variable width before stable.
+        updateSize(newWidth)
       }
-    }.frame(height: barHeight + keyboardHeight)
+    }.frame(height: viewModel.totalHeight)
+      .environment(\.totalHeight, viewModel.totalHeight)
+  }
+
+  private func updateSize(_ width: CGFloat) {
+    if width == 0 {  // Unstable.
+      return
+    }
+    setFloating(width)
+    viewModel.totalWidth = width
+    viewModel.totalHeight = getDefaultTotalHeight()
   }
 
   public func setDisplayMode(_ mode: DisplayMode) {
@@ -150,13 +168,13 @@ public struct VirtualKeyboardView: View {
     viewModel.hasClientPreedit = hasClientPreedit
     viewModel.batch = (viewModel.batch + 1) & 0xFFFF
     viewModel.scrollEnd = false
-    viewModel.rowItemCount = calculateLayout(candidates, keyboardWidth * 4 / 5)
+    viewModel.rowItemCount = calculateLayout(candidates, viewModel.totalWidth * 4 / 5)
     viewModel.pendingScroll = bulk ? 0 : -1
   }
 
   public func scroll(_ candidates: [String], _ end: Bool) {
     viewModel.candidates.append(contentsOf: candidates)
-    viewModel.rowItemCount = calculateLayout(viewModel.candidates, keyboardWidth * 4 / 5)
+    viewModel.rowItemCount = calculateLayout(viewModel.candidates, viewModel.totalWidth * 4 / 5)
     // Don't update batch as we don't want to reset scroll position.
     viewModel.scrollEnd = end
   }
@@ -241,4 +259,9 @@ public struct VirtualKeyboardView: View {
   }
 }
 
-public let virtualKeyboardView = VirtualKeyboardView()
+public var virtualKeyboardView: VirtualKeyboardView!
+
+public func newVirtualKeyboardView() -> VirtualKeyboardView {
+  virtualKeyboardView = VirtualKeyboardView()
+  return virtualKeyboardView
+}

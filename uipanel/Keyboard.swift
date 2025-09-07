@@ -27,6 +27,8 @@ extension Array where Element == CGFloat {
 }
 
 struct KeyboardView: View {
+  @Environment(\.totalHeight) var totalHeight
+
   let width: CGFloat
   let layer: String
   let lock: Bool
@@ -49,7 +51,9 @@ struct KeyboardView: View {
 
   var body: some View {
     let rows = layer == "shift" ? shiftRows : defaultRows
+    let keyboardHeight = getKeyboardHeight(totalHeight)
     let height = keyboardHeight / CGFloat(rows.count)
+
     ZStack {
       ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
         renderRow(row, CGFloat(i) * height, width, height)

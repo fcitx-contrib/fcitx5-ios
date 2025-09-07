@@ -144,6 +144,8 @@ struct BackspaceView: View {
 
 struct GlobeView: View {
   @Environment(\.colorScheme) var colorScheme
+  @Environment(\.totalHeight) var totalHeight
+
   let x: CGFloat
   let y: CGFloat
   let width: CGFloat
@@ -175,7 +177,8 @@ struct GlobeView: View {
                 })
             }
             if !items.isEmpty {
-              let frame = CGRect(x: x, y: y + barHeight, width: width, height: height)
+              let frame = CGRect(
+                x: x, y: y + getBarHeight(totalHeight), width: width, height: height)
               virtualKeyboardView.showContextMenu(frame, items)
             }
           }

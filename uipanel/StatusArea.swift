@@ -46,6 +46,7 @@ private func getActionView(_ icon: String, _ desc: String) -> some View {
 }
 
 struct StatusAreaView: View {
+  @Environment(\.totalHeight) var totalHeight
   @Binding var actions: [StatusAreaAction]
 
   private let columns = [
@@ -99,7 +100,7 @@ struct StatusAreaView: View {
             }
           }
         }
-      }.frame(height: keyboardHeight)
+      }.frame(height: getKeyboardHeight(totalHeight))
     }
   }
 }

@@ -30,6 +30,8 @@ private func preeditWithCaret(_ preedit: String, _ caret: Int) -> String {
 
 struct CandidateBarView: View {
   @Environment(\.colorScheme) var colorScheme
+  @Environment(\.totalHeight) var totalHeight
+
   let width: CGFloat
   let auxUp: String
   let preedit: String
@@ -54,6 +56,9 @@ struct CandidateBarView: View {
   }
 
   var body: some View {
+    let barHeight = getBarHeight(totalHeight)
+    let keyboardHeight = getKeyboardHeight(totalHeight)
+
     ScrollViewReader { proxy in
       HStack(spacing: 0) {
         let barHeightExcludePreedit =

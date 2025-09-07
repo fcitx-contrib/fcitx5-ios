@@ -2,9 +2,12 @@ import SwiftUI
 
 struct ToolbarView: View {
   @Environment(\.colorScheme) var colorScheme
+  @Environment(\.totalHeight) var totalHeight
+
   let width: CGFloat
 
   var body: some View {
+    let barHeight = getBarHeight(totalHeight)
     HStack(spacing: width / 6) {
       Spacer()
       Button {

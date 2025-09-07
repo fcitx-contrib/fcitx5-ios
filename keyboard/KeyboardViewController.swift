@@ -54,7 +54,8 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     setLocale(syncLocale())
     startFcitx(appBundlePath, "\(Bundle.main.bundlePath)/share", appGroup.path)
 
-    hostingController = UIHostingController(rootView: virtualKeyboardView)
+    // Must recreate SwiftUI view, otherwise rotating may have old height which can't be updated.
+    hostingController = UIHostingController(rootView: newVirtualKeyboardView())
     hostingController.view.translatesAutoresizingMaskIntoConstraints = false
 
     // Spotlight shows that system keyboard has transparent background.

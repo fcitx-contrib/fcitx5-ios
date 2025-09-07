@@ -30,6 +30,8 @@ let builtinCategories: [SymbolCategory] = [
 
 struct SymbolButton: View {
   @Environment(\.colorScheme) var colorScheme
+  @Environment(\.totalHeight) var totalHeight
+
   let symbol: String
   let action: () -> Void
 
@@ -39,7 +41,7 @@ struct SymbolButton: View {
   var body: some View {
     Text(symbol)
       .font(.system(size: 24))
-      .frame(height: keyboardHeight / 5)
+      .frame(height: getKeyboardHeight(totalHeight) / 5)
       .frame(maxWidth: .infinity)
       .background(isPressed ? getFunctionBackground(colorScheme) : Color.clear)
       // Use simultaneousGesture so that scrolling behavior is preserved.
@@ -66,6 +68,7 @@ struct SymbolButton: View {
 
 struct SymbolView: View {
   @Environment(\.colorScheme) var colorScheme
+  @Environment(\.totalHeight) var totalHeight
   let width: CGFloat
 
   @State private var selectedKey = builtinCategories.first!.key
@@ -79,7 +82,7 @@ struct SymbolView: View {
             ForEach(builtinCategories) { category in
               Text(category.key)
                 .font(.system(size: 24))
-                .frame(height: keyboardHeight / 5)
+                .frame(height: totalHeight / 5)
                 .frame(maxWidth: .infinity)
                 .background(
                   selectedKey == category.key ? getFunctionBackground(colorScheme) : Color.clear
