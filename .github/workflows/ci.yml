@@ -44,7 +44,7 @@ jobs:
     needs: [lint, data]
     runs-on: macos-15
     env:
-      MOZC_SHA: 88b1dcae03a0a16192586dca3da157dad64f0e2f
+      MOZC_SHA: ce1fb7fe48efb1d85f8e54eff1b05e9e692bf0d4
     strategy:
       fail-fast: false
       matrix:

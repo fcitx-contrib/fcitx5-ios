@@ -6,6 +6,7 @@ struct GestureAction {
   var onLongPress: (() -> Void)? = nil
   var onSwipe: ((SwipeDirection) -> Void)? = nil
   var onSlide: ((Int) -> Void)? = nil
+  var onRelease: (() -> Void)? = nil
 }
 
 enum SwipeDirection {
@@ -151,6 +152,7 @@ struct KeyModifier: ViewModifier {
           .onEnded { value in
             clearBubble()
             defer {
+              action.onRelease?()
               isPressed = false
               startLocation = nil
               lastLocation = nil

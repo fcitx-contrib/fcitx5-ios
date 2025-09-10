@@ -111,6 +111,21 @@ struct BackspaceView: View {
   var vMargin: CGFloat? = nil
   var radius: CGFloat? = nil
 
+  @State private var deleteTimer: Timer? = nil
+
+  func startDelete() {
+    stopDelete()
+    deleteTimer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { _ in
+      virtualKeyboardView.resetLayerIfNotLocked()
+      client.keyPressed("", "Backspace")
+    }
+  }
+
+  func stopDelete() {
+    deleteTimer?.invalidate()
+    deleteTimer = nil
+  }
+
   var body: some View {
     Image(systemName: "delete.left")
       .resizable()
@@ -130,8 +145,14 @@ struct BackspaceView: View {
             virtualKeyboardView.resetLayerIfNotLocked()
             client.keyPressed("", "Backspace")
           },
+          onLongPress: {
+            startDelete()
+          },
           onSlide: { step in
             virtualKeyboardView.slideBackspace(step)
+          },
+          onRelease: {
+            stopDelete()
           }
         ),
         pressedView: Image(systemName: "delete.left.fill")
@@ -139,6 +160,9 @@ struct BackspaceView: View {
           .aspectRatio(contentMode: .fit)
           .frame(height: height * 0.4)
       )
+      .onDisappear {
+        stopDelete()
+      }
   }
 }
 
