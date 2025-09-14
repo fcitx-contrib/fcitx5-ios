@@ -32,6 +32,7 @@ struct KeyView: View {
   let key: String
   let subLabel: [String: String]?
   let swipeUp: [String: Any]?
+  let longPress: [String: Any]?
 
   var body: some View {
     Text(label)
@@ -47,6 +48,15 @@ struct KeyView: View {
             virtualKeyboardView.resetLayerIfNotLocked()
             client.keyPressed(key, "")
           },
+          onLongPress: { highlight in
+            if let actionsList =
+              ((longPress?["cells"] as? [[String: Any]])?.map {
+                $0["actions"] as? [[String: String]]
+              } as? [[[String: String]]]), highlight >= 0, highlight < actionsList.count
+            {
+              executeActions(actionsList[highlight])
+            }
+          },
           onSwipe: { direction in
             if direction == .up, let swipeUp = swipeUp,
               let actions = swipeUp["actions"] as? [[String: String]]
@@ -57,7 +67,10 @@ struct KeyView: View {
         ),
         topRight: subLabel?["topRight"] as? String,
         bubbleLabel: label,
-        swipeUpLabel: swipeUp?["label"] as? String
+        swipeUpLabel: swipeUp?["label"] as? String,
+        longPressLabels: (longPress?["cells"] as? [[String: Any]])?.map { $0["label"] as? String }
+          as? [String],
+        longPressIndex: longPress?["index"] as? Int
       )
   }
 }
@@ -87,11 +100,11 @@ struct SpaceView: View {
           },
           onSlide: { step in
             if step > 0 {
-              for i in 0..<step {
+              for _ in 0..<step {
                 client.keyPressed("", "ArrowRight")
               }
             } else {
-              for i in 0..<(-step) {
+              for _ in 0..<(-step) {
                 client.keyPressed("", "ArrowLeft")
               }
             }
@@ -145,7 +158,7 @@ struct BackspaceView: View {
             virtualKeyboardView.resetLayerIfNotLocked()
             client.keyPressed("", "Backspace")
           },
-          onLongPress: {
+          onLongPress: { _ in
             startDelete()
           },
           onSlide: { step in
@@ -191,7 +204,7 @@ struct GlobeView: View {
             virtualKeyboardView.resetLayerIfNotLocked()
             client.globe()
           },
-          onLongPress: {
+          onLongPress: { _ in
             let items = virtualKeyboardView.viewModel.inputMethods.map { inputMethod in
               MenuItem(
                 text: inputMethod.displayName,

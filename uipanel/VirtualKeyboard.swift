@@ -50,6 +50,9 @@ class ViewModel: ObservableObject {
   @Published var bubbleBackground: Color = .clear
   @Published var bubbleShadow: Color = .clear
   @Published var bubbleLabel: String? = nil
+  @Published var bubbleLabels = [String]()
+  @Published var bubbleIndex = 0
+  @Published var bubbleHighlight = 0
 
   var hasPreedit: Bool { !preedit.isEmpty || hasClientPreedit }
 }
@@ -97,7 +100,10 @@ public struct VirtualKeyboardView: View {
             bubbleHeight: viewModel.bubbleHeight,
             bubbleBackground: viewModel.bubbleBackground,
             bubbleShadow: viewModel.bubbleShadow,
-            bubbleLabel: viewModel.bubbleLabel
+            bubbleLabel: viewModel.bubbleLabel,
+            bubbleLabels: viewModel.bubbleLabels,
+            bubbleIndex: viewModel.bubbleIndex,
+            bubbleHighlight: viewModel.bubbleHighlight
           ).opacity(
             viewModel.mode == .initial || (viewModel.mode == .candidates && !viewModel.expanded)
               ? 1 : 0)  // Don't recreate KeyboardView when mode changes.
@@ -247,7 +253,8 @@ public struct VirtualKeyboardView: View {
 
   func setBubble(
     _ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat, _ background: Color,
-    _ colorScheme: ColorScheme, _ shadow: Color, _ label: String?
+    _ colorScheme: ColorScheme, _ shadow: Color, _ label: String?, _ labels: [String],
+    _ index: Int, _ highlight: Int
   ) {
     viewModel.bubbleX = x
     viewModel.bubbleY = y
@@ -258,6 +265,9 @@ public struct VirtualKeyboardView: View {
     viewModel.bubbleBackground = background.blend(with: getBackground(colorScheme))
     viewModel.bubbleShadow = shadow
     viewModel.bubbleLabel = label
+    viewModel.bubbleLabels = labels
+    viewModel.bubbleIndex = index
+    viewModel.bubbleHighlight = highlight
   }
 }
 

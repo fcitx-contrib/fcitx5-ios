@@ -45,6 +45,9 @@ struct KeyboardView: View {
   let bubbleBackground: Color
   let bubbleShadow: Color
   let bubbleLabel: String?
+  let bubbleLabels: [String]
+  let bubbleIndex: Int
+  let bubbleHighlight: Int
 
   @State private var defaultRows = [[String: Any]]()
   @State private var shiftRows = [[String: Any]]()
@@ -58,11 +61,11 @@ struct KeyboardView: View {
       ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
         renderRow(row, CGFloat(i) * height, width, height)
       }
-      if bubbleLabel != nil {
+      if bubbleLabel != nil || !bubbleLabels.isEmpty {
         BubbleView(
           x: bubbleX, y: bubbleY, width: bubbleWidth, height: bubbleHeight,
           keyboardWidth: width, background: bubbleBackground, shadow: bubbleShadow,
-          label: bubbleLabel)
+          label: bubbleLabel, labels: bubbleLabels, index: bubbleIndex, highlight: bubbleHighlight)
       }
     }
     .frame(height: keyboardHeight)
@@ -109,9 +112,10 @@ struct KeyboardView: View {
             {
               let subLabel = key["subLabel"] as? [String: String]
               let swipeUp = key["swipeUp"] as? [String: Any]
+              let longPress = key["longPress"] as? [String: Any]
               KeyView(
                 x: x, y: y, width: keyWidth, height: height,
-                label: label, key: k, subLabel: subLabel, swipeUp: swipeUp)
+                label: label, key: k, subLabel: subLabel, swipeUp: swipeUp, longPress: longPress)
             }
           case "space":
             SpaceView(x: x, y: y, width: keyWidth, height: height, label: spaceLabel)

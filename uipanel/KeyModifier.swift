@@ -3,7 +3,7 @@ import SwiftUtil
 
 struct GestureAction {
   var onTap: (() -> Void)? = nil
-  var onLongPress: (() -> Void)? = nil
+  var onLongPress: ((Int) -> Void)? = nil
   var onSwipe: ((SwipeDirection) -> Void)? = nil
   var onSlide: ((Int) -> Void)? = nil
   var onRelease: (() -> Void)? = nil
@@ -20,8 +20,12 @@ private func getSwipeDirection(_ dx: CGFloat, _ dy: CGFloat) -> SwipeDirection {
   return dy > 0 ? .down : .up
 }
 
+private func getNStep(_ start: CGFloat, _ end: CGFloat, _ step: CGFloat) -> Int {
+  return (start < end ? 1 : -1) * Int(floor(abs(end - start) / step))
+}
+
 private func clearBubble() {
-  virtualKeyboardView.setBubble(0, 0, 0, 0, .clear, .light, .clear, nil)
+  virtualKeyboardView.setBubble(0, 0, 0, 0, .clear, .light, .clear, nil, [], 0, 0)
 }
 
 struct KeyModifier: ViewModifier {
@@ -29,6 +33,7 @@ struct KeyModifier: ViewModifier {
 
   let threshold: CGFloat = 30
   let stepSize: CGFloat = 15
+  let moveSize: CGFloat = 30
 
   @State private var touchId = 0
   @State private var isPressed = false
@@ -36,7 +41,9 @@ struct KeyModifier: ViewModifier {
   @State private var lastLocation: CGFloat?
   @State private var didTriggerLongPress = false
   @State private var didMoveFarEnough = false
+  @State private var didTriggerSwipe = false
   @State private var slideActivated = false
+  @State private var bubbleHighlight = 0
 
   let x: CGFloat
   let y: CGFloat
@@ -55,6 +62,8 @@ struct KeyModifier: ViewModifier {
   let topRight: String?
   let bubbleLabel: String?
   let swipeUpLabel: String?
+  let longPressLabels: [String]
+  let longPressIndex: Int
 
   func body(content: Content) -> some View {
     VStack {
@@ -97,7 +106,7 @@ struct KeyModifier: ViewModifier {
               virtualKeyboardView.setBubble(
                 bubbleX, bubbleY, bubbleWidth, bubbleHeight,
                 background, colorScheme, shadow,
-                bubbleLabel)
+                bubbleLabel, [], 0, 0)
 
               // Schedule long press that can be interrupted by move.
               DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -105,10 +114,18 @@ struct KeyModifier: ViewModifier {
                   // Called from a previous touch.
                   return
                 }
-                if isPressed && !didTriggerLongPress && !didMoveFarEnough {
+                if isPressed && !didTriggerSwipe && !didTriggerLongPress && !didMoveFarEnough {
                   didTriggerLongPress = true
-                  clearBubble()
-                  action.onLongPress?()
+                  if longPressIndex >= 0 && longPressIndex < longPressLabels.count {
+                    bubbleHighlight = longPressIndex
+                    virtualKeyboardView.setBubble(
+                      bubbleX, bubbleY, bubbleWidth, bubbleHeight,
+                      background, colorScheme, shadow, nil, longPressLabels, longPressIndex,
+                      bubbleHighlight)
+                  } else {
+                    clearBubble()
+                    action.onLongPress?(0)
+                  }
                 }
               }
             } else {  // touch move
@@ -118,16 +135,19 @@ struct KeyModifier: ViewModifier {
               if !didTriggerLongPress {
                 if !didMoveFarEnough && (abs(dx) > threshold || abs(dy) > threshold) {
                   didMoveFarEnough = true
+                  didTriggerSwipe = true
                 }
-                if getSwipeDirection(dx, dy) == .up {
-                  virtualKeyboardView.setBubble(
-                    bubbleX, bubbleY, bubbleWidth, bubbleHeight, background, colorScheme,
-                    shadow, swipeUpLabel)
-                } else {
-                  clearBubble()
+                if didMoveFarEnough {
+                  if getSwipeDirection(dx, dy) == .up {
+                    virtualKeyboardView.setBubble(
+                      bubbleX, bubbleY, bubbleWidth, bubbleHeight, background, colorScheme,
+                      shadow, swipeUpLabel, [], 0, 0)
+                  } else {
+                    clearBubble()
+                  }
                 }
               }
-              // Process slide.
+              // Process slide and long press + move.
               if let onSlide = action.onSlide {
                 if !slideActivated {
                   if abs(dx) >= threshold, let start = startLocation {
@@ -137,14 +157,25 @@ struct KeyModifier: ViewModifier {
                 }
                 if slideActivated {
                   if let start = startLocation, let last = lastLocation {
-                    let totalPast = Int(floor((last - start.x) / stepSize))
-                    let totalNow = Int(floor((value.location.x - start.x) / stepSize))
+                    let totalPast = getNStep(start.x, last, stepSize)
+                    let totalNow = getNStep(start.x, value.location.x, stepSize)
                     let delta = totalNow - totalPast
                     if delta != 0 {
                       onSlide(delta)
                     }
                     lastLocation = value.location.x
                   }
+                }
+              } else if didTriggerLongPress && longPressLabels.count > 1, let last = lastLocation {
+                let delta = getNStep(last, value.location.x, moveSize)
+                if delta != 0 {
+                  bubbleHighlight = max(
+                    0, min(bubbleHighlight + delta, longPressLabels.count - 1))
+                  virtualKeyboardView.setBubble(
+                    bubbleX, bubbleY, bubbleWidth, bubbleHeight,
+                    background, colorScheme, shadow, nil, longPressLabels, longPressIndex,
+                    bubbleHighlight)
+                  lastLocation = (lastLocation ?? 0) + CGFloat(delta) * moveSize
                 }
               }
             }
@@ -158,7 +189,9 @@ struct KeyModifier: ViewModifier {
               lastLocation = nil
               didTriggerLongPress = false
               didMoveFarEnough = false
+              didTriggerSwipe = false
               slideActivated = false
+              bubbleHighlight = 0
             }
 
             let dx = value.location.x - (startLocation?.x ?? 0)
@@ -169,6 +202,13 @@ struct KeyModifier: ViewModifier {
                 onSlide(0)
                 return
               }
+            }
+
+            if !didTriggerSwipe && didTriggerLongPress && bubbleHighlight >= 0
+              && bubbleHighlight < longPressLabels.count
+            {
+              action.onLongPress?(bubbleHighlight)
+              return
             }
 
             if didMoveFarEnough {
@@ -204,7 +244,7 @@ extension View {
     radius: CGFloat = keyCornerRadius, background: Color, pressedBackground: Color,
     foreground: Color, shadow: Color, action: GestureAction, pressedForeground: Color? = nil,
     pressedView: (any View)? = nil, topRight: String? = nil, bubbleLabel: String? = nil,
-    swipeUpLabel: String? = nil
+    swipeUpLabel: String? = nil, longPressLabels: [String]? = nil, longPressIndex: Int? = nil
   ) -> some View {
     self.modifier(
       KeyModifier(
@@ -213,7 +253,9 @@ extension View {
         background: background, pressedBackground: pressedBackground,
         foreground: foreground, pressedForeground: pressedForeground ?? foreground,
         shadow: shadow, action: action, pressedView: pressedView, topRight: topRight,
-        bubbleLabel: bubbleLabel, swipeUpLabel: swipeUpLabel
+        bubbleLabel: bubbleLabel, swipeUpLabel: swipeUpLabel,
+        longPressLabels: longPressLabels ?? [],
+        longPressIndex: longPressIndex ?? 0
       )
     )
   }
