@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v5
 
@@ -42,7 +42,7 @@ jobs:
 
   build:
     needs: [lint, data]
-    runs-on: macos-15
+    runs-on: macos-26
     env:
       MOZC_SHA: ce1fb7fe48efb1d85f8e54eff1b05e9e692bf0d4
     strategy:
@@ -101,13 +101,13 @@ jobs:
       - name: Install
         if: ${{ matrix.platform == 'SIMULATORARM64' }}
         run: |
-          xcrun simctl boot "iPhone 16"
+          xcrun simctl boot "iPhone 17"
           xcrun simctl install booted build/${{ matrix.platform }}/src/Release-iphonesimulator/Fcitx5.app
           xcrun simctl launch booted org.fcitx.Fcitx5
 
       - name: Download artifact
         if: ${{ matrix.platform == 'OS64' }}
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           merge-multiple: true
 
