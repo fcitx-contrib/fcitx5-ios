@@ -301,10 +301,13 @@ struct ShiftView: View {
       foreground: getNormalForeground(colorScheme),
       shadow: getShadow(colorScheme),
       action: GestureAction(
-        onTap: {
+        onPress: {
           virtualKeyboardView.setLayer(
             state == .normal ? "shift" : "default"
           )
+        },
+        onDoubleTap: {
+          virtualKeyboardView.setLayer("shift", lock: true)
         }
       )
     )

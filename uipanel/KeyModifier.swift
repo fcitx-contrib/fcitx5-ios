@@ -2,7 +2,9 @@ import SwiftUI
 import SwiftUtil
 
 struct GestureAction {
+  var onPress: (() -> Void)? = nil
   var onTap: (() -> Void)? = nil
+  var onDoubleTap: (() -> Void)? = nil
   var onLongPress: ((Int) -> Void)? = nil
   var onSwipe: ((SwipeDirection) -> Void)? = nil
   var onSlide: ((Int) -> Void)? = nil
@@ -36,6 +38,7 @@ struct KeyModifier: ViewModifier {
   let moveSize: CGFloat = 30
 
   @State private var touchId = 0
+  @State private var lastTouchTime: Date?
   @State private var isPressed = false
   @State private var startLocation: CGPoint?
   @State private var lastLocation: CGFloat?
@@ -97,6 +100,7 @@ struct KeyModifier: ViewModifier {
             let bubbleHeight = height - rowGap
 
             if !isPressed {  // touch start
+              let touchTime = Date()
               touchId = (touchId + 1) & 0xFFFF
               let currentTouchId = touchId
               isPressed = true
@@ -127,6 +131,15 @@ struct KeyModifier: ViewModifier {
                     action.onLongPress?(0)
                   }
                 }
+              }
+              if let t = lastTouchTime, let onDoubleTap = action.onDoubleTap,
+                touchTime.timeIntervalSince(t) < 0.3
+              {
+                onDoubleTap()
+                lastTouchTime = nil
+              } else {
+                action.onPress?()
+                lastTouchTime = touchTime
               }
             } else {  // touch move
               let dx = value.location.x - (startLocation?.x ?? 0)
