@@ -9,7 +9,6 @@ jobs:
     steps:
       - name: Install bsdtar
         run: |
-          sudo rm /var/lib/man-db/auto-update
           sudo apt update && sudo apt install -y libarchive-tools
           sudo ln -sf /usr/bin/bsdtar /usr/bin/tar
 
@@ -17,7 +16,7 @@ jobs:
         run: wget -O release.ipa https://github.com/fcitx-contrib/fcitx5-ios/releases/download/latest/Fcitx5.ipa
 
       - name: Download artifact
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           merge-multiple: true
 

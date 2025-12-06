@@ -31,7 +31,6 @@
 * [fmt](https://github.com/fmtlib/fmt): MIT
 * [glog](https://github.com/google/glog): BSD-3-Clause
 * [json](https://github.com/nlohmann/json): MIT
-* [json-c](https://github.com/json-c/json-c): MIT
 * [leveldb](https://github.com/google/leveldb): BSD-3-Clause
 * [libintl](https://github.com/j-jorge/libintl-lite): BSL-1.0
 * [libuv](https://github.com/libuv/libuv): MIT
