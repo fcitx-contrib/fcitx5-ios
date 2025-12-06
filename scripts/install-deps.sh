@@ -5,7 +5,6 @@ deps=(
   fmt
   glog
   json
-  json-c
   leveldb
   libintl
   libmozc
