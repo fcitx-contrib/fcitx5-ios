@@ -107,16 +107,14 @@ struct ContentView: View {
       try? "".write(
         to: documents.appendingPathComponent("placeholder"), atomically: true, encoding: .utf8)
       setShowToastCallback({ icon, message, duration in
-        DispatchQueue.main.async {
-          self.duration = Double(duration) / 1000.0
-          self.message = message
-          self.icon = icon
-          if icon == "running" {
-            self.showLoadingToast = true
-          } else {
-            self.showLoadingToast = false
-            self.showToast = true
-          }
+        self.duration = Double(duration) / 1000.0
+        self.message = message
+        self.icon = icon
+        if icon == "running" {
+          self.showLoadingToast = true
+        } else {
+          self.showLoadingToast = false
+          self.showToast = true
         }
       })
       viewModel.refresh()
