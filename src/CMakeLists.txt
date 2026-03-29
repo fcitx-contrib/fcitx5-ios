@@ -201,6 +201,7 @@ copy_share_to(app copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fsc
 # Copy layouts, icons, profile and Swift translations.
 copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/fcitx5-keyboard-layouts/layout" "share/layout")
 
+add_dependencies(${BUNDLE_NAME} generate_icons)
 set(ICON_FILES "AppIcon60x60@2x.png" "AppIcon76x76@2x~ipad.png" "Assets.car")
 foreach(ICON_FILE IN LISTS ICON_FILES)
     copy_to(app copy "${PROJECT_SOURCE_DIR}/build/assets/actool_out/${ICON_FILE}" "${ICON_FILE}")
