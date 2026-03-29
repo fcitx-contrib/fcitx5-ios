@@ -13,33 +13,37 @@ add_custom_target(png_images ALL
     DEPENDS "${PROJECT_BINARY_DIR}/full-punc.png" "${PROJECT_BINARY_DIR}/half-punc.png"
 )
 
-set(ICON_SOURCE "fcitx5/data/icon/scalable/apps/org.fcitx.Fcitx5.svg")
+set(ICON_SOURCE "${PROJECT_SOURCE_DIR}/fcitx5/data/icon/scalable/apps/org.fcitx.Fcitx5.svg")
 set(APPICON_SET "${PROJECT_SOURCE_DIR}/build/assets/AppIcon.appiconset")
 set(ACTOOL_OUT "${PROJECT_SOURCE_DIR}/build/assets/actool_out")
 
+set(ICON_OUTPUTS
+    "${APPICON_SET}/Contents.json"
+    "${APPICON_SET}/icon-20x2.png"
+    "${APPICON_SET}/icon-20x3.png"
+    "${APPICON_SET}/icon-29x2.png"
+    "${APPICON_SET}/icon-29x3.png"
+    "${APPICON_SET}/icon-40x2.png"
+    "${APPICON_SET}/icon-40x3.png"
+    "${APPICON_SET}/icon-60x2.png"
+    "${APPICON_SET}/icon-60x3.png"
+    "${APPICON_SET}/icon-76x2.png"
+    "${APPICON_SET}/icon-83.5x2.png"
+    "${APPICON_SET}/icon-1024x1.png"
+    "${ACTOOL_OUT}/AppIcon60x60@2x.png"
+    "${ACTOOL_OUT}/AppIcon76x76@2x~ipad.png"
+    "${ACTOOL_OUT}/Assets.car"
+)
+
 add_custom_command(
-    OUTPUT "${APPICON_SET}/Contents.json"
-           "${APPICON_SET}/icon-20x2.png"
-           "${APPICON_SET}/icon-20x3.png"
-           "${APPICON_SET}/icon-29x2.png"
-           "${APPICON_SET}/icon-29x3.png"
-           "${APPICON_SET}/icon-40x2.png"
-           "${APPICON_SET}/icon-40x3.png"
-           "${APPICON_SET}/icon-60x2.png"
-           "${APPICON_SET}/icon-60x3.png"
-           "${APPICON_SET}/icon-76x2.png"
-           "${APPICON_SET}/icon-83.5x2.png"
-           "${APPICON_SET}/icon-1024x1.png"
-           "${ACTOOL_OUT}/AppIcon60x60@2x.png"
-           "${ACTOOL_OUT}/AppIcon76x76@2x~ipad.png"
-           "${ACTOOL_OUT}/Assets.car"
+    OUTPUT ${ICON_OUTPUTS}
     COMMAND "${PROJECT_SOURCE_DIR}/scripts/generate-icons.sh"
     DEPENDS "${ICON_SOURCE}" "${PROJECT_SOURCE_DIR}/scripts/generate-icons.sh"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
     COMMENT "Generating app icons"
 )
 add_custom_target(generate_icons ALL
-    DEPENDS "${APPICON_SET}/Contents.json"
+    DEPENDS ${ICON_OUTPUTS}
 )
 
 # I18n
