@@ -2,7 +2,6 @@
 set -e
 
 SVG_ICON="fcitx5/data/icon/scalable/apps/org.fcitx.Fcitx5.svg"
-APP_NAME="Fcitx5"
 ASSETS_DIR="build/assets"
 APPICON_SET="$ASSETS_DIR/AppIcon.appiconset"
 ACTOOL_OUT="$ASSETS_DIR/actool_out"
