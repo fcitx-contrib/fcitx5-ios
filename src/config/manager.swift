@@ -6,7 +6,7 @@ import SwiftUtil
 let globalConfigUri = "fcitx://config/global"
 
 func getConfig(_ uri: String) -> [String: Any] {
-  guard let data = String(Fcitx.getConfig(uri)).data(using: .utf8),
+  guard let data = "\(Fcitx.getConfig(uri))".data(using: .utf8),
     let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
   else {
     return ["ERROR": "Failed to get config"]
