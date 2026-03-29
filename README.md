@@ -4,7 +4,7 @@ English
 
 # Fcitx5 iOS
 
-[Fcitx5](https://github.com/fcitx/fcitx5) input method framework ported to iOS.
+[Fcitx5](https://github.com/fcitx/fcitx5) input method framework ported to iOS ≥ 16.3.
 
 Currently developer beta. Please download [IPA](https://github.com/fcitx-contrib/fcitx5-ios/releases/tag/latest) and install with [SideStore](https://github.com/SideStore/SideStore).
 

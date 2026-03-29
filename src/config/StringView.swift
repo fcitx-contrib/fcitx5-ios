@@ -3,11 +3,22 @@ import SwiftUI
 struct StringView: View, OptionViewProtocol {
   let label: String
   let data: [String: Any]
-  let value: Any
-  let onUpdate: (Any) -> Void
-  @State private var oldText: String = ""
-  @State private var text: String = ""
+  @Binding var value: Any
+  @State private var text: String
   @FocusState private var isFocused: Bool
+
+  init(label: String, data: [String: Any], value: Binding<Any>) {
+    self.label = label
+    self.data = data
+    self._value = value
+    self._text = State(initialValue: value.wrappedValue as? String ?? "")
+  }
+
+  private func submit() {
+    if ($value.wrappedValue as? String) != text {
+      $value.wrappedValue = text
+    }
+  }
 
   var body: some View {
     HStack {
@@ -18,28 +29,17 @@ struct StringView: View, OptionViewProtocol {
         .focused($isFocused)
         // Don't update real-time. It changes parent state so the whole view is re-rendered.
         // Don't use onSubmit. It requires Enter key to be pressed.
-        .onChange(of: isFocused) {
-          // Avoid unnecessary write.
-          if !isFocused && oldText != text {
-            oldText = text
-            onUpdate(text)
+        .onChange(of: isFocused) { focused in
+          if !focused {
+            submit()
           }
+        }
+        .onChange(of: value as? String) {
+          text = $0 ?? ""
         }
         // Leading for List item, trailing for String option.
         .multilineTextAlignment(label.isEmpty ? .leading : .trailing)
-    }.onAppear {
-      text = value as! String
-      oldText = text
-    }.contextMenu {
-      // String (Key) inside List doesn't have default value.
-      if let defaultValue = data["DefaultValue"] as? String {
-        Button {
-          text = defaultValue
-          onUpdate(text)
-        } label: {
-          Text("Reset")
-        }
-      }
     }
+    .resetContextMenu(data: data, value: $value)
   }
 }

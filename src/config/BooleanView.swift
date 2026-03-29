@@ -3,23 +3,16 @@ import SwiftUI
 struct BooleanView: OptionViewProtocol {
   let label: String
   let data: [String: Any]
-  let value: Any
-  let onUpdate: (Any) -> Void
-  @State private var isOn: Bool = false
+  @Binding var value: Any
 
   var body: some View {
-    Toggle(isOn: $isOn) {
-      Text(label)
-    }.onChange(of: isOn) {
-      onUpdate(isOn ? "True" : "False")
-    }.onAppear {
-      isOn = value as! String == "True"
-    }.contextMenu {
-      Button {
-        isOn = data["DefaultValue"] as! String == "True"
-      } label: {
-        Text("Reset")
-      }
-    }
+    Toggle(
+      label,
+      isOn: Binding(
+        get: { value as? String == "True" },
+        set: { value = $0 ? "True" : "False" }
+      )
+    )
+    .resetContextMenu(data: data, value: $value)
   }
 }

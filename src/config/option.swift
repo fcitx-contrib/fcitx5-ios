@@ -1,25 +1,41 @@
 import SwiftUI
 
+extension View {
+  @ViewBuilder
+  func resetContextMenu(data: [String: Any], value: Binding<Any>) -> some View {
+    if let defaultValue = data["DefaultValue"] as? String {
+      self.contextMenu {
+        Button {
+          value.wrappedValue = defaultValue
+        } label: {
+          Text("Reset")
+        }
+      }
+    } else {
+      self
+    }
+  }
+}
+
 protocol OptionViewProtocol: View {
-  init(label: String, data: [String: Any], value: Any, onUpdate: @escaping (Any) -> Void)
+  init(label: String, data: [String: Any], value: Binding<Any>)
 }
 
 struct OptionView: View {
-  private let description: String
+  private let label: String
   private let data: [String: Any]
-  private let onUpdate: (Any) -> Void
+  @Binding private var value: Any
   private let optionViewType: any OptionViewProtocol.Type
 
-  init(data: [String: Any], onUpdate: @escaping (Any) -> Void, expandGroup: Bool = false) {
-    description = data["Description"] as! String
+  init(data: [String: Any], value: Binding<Any>, expandGroup: Bool = false) {
+    label = data["Description"] as! String
     self.data = data
-    self.onUpdate = onUpdate
+    _value = value
     optionViewType = toOptionViewType(data, expandGroup: expandGroup)
   }
 
   var body: some View {
-    AnyView(
-      optionViewType.init(label: description, data: data, value: data["Value"], onUpdate: onUpdate))
+    AnyView(optionViewType.init(label: label, data: data, value: $value))
   }
 }
 

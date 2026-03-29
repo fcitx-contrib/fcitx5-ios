@@ -21,8 +21,7 @@ private func serialize(_ value: [ListItem]) -> [String: Any] {
 struct ListSubView: OptionViewProtocol {
   let label: String
   let data: [String: Any]
-  let value: Any
-  let onUpdate: (Any) -> Void
+  @Binding var value: Any
   @State private var list = [ListItem]()
 
   var body: some View {
@@ -35,20 +34,22 @@ struct ListSubView: OptionViewProtocol {
             AnyView(
               optionViewType.init(
                 label: "", data: data,  // List|Entries need this.
-                value: item.value,
-                onUpdate: {
-                  list[i] = ListItem(value: $0)
-                  onUpdate(serialize(list))
-                })
+                value: Binding(
+                  get: { item.value },
+                  set: {
+                    list[i] = ListItem(value: $0)
+                    value = serialize(list)
+                  }
+                ))
             ).id(item.id)  // For scrolling.
           }
           .onDelete { offsets in
             list.remove(atOffsets: offsets)
-            onUpdate(serialize(list))
+            value = serialize(list)
           }
           .onMove { indices, newOffset in
             list.move(fromOffsets: indices, toOffset: newOffset)
-            onUpdate(serialize(list))
+            value = serialize(list)
           }
         } header: {
           HStack {
@@ -64,7 +65,7 @@ struct ListSubView: OptionViewProtocol {
               } else {
                 list.append(ListItem(value: ""))
               }
-              onUpdate(serialize(list))
+              value = serialize(list)
               DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 withAnimation {
                   proxy.scrollTo(list.last?.id)
@@ -77,15 +78,18 @@ struct ListSubView: OptionViewProtocol {
         }
       }
     }.navigationTitle(label)
+      .toolbar {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button {
+            list = deserialize(data["DefaultValue"])
+            value = data["DefaultValue"] as Any
+          } label: {
+            Text("Reset")
+          }
+        }
+      }
       .onAppear {
         list = deserialize(value)
-      }.contextMenu {
-        Button {
-          list = deserialize(data["DefaultValue"])
-          onUpdate(data["DefaultValue"])
-        } label: {
-          Text("Reset")
-        }
       }
   }
 }
@@ -93,12 +97,11 @@ struct ListSubView: OptionViewProtocol {
 struct ListView: OptionViewProtocol {
   let label: String
   let data: [String: Any]
-  let value: Any
-  let onUpdate: (Any) -> Void
+  @Binding var value: Any
 
   var body: some View {
     NavigationLink(
-      destination: ListSubView(label: label, data: data, value: value, onUpdate: onUpdate)
+      destination: ListSubView(label: label, data: data, value: $value)
     ) {
       Text(label)
     }

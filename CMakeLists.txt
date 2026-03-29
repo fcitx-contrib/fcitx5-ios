@@ -4,12 +4,11 @@ cmake_minimum_required(VERSION 4.1)
 set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE STRING INTERNAL FORCE)
 
 set(ENABLE_STRICT_TRY_COMPILE ON)
-set(DEPLOYMENT_TARGET 17) # I really need onChange for focus out.
+set(DEPLOYMENT_TARGET 16.3)
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/ios-cmake/ios.toolchain.cmake")
 
 project(fcitx5-ios VERSION 0.1.0 LANGUAGES CXX Swift)
 set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED YES) # Need it for AppGroup even for simulator.
-set(CMAKE_OSX_DEPLOYMENT_TARGET 17)
 set(CMAKE_Swift_LANGUAGE_VERSION 5.9)
 set(CMAKE_CXX_STANDARD 20)
 

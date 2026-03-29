@@ -12,9 +12,26 @@ private let numberFormatter: NumberFormatter = {
 struct IntegerView: OptionViewProtocol {
   let label: String
   let data: [String: Any]
-  let value: Any
-  let onUpdate: (Any) -> Void
-  @State private var number: Int = 0
+  @Binding var value: Any
+  @Binding private var number: Int
+  @FocusState private var isFocused: Bool
+
+  init(label: String, data: [String: Any], value: Binding<Any>) {
+    self.label = label
+    self.data = data
+    self._value = value
+    var oldNumber = Int(value.wrappedValue as? String ?? "") ?? 0
+    self._number = Binding(
+      get: { Int(value.wrappedValue as? String ?? "") ?? 0 },
+      set: {
+        if oldNumber == $0 {
+          return
+        }
+        oldNumber = $0
+        value.wrappedValue = String($0)
+      }
+    )
+  }
 
   var body: some View {
     let minValue = Int(data["IntMin"] as? String ?? "")
@@ -23,6 +40,16 @@ struct IntegerView: OptionViewProtocol {
       // Limit width of TextField and let Text expand, otherwise they take 1/3 each.
       Text(label).frame(maxWidth: .infinity, alignment: .leading)
       TextField("", value: $number, formatter: numberFormatter).multilineTextAlignment(.trailing)
+        .focused($isFocused)
+        .onChange(of: isFocused) { focused in
+          if !focused, let minValue = minValue, let maxValue = maxValue {
+            if number < minValue {
+              number = minValue
+            } else if number > maxValue {
+              number = maxValue
+            }
+          }
+        }
         .frame(width: 60)
       if let minValue = minValue, let maxValue = maxValue {
         Stepper(
@@ -38,18 +65,7 @@ struct IntegerView: OptionViewProtocol {
           number -= 1
         }
       }
-    }.onChange(of: number) {
-      onUpdate(String(number))
-    }.onAppear {
-      let v = value as! String
-      number = v.isEmpty ? 0 : Int(v)!
-    }.contextMenu {
-      Button {
-        let v = data["DefaultValue"] as! String
-        number = v.isEmpty ? 0 : Int(v)!
-      } label: {
-        Text("Reset")
-      }
     }
+    .resetContextMenu(data: data, value: $value)
   }
 }
