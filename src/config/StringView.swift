@@ -26,6 +26,7 @@ struct StringView: View, OptionViewProtocol {
         Text(label)
       }
       TextField("", text: $text)
+        .submitLabel(.done)
         .focused($isFocused)
         // Don't update real-time. It changes parent state so the whole view is re-rendered.
         // Don't use onSubmit. It requires Enter key to be pressed.

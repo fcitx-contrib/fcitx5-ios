@@ -39,7 +39,9 @@ struct IntegerView: OptionViewProtocol {
     HStack {
       // Limit width of TextField and let Text expand, otherwise they take 1/3 each.
       Text(label).frame(maxWidth: .infinity, alignment: .leading)
-      TextField("", value: $number, formatter: numberFormatter).multilineTextAlignment(.trailing)
+      TextField("", value: $number, formatter: numberFormatter)
+        .submitLabel(.done)
+        .multilineTextAlignment(.trailing)
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
           if !focused, let minValue = minValue, let maxValue = maxValue {
