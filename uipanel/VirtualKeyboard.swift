@@ -10,6 +10,14 @@ public enum DisplayMode {
   case symbol
 }
 
+var client: FcitxProtocol!
+
+public func setClient(_ cli: FcitxProtocol) {
+  client = cli
+}
+
+let vm = ViewModel()
+
 class ViewModel: ObservableObject {
   @Published var mode: DisplayMode = .initial
   @Published var returnMode: DisplayMode = .initial  // or .candidates
@@ -58,7 +66,7 @@ class ViewModel: ObservableObject {
 }
 
 public struct VirtualKeyboardView: View {
-  @ObservedObject var viewModel = ViewModel()
+  @ObservedObject var viewModel = vm
 
   public var body: some View {
     GeometryReader { geometry in

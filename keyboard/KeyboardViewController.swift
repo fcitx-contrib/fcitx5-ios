@@ -2,6 +2,7 @@ import Fcitx
 import FcitxCommon
 import FcitxProtocol
 import KeyboardUI
+import SwiftFrontend
 import SwiftUI
 import SwiftUtil
 import UIKit
@@ -65,6 +66,8 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   override func viewWillAppear(_ animated: Bool) {
     logger.info("viewWillAppear \(self.id)")
+    SwiftFrontend.setClient(self)
+    KeyboardUI.setClient(self)
 
     // If setting view in viewDidLoad instead, it will cause huge layout shift.
     addChild(hostingController)
@@ -87,13 +90,14 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       reload()
     }
     virtualKeyboardView.setDisplayMode(.initial)
-    focusIn(self)
+    self.resetInput()  // Avoid old context carried over, since focusOut is dummy.
+    focusIn()
   }
 
   override func viewWillDisappear(_ animated: Bool) {
     logger.info("viewWillDisappear \(self.id)")
     super.viewWillDisappear(animated)
-    focusOut(self)
+    focusOut()
     hostingController.willMove(toParent: nil)
     hostingController.view.removeFromSuperview()
     hostingController.removeFromParent()

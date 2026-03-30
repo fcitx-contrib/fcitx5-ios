@@ -26,13 +26,6 @@ UIPanel::UIPanel(Instance *instance) : instance_(instance) {
         });
 }
 
-void UIPanel::showVirtualKeyboard() {
-    if (auto ic = dynamic_cast<IosInputContext *>(
-            instance_->mostRecentInputContext())) {
-        KeyboardUI::showKeyboardAsync(ic->getClient());
-    }
-}
-
 void UIPanel::update(UserInterfaceComponent component,
                      InputContext *inputContext) {
     switch (component) {

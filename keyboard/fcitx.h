@@ -1,11 +1,9 @@
 #pragma once
 
-#include <objc/objc.h>
-
 void startFcitx(const char *appBundlePath, const char *xdgDataDirs,
                 const char *appGroupPath);
-void focusIn(id client);
-void focusOut(id client);
+void focusIn();
+void focusOut();
 void processKey(const char *key, const char *code);
 void resetInput();
 void reload();

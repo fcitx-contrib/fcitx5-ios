@@ -6,7 +6,6 @@
 #include <fcitx/addonmanager.h>
 #include <fcitx/focusgroup.h>
 #include <fcitx/instance.h>
-#include <objc/objc.h>
 
 namespace fcitx {
 
@@ -25,8 +24,8 @@ class IosFrontend : public AddonInstance {
     void createInputContext();
     bool keyEvent(const Key &key, bool isRelease);
     void forwardKey(const std::string &key, const std::string &code);
-    void focusIn(id client);
-    void focusOut(id client);
+    void focusIn();
+    void focusOut();
     void resetInput();
 
   private:
@@ -53,11 +52,8 @@ class IosInputContext : public InputContext {
     void deleteSurroundingTextImpl(int offset, unsigned int size) override {}
     void forwardKeyImpl(const ForwardKeyEvent &key) override {}
     void updatePreeditImpl() override;
-    void setClient(id client) { client_ = client; }
-    id getClient() { return client_; }
 
   private:
     IosFrontend *frontend_;
-    id client_;
 };
 } // namespace fcitx
