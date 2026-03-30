@@ -13,23 +13,30 @@ struct ConfigView: View {
   @ObservedObject private var manager = ConfigManager()
 
   var body: some View {
+    let isPunctuationMap = uri == "fcitx://config/addon/punctuation/punctuationmap/zh_CN"
     VStack {
       if let error = manager.error {
         Text(error)
       } else {
-        List {
-          ForEach(Array(manager.children.enumerated()), id: \.offset) { _, child in
-            let option = child["Option"] as! String
-            OptionView(
-              data: child,
-              value: Binding(
-                get: { (manager.value as? [String: Any])?[option] ?? "" },
-                set: { newValue in
-                  setConfig(uri, option, newValue)
-                  manager.value = mergeChild(manager.value, option, newValue)
-                }
-              ),
-              expandGroup: uri == globalConfigUri)
+        let forEach = ForEach(Array(manager.children.enumerated()), id: \.offset) { _, child in
+          let option = child["Option"] as! String
+          OptionView(
+            data: child,
+            value: Binding(
+              get: { (manager.value as? [String: Any])?[option] ?? "" },
+              set: { newValue in
+                setConfig(uri, option, newValue)
+                manager.value = mergeChild(manager.value, option, newValue)
+              }
+            ),
+            expandGroup: uri == globalConfigUri)
+        }
+        if isPunctuationMap {
+          // Flatten punctuation map since it only has one child.
+          forEach
+        } else {
+          List {
+            forEach
           }
         }
       }
@@ -37,9 +44,12 @@ struct ConfigView: View {
     .navigationTitle(title)
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
-      ToolbarItem(placement: .navigationBarTrailing) {
-        Button("Reset") {
-          manager.reset()
+      // Punctuation map already has List-level reset button, which can update List UI.
+      if !isPunctuationMap {
+        ToolbarItem(placement: .navigationBarTrailing) {
+          Button("Reset") {
+            manager.reset()
+          }
         }
       }
     }

@@ -100,10 +100,13 @@ struct ListView: OptionViewProtocol {
   @Binding var value: Any
 
   var body: some View {
-    NavigationLink(
-      destination: ListSubView(label: label, data: data, value: $value)
-    ) {
-      Text(label)
+    let subView = ListSubView(label: label, data: data, value: $value)
+    if data["Type"] as? String == "List|Entries$PunctuationMapEntryConfig" {
+      subView
+    } else {
+      NavigationLink(destination: subView) {
+        Text(label)
+      }
     }
   }
 }
