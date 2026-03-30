@@ -26,6 +26,7 @@ private func getNStep(_ start: CGFloat, _ end: CGFloat, _ step: CGFloat) -> Int 
   return (start < end ? 1 : -1) * Int(floor(abs(end - start) / step))
 }
 
+@MainActor
 private func clearBubble() {
   virtualKeyboardView.setBubble(0, 0, 0, 0, .clear, .light, .clear, nil, [], 0, 0)
 }
@@ -274,6 +275,7 @@ extension View {
   }
 }
 
+@MainActor
 func executeActions(_ actions: [[String: String]]) {
   for action in actions {
     if let type = action["type"] {

@@ -1,8 +1,10 @@
 import FcitxProtocol
 import Foundation
 
+@MainActor
 private var client: FcitxProtocol!
 
+@MainActor
 public func setClient(_ cli: FcitxProtocol) {
   client = cli
 }

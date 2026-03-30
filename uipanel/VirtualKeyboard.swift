@@ -10,14 +10,18 @@ public enum DisplayMode {
   case symbol
 }
 
+@MainActor
 var client: FcitxProtocol!
 
+@MainActor
 public func setClient(_ cli: FcitxProtocol) {
   client = cli
 }
 
+@MainActor
 let vm = ViewModel()
 
+@MainActor
 class ViewModel: ObservableObject {
   @Published var mode: DisplayMode = .initial
   @Published var returnMode: DisplayMode = .initial  // or .candidates
@@ -279,8 +283,10 @@ public struct VirtualKeyboardView: View {
   }
 }
 
+@MainActor
 public var virtualKeyboardView: VirtualKeyboardView!
 
+@MainActor
 public func newVirtualKeyboardView() -> VirtualKeyboardView {
   virtualKeyboardView = VirtualKeyboardView()
   return virtualKeyboardView

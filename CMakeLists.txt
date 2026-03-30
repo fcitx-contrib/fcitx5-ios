@@ -9,7 +9,7 @@ set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/ios-cmake/ios.toolchain.cmak
 
 project(fcitx5-ios VERSION 0.1.0 LANGUAGES CXX Swift)
 set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED YES) # Need it for AppGroup even for simulator.
-set(CMAKE_Swift_LANGUAGE_VERSION 5.9)
+set(CMAKE_Swift_LANGUAGE_VERSION 6)
 set(CMAKE_CXX_STANDARD 20)
 
 set(BUNDLE_IDENTIFIER "org.fcitx.Fcitx5")
