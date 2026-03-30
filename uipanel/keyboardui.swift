@@ -3,16 +3,6 @@ import FcitxProtocol
 import SwiftUI
 import SwiftUtil
 
-var client: FcitxProtocol!
-
-public func showKeyboardAsync(_ clientPtr: UnsafeMutableRawPointer) {
-  let obj: AnyObject = Unmanaged.fromOpaque(clientPtr).takeUnretainedValue()
-  guard let obj = obj as? FcitxProtocol else {
-    return
-  }
-  client = obj
-}
-
 public func setCandidatesAsync(
   _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String],
   _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool

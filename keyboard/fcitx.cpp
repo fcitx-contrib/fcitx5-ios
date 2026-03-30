@@ -21,12 +21,12 @@ void startFcitx(const char *appBundlePath, const char *xdgDataDirs,
     return;
 }
 
-void focusIn(id client) {
-    return dispatcher->schedule([client] { frontend->focusIn(client); });
+void focusIn() {
+    return dispatcher->schedule([] { frontend->focusIn(); });
 }
 
-void focusOut(id client) {
-    return dispatcher->schedule([client] { frontend->focusOut(client); });
+void focusOut() {
+    return dispatcher->schedule([] { frontend->focusOut(); });
 }
 
 void processKey(const char *k, const char *c) {

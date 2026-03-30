@@ -26,7 +26,7 @@ class UIPanel final : public VirtualKeyboardUserInterface {
     void update(UserInterfaceComponent component,
                 InputContext *inputContext) override;
     bool isVirtualKeyboardVisible() const override { return true; }
-    void showVirtualKeyboard() override;
+    void showVirtualKeyboard() override {}
     void hideVirtualKeyboard() override {}
     void scroll(int start, int count);
     void page(bool next);

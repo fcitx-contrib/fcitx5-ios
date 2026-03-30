@@ -30,6 +30,7 @@ function(add_keyboard_extension keyboard language targets)
     target_include_directories(${extension} PRIVATE
         "${PROJECT_SOURCE_DIR}/keyboard"
         "${PROJECT_BINARY_DIR}/common/$<CONFIG>-${SDK_NAME}"
+        "${PROJECT_BINARY_DIR}/iosfrontend/$<CONFIG>-${SDK_NAME}"
         "${PROJECT_BINARY_DIR}/uipanel/$<CONFIG>-${SDK_NAME}"
     )
 
