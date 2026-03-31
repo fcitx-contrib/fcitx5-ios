@@ -23,8 +23,9 @@ private func syncLocale() -> String {
   return getLocale()
 }
 
+@MainActor
 class KeyboardViewController: UIInputViewController, FcitxProtocol {
-  var id: UInt64!
+  nonisolated(unsafe) var id: UInt64!
   var hostingController: UIHostingController<VirtualKeyboardView>!
   var removedBySlide = ""
   static private var clipboardText = ""
@@ -105,7 +106,6 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   deinit {
     logger.info("deinit \(self.id)")
-    hostingController = nil
   }
 
   override func viewWillLayoutSubviews() {

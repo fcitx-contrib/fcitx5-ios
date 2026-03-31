@@ -17,14 +17,17 @@ enum KeyboardState {
   case floating
 }
 
+@MainActor
 private var isFloating = false
 
+@MainActor
 func setFloating(_ width: CGFloat) {
   isFloating =
     (UIScreen.main.bounds.width >= 1000 || UIScreen.main.bounds.height > 1000)
     && width < UIScreen.main.bounds.width && width < UIScreen.main.bounds.height
 }
 
+@MainActor
 func getKeyboardState() -> KeyboardState {
   if isFloating {
     return .floating
@@ -35,6 +38,7 @@ func getKeyboardState() -> KeyboardState {
   return .landscape
 }
 
+@MainActor
 func getDefaultTotalHeight() -> CGFloat {
   switch getKeyboardState() {
   case .portrait:

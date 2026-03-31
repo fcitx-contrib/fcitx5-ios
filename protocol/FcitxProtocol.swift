@@ -1,3 +1,4 @@
+@MainActor
 public protocol FcitxProtocol {
   func keyPressed(_ key: String, _ code: String)
   func forwardKey(_ key: String, _ code: String)

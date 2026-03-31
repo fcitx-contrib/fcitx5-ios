@@ -19,7 +19,7 @@ public func scrollAsync(_ candidates: [String], _ end: Bool) {
   }
 }
 
-public struct StatusAreaAction: Identifiable {
+public struct StatusAreaAction: Identifiable, Sendable {
   public let id: Int32
   let desc: String
   let icon: String
