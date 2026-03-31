@@ -52,17 +52,15 @@ struct SymbolButton: View {
           }
           .onChanged { value in
             let distance = hypot(value.translation.width, value.translation.height)
-            dragExceededThreshold = distance > 10
+            dragExceededThreshold = dragExceededThreshold || distance > 10
           }
           .onEnded { _ in
+            if !dragExceededThreshold {
+              action()
+            }
             dragExceededThreshold = false
           }
       )
-      .onTapGesture {
-        if !dragExceededThreshold {
-          action()
-        }
-      }
   }
 }
 

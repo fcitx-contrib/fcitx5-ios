@@ -34,7 +34,7 @@ jobs:
             custom_phrase.txt
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: artifact.zip
           path: |
@@ -94,7 +94,7 @@ jobs:
 
       - name: Download artifact
         if: ${{ matrix.platform == 'OS64' }}
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           merge-multiple: true
 
@@ -113,8 +113,9 @@ jobs:
 
       - name: Upload artifact
         if: ${{ github.ref != 'refs/heads/master' && matrix.platform == 'OS64' }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
+          archive: false
           name: Fcitx5.ipa
           path: |
             build/OS64/src/Release-iphoneos/Fcitx5.ipa
