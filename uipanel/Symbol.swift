@@ -55,14 +55,12 @@ struct SymbolButton: View {
             dragExceededThreshold = distance > 10
           }
           .onEnded { _ in
+            if !dragExceededThreshold {
+              action()
+            }
             dragExceededThreshold = false
           }
       )
-      .onTapGesture {
-        if !dragExceededThreshold {
-          action()
-        }
-      }
   }
 }
 
