@@ -35,7 +35,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       (textDocumentProxy.documentContextBeforeInput ?? "")
       + (textDocumentProxy.selectedText ?? "")
       + (textDocumentProxy.documentContextAfterInput ?? "")
-    virtualKeyboardView.setTextIsEmpty(text.isEmpty)
+    vm.setTextIsEmpty(text.isEmpty)
   }
 
   override func updateViewConstraints() {
@@ -57,7 +57,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     startFcitx(appBundlePath, "\(Bundle.main.bundlePath)/share", appGroup.path)
 
     // Must recreate SwiftUI view, otherwise rotating may have old height which can't be updated.
-    hostingController = UIHostingController(rootView: newVirtualKeyboardView())
+    hostingController = UIHostingController(rootView: VirtualKeyboardView())
     hostingController.view.translatesAutoresizingMaskIntoConstraints = false
 
     // Spotlight shows that system keyboard has transparent background.
@@ -83,14 +83,14 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
     hostingController.didMove(toParent: self)
 
-    virtualKeyboardView.setReturnKeyType(textDocumentProxy.returnKeyType)
+    vm.setReturnKeyType(textDocumentProxy.returnKeyType)
     super.viewWillAppear(animated)
     let keyboard = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
     if removeFile(appGroupTmp.appendingPathComponent("\(keyboard).reload")) {
       logger.info("Reload accepted")
       reload()
     }
-    virtualKeyboardView.setDisplayMode(.initial)
+    vm.setDisplayMode(.initial)
     self.resetInput()  // Avoid old context carried over, since focusOut is dummy.
     focusIn()
   }

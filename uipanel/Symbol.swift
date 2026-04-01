@@ -103,7 +103,7 @@ struct SymbolView: View {
                     SymbolButton(symbol: symbol) {
                       client.resetInput()
                       client.commitString(symbol)
-                      virtualKeyboardView.popDisplayMode()
+                      vm.popDisplayMode()
                     }
                   }
                 }

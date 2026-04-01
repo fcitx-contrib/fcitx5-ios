@@ -111,7 +111,7 @@ struct LongPressMeasureModifier: ViewModifier {
               if items.isEmpty {
                 return
               }
-              virtualKeyboardView.showContextMenu(frame, items)
+              vm.showContextMenu(frame, items)
             }
         }
       }

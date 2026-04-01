@@ -45,7 +45,7 @@ struct KeyView: View {
         shadow: getShadow(colorScheme),
         action: GestureAction(
           onTap: {
-            virtualKeyboardView.resetLayerIfNotLocked()
+            vm.resetLayerIfNotLocked()
             client.keyPressed(key, "")
           },
           onLongPress: { highlight in
@@ -95,7 +95,7 @@ struct SpaceView: View {
         shadow: getShadow(colorScheme),
         action: GestureAction(
           onTap: {
-            virtualKeyboardView.resetLayerIfNotLocked()
+            vm.resetLayerIfNotLocked()
             client.keyPressed(" ", "")
           },
           onSlide: { step in
@@ -129,7 +129,7 @@ struct BackspaceView: View {
   func startDelete() {
     stopDelete()
     deleteTimer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { _ in
-      virtualKeyboardView.resetLayerIfNotLocked()
+      vm.resetLayerIfNotLocked()
       client.keyPressed("", "Backspace")
     }
   }
@@ -155,14 +155,14 @@ struct BackspaceView: View {
         shadow: getShadow(colorScheme),
         action: GestureAction(
           onTap: {
-            virtualKeyboardView.resetLayerIfNotLocked()
+            vm.resetLayerIfNotLocked()
             client.keyPressed("", "Backspace")
           },
           onLongPress: { _ in
             startDelete()
           },
           onSlide: { step in
-            virtualKeyboardView.slideBackspace(step)
+            vm.slideBackspace(step)
           },
           onRelease: {
             stopDelete()
@@ -201,22 +201,22 @@ struct GlobeView: View {
         shadow: getShadow(colorScheme),
         action: GestureAction(
           onTap: {
-            virtualKeyboardView.resetLayerIfNotLocked()
+            vm.resetLayerIfNotLocked()
             client.globe()
           },
           onLongPress: { _ in
-            let items = virtualKeyboardView.viewModel.inputMethods.map { inputMethod in
+            let items = vm.inputMethods.map { inputMethod in
               MenuItem(
                 text: inputMethod.displayName,
                 action: {
-                  virtualKeyboardView.resetLayerIfNotLocked()
+                  vm.resetLayerIfNotLocked()
                   client.setCurrentInputMethod(inputMethod.name)
                 })
             }
             if !items.isEmpty {
               let frame = CGRect(
                 x: x, y: y + getBarHeight(totalHeight), width: width, height: height)
-              virtualKeyboardView.showContextMenu(frame, items)
+              vm.showContextMenu(frame, items)
             }
           }
         )
@@ -263,7 +263,7 @@ struct EnterView: View {
           // When !cr && disable, still allow key press, because text empty detection is not reliable.
           // e.g. In WeChat when the first line is empty and caret is there and the second line is not empty,
           // it says text is empty but should be sendable.
-          virtualKeyboardView.resetLayerIfNotLocked()
+          vm.resetLayerIfNotLocked()
           client.keyPressed("\r", "Enter")
         }
       ),
@@ -302,12 +302,12 @@ struct ShiftView: View {
       shadow: getShadow(colorScheme),
       action: GestureAction(
         onPress: {
-          virtualKeyboardView.setLayer(
+          vm.setLayer(
             state == .normal ? "shift" : "default"
           )
         },
         onDoubleTap: {
-          virtualKeyboardView.setLayer("shift", lock: true)
+          vm.setLayer("shift", lock: true)
         }
       )
     )
@@ -331,7 +331,7 @@ struct SymbolKeyView: View {
         shadow: getShadow(colorScheme),
         action: GestureAction(
           onTap: {
-            virtualKeyboardView.setDisplayMode(.symbol)
+            vm.setDisplayMode(.symbol)
           }
         )
       )

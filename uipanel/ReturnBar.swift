@@ -8,7 +8,7 @@ struct ReturnBarView: View {
     let barHeight = getBarHeight(totalHeight)
     HStack {
       Button {
-        virtualKeyboardView.popDisplayMode()
+        vm.popDisplayMode()
       } label: {
         Image(systemName: "arrow.backward")
           .foregroundColor(getNormalForeground(colorScheme))
