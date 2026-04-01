@@ -8,14 +8,14 @@ public func setCandidatesAsync(
   _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool
 ) {
   DispatchQueue.main.async {
-    virtualKeyboardView.setCandidates(
+    vm.setCandidates(
       auxUp, preedit, caret, candidates, highlighted, bulk, hasClientPreedit)
   }
 }
 
 public func scrollAsync(_ candidates: [String], _ end: Bool) {
   DispatchQueue.main.async {
-    virtualKeyboardView.scroll(candidates, end)
+    vm.scroll(candidates, end)
   }
 }
 
@@ -42,13 +42,13 @@ public struct StatusAreaAction: Identifiable, Sendable {
 
 public func setStatusAreaAsync(_ actions: [StatusAreaAction]) {
   DispatchQueue.main.async {
-    virtualKeyboardView.setStatusArea(actions)
+    vm.setStatusArea(actions)
   }
 }
 
 public func setCurrentInputMethodAsync(_ im: String) {
   DispatchQueue.main.async {
-    virtualKeyboardView.setCurrentInputMethod(
+    vm.setCurrentInputMethod(
       im, deserialize([InputMethod].self, String(getInputMethods())))
   }
 }

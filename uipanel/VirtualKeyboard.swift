@@ -19,10 +19,10 @@ public func setClient(_ cli: FcitxProtocol) {
 }
 
 @MainActor
-let vm = ViewModel()
+public let vm = ViewModel()
 
 @MainActor
-class ViewModel: ObservableObject {
+public class ViewModel: ObservableObject {
   @Published var mode: DisplayMode = .initial
   @Published var returnMode: DisplayMode = .initial  // or .candidates
 
@@ -67,10 +67,144 @@ class ViewModel: ObservableObject {
   @Published var bubbleHighlight = 0
 
   var hasPreedit: Bool { !preedit.isEmpty || hasClientPreedit }
+
+  public func setDisplayMode(_ mode: DisplayMode) {
+    if self.mode == .candidates && mode == .symbol {
+      returnMode = .candidates
+    }
+    self.mode = mode
+  }
+
+  func popDisplayMode() {
+    if returnMode == .candidates {
+      self.mode = .candidates
+      returnMode = .initial
+    } else {
+      self.mode = .initial
+    }
+  }
+
+  func setCandidates(
+    _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String],
+    _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool
+  ) {
+    if !auxUp.isEmpty || !preedit.isEmpty || !candidates.isEmpty {
+      setDisplayMode(.candidates)
+      if preedit.isEmpty && !hasClientPreedit {
+        // For prediction candidates, collapse to single bar so that user can ignore them and type keyboard.
+        expanded = false
+      }
+    } else if self.mode == .candidates {
+      setDisplayMode(.initial)
+      expanded = false
+    }
+    self.auxUp = auxUp
+    self.preedit = preedit
+    self.caret = Int(caret)
+    self.candidates = candidates
+    self.highlighted = Int(highlighted)
+    self.hasClientPreedit = hasClientPreedit
+    batch = (batch + 1) & 0xFFFF
+    scrollEnd = false
+    rowItemCount = calculateLayout(candidates, totalWidth * 4 / 5)
+    pendingScroll = bulk ? 0 : -1
+  }
+
+  func scroll(_ candidates: [String], _ end: Bool) {
+    self.candidates.append(contentsOf: candidates)
+    rowItemCount = calculateLayout(self.candidates, totalWidth * 4 / 5)
+    // Don't update batch as we don't want to reset scroll position.
+    scrollEnd = end
+  }
+
+  func setStatusArea(_ actions: [StatusAreaAction]) {
+    self.actions = actions
+  }
+
+  func setCurrentInputMethod(_ im: String, _ inputMethods: [InputMethod]) {
+    self.inputMethods = inputMethods
+    for inputMethod in inputMethods {
+      if inputMethod.name == im {
+        spaceLabel = inputMethod.displayName
+        break
+      }
+    }
+  }
+
+  public func setTextIsEmpty(_ isEmpty: Bool) {
+    textIsEmpty = isEmpty
+  }
+
+  public func setReturnKeyType(_ type: UIReturnKeyType?) {
+    enterHighlight = true
+    switch type {
+    case .done:
+      enterLabel = NSLocalizedString("done", comment: "")
+    case .go:
+      enterLabel = NSLocalizedString("go", comment: "")
+    case .next:
+      enterLabel = NSLocalizedString("next", comment: "")
+    case .search:
+      enterLabel = NSLocalizedString("search", comment: "")
+    case .send:
+      enterLabel = NSLocalizedString("send", comment: "")
+    default:
+      enterLabel = NSLocalizedString("return", comment: "")
+      enterHighlight = false
+    }
+  }
+
+  func setLayer(_ layer: String, lock: Bool = false) {
+    self.layer = layer
+    self.lock = lock
+  }
+
+  func resetLayerIfNotLocked() {
+    if !lock {
+      self.layer = "default"
+    }
+  }
+
+  func showContextMenu(_ frame: CGRect, _ items: [MenuItem]) {
+    self.frame = frame
+    menuItems = items
+    showMenu = true
+  }
+
+  func slideBackspace(_ step: Int) {
+    if hasPreedit || !candidates.isEmpty {
+      if step == 0 {
+        client.resetInput()
+      }
+      return
+    }
+    client.slideBackspace(step)
+  }
+
+  func setBubble(
+    _ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat, _ background: Color,
+    _ colorScheme: ColorScheme, _ shadow: Color, _ label: String?, _ labels: [String],
+    _ index: Int, _ highlight: Int
+  ) {
+    bubbleX = x
+    bubbleY = y
+    bubbleWidth = width
+    bubbleHeight = height
+    // This only guarantees same color with key when system background is pure
+    // white/dark or key is opaque. In Spotlight, color discrepancy is expected.
+    bubbleBackground = background.blend(with: getBackground(colorScheme))
+    bubbleShadow = shadow
+    bubbleLabel = label
+    bubbleLabels = labels
+    bubbleIndex = index
+    bubbleHighlight = highlight
+  }
 }
 
 public struct VirtualKeyboardView: View {
   @ObservedObject var viewModel = vm
+
+  public init() {}
 
   public var body: some View {
     GeometryReader { geometry in
@@ -149,145 +283,4 @@ public struct VirtualKeyboardView: View {
     viewModel.totalWidth = width
     viewModel.totalHeight = getDefaultTotalHeight()
   }
-
-  public func setDisplayMode(_ mode: DisplayMode) {
-    if viewModel.mode == .candidates && mode == .symbol {
-      viewModel.returnMode = .candidates
-    }
-    viewModel.mode = mode
-  }
-
-  public func popDisplayMode() {
-    if viewModel.returnMode == .candidates {
-      viewModel.mode = .candidates
-      viewModel.returnMode = .initial
-    } else {
-      viewModel.mode = .initial
-    }
-  }
-
-  public func setCandidates(
-    _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String],
-    _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool
-  ) {
-    if !auxUp.isEmpty || !preedit.isEmpty || !candidates.isEmpty {
-      setDisplayMode(.candidates)
-      if preedit.isEmpty && !hasClientPreedit {
-        // For prediction candidates, collapse to single bar so that user can ignore them and type keyboard.
-        viewModel.expanded = false
-      }
-    } else if viewModel.mode == .candidates {
-      setDisplayMode(.initial)
-      viewModel.expanded = false
-    }
-    viewModel.auxUp = auxUp
-    viewModel.preedit = preedit
-    viewModel.caret = Int(caret)
-    viewModel.candidates = candidates
-    viewModel.highlighted = Int(highlighted)
-    viewModel.hasClientPreedit = hasClientPreedit
-    viewModel.batch = (viewModel.batch + 1) & 0xFFFF
-    viewModel.scrollEnd = false
-    viewModel.rowItemCount = calculateLayout(candidates, viewModel.totalWidth * 4 / 5)
-    viewModel.pendingScroll = bulk ? 0 : -1
-  }
-
-  public func scroll(_ candidates: [String], _ end: Bool) {
-    viewModel.candidates.append(contentsOf: candidates)
-    viewModel.rowItemCount = calculateLayout(viewModel.candidates, viewModel.totalWidth * 4 / 5)
-    // Don't update batch as we don't want to reset scroll position.
-    viewModel.scrollEnd = end
-  }
-
-  public func setStatusArea(_ actions: [StatusAreaAction]) {
-    viewModel.actions = actions
-  }
-
-  public func setCurrentInputMethod(_ im: String, _ inputMethods: [InputMethod]) {
-    viewModel.inputMethods = inputMethods
-    for inputMethod in inputMethods {
-      if inputMethod.name == im {
-        viewModel.spaceLabel = inputMethod.displayName
-        break
-      }
-    }
-  }
-
-  public func setTextIsEmpty(_ isEmpty: Bool) {
-    viewModel.textIsEmpty = isEmpty
-  }
-
-  public func setReturnKeyType(_ type: UIReturnKeyType?) {
-    viewModel.enterHighlight = true
-    switch type {
-    case .done:
-      viewModel.enterLabel = NSLocalizedString("done", comment: "")
-    case .go:
-      viewModel.enterLabel = NSLocalizedString("go", comment: "")
-    case .next:
-      viewModel.enterLabel = NSLocalizedString("next", comment: "")
-    case .search:
-      viewModel.enterLabel = NSLocalizedString("search", comment: "")
-    case .send:
-      viewModel.enterLabel = NSLocalizedString("send", comment: "")
-    default:
-      viewModel.enterLabel = NSLocalizedString("return", comment: "")
-      viewModel.enterHighlight = false
-    }
-  }
-
-  func setLayer(_ layer: String, lock: Bool = false) {
-    viewModel.layer = layer
-    viewModel.lock = lock
-  }
-
-  func resetLayerIfNotLocked() {
-    if !viewModel.lock {
-      viewModel.layer = "default"
-    }
-  }
-
-  func showContextMenu(_ frame: CGRect, _ items: [MenuItem]) {
-    viewModel.frame = frame
-    viewModel.menuItems = items
-    viewModel.showMenu = true
-  }
-
-  func slideBackspace(_ step: Int) {
-    if viewModel.hasPreedit || !viewModel.candidates.isEmpty {
-      if step == 0 {
-        client.resetInput()
-      }
-      return
-    }
-    client.slideBackspace(step)
-  }
-
-  func setBubble(
-    _ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat, _ background: Color,
-    _ colorScheme: ColorScheme, _ shadow: Color, _ label: String?, _ labels: [String],
-    _ index: Int, _ highlight: Int
-  ) {
-    viewModel.bubbleX = x
-    viewModel.bubbleY = y
-    viewModel.bubbleWidth = width
-    viewModel.bubbleHeight = height
-    // This only guarantees same color with key when system background is pure
-    // white/dark or key is opaque. In Spotlight, color discrepancy is expected.
-    viewModel.bubbleBackground = background.blend(with: getBackground(colorScheme))
-    viewModel.bubbleShadow = shadow
-    viewModel.bubbleLabel = label
-    viewModel.bubbleLabels = labels
-    viewModel.bubbleIndex = index
-    viewModel.bubbleHighlight = highlight
-  }
-}
-
-@MainActor
-public var virtualKeyboardView: VirtualKeyboardView!
-
-@MainActor
-public func newVirtualKeyboardView() -> VirtualKeyboardView {
-  virtualKeyboardView = VirtualKeyboardView()
-  return virtualKeyboardView
 }

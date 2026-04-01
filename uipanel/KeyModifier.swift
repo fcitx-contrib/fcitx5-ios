@@ -28,7 +28,7 @@ private func getNStep(_ start: CGFloat, _ end: CGFloat, _ step: CGFloat) -> Int 
 
 @MainActor
 private func clearBubble() {
-  virtualKeyboardView.setBubble(0, 0, 0, 0, .clear, .light, .clear, nil, [], 0, 0)
+  vm.setBubble(0, 0, 0, 0, .clear, .light, .clear, nil, [], 0, 0)
 }
 
 struct KeyModifier: ViewModifier {
@@ -108,7 +108,7 @@ struct KeyModifier: ViewModifier {
               startLocation = value.startLocation
               lastLocation = value.startLocation.x
 
-              virtualKeyboardView.setBubble(
+              vm.setBubble(
                 bubbleX, bubbleY, bubbleWidth, bubbleHeight,
                 background, colorScheme, shadow,
                 bubbleLabel, [], 0, 0)
@@ -123,7 +123,7 @@ struct KeyModifier: ViewModifier {
                   didTriggerLongPress = true
                   if longPressIndex >= 0 && longPressIndex < longPressLabels.count {
                     bubbleHighlight = longPressIndex
-                    virtualKeyboardView.setBubble(
+                    vm.setBubble(
                       bubbleX, bubbleY, bubbleWidth, bubbleHeight,
                       background, colorScheme, shadow, nil, longPressLabels, longPressIndex,
                       bubbleHighlight)
@@ -153,7 +153,7 @@ struct KeyModifier: ViewModifier {
                 }
                 if didMoveFarEnough {
                   if getSwipeDirection(dx, dy) == .up {
-                    virtualKeyboardView.setBubble(
+                    vm.setBubble(
                       bubbleX, bubbleY, bubbleWidth, bubbleHeight, background, colorScheme,
                       shadow, swipeUpLabel, [], 0, 0)
                   } else {
@@ -185,7 +185,7 @@ struct KeyModifier: ViewModifier {
                 if delta != 0 {
                   bubbleHighlight = max(
                     0, min(bubbleHighlight + delta, longPressLabels.count - 1))
-                  virtualKeyboardView.setBubble(
+                  vm.setBubble(
                     bubbleX, bubbleY, bubbleWidth, bubbleHeight,
                     background, colorScheme, shadow, nil, longPressLabels, longPressIndex,
                     bubbleHighlight)

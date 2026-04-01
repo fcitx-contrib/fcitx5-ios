@@ -11,14 +11,14 @@ struct ToolbarView: View {
     HStack(spacing: width / 6) {
       Spacer()
       Button {
-        virtualKeyboardView.setDisplayMode(.edit)
+        vm.setDisplayMode(.edit)
       } label: {
         Image(systemName: "character.cursor.ibeam")
           .foregroundColor(getNormalForeground(colorScheme))
           .frame(width: barHeight, height: barHeight)
       }
       Button {
-        virtualKeyboardView.setDisplayMode(.statusArea)
+        vm.setDisplayMode(.statusArea)
       } label: {
         Image(systemName: "ellipsis")
           .foregroundColor(getNormalForeground(colorScheme))
