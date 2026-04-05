@@ -1,13 +1,12 @@
 // See fcitx5-macos/src/locale.swift
 
 import Foundation
-import SwiftUtil
 
 // Return app locale or system locale if called from app.
 // Return system locale if called from keyboard.
 public func getLocale() -> String {
   let locale = Locale.current
-  logger.info("System locale = \(locale.identifier)")
+  FCITX_INFO("System locale = \(locale.identifier)")
 
   if let languageCode = locale.language.languageCode?.identifier {
     if languageCode == "zh" {

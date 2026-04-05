@@ -14,7 +14,7 @@ struct Fcitx5App: App {
         SceneDelegate.contentView?.handleURL(url)
       }.onChange(of: scenePhase) { newPhase in
         if newPhase == .active {
-          logger.info("App is active")
+          FCITX_INFO("App is active")
           sync(
             documents.appendingPathComponent("rime"), appGroupData.appendingPathComponent("rime"))
         }

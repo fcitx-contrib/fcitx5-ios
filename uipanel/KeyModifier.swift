@@ -285,7 +285,7 @@ func executeActions(_ actions: [[String: String]]) {
         let code = action["code"] ?? ""
         client.keyPressed(key, code)
       default:
-        logger.error("Unknown action type: \(type)")
+        FCITX_ERROR("Unknown action type: \(type)")
       }
     }
   }
