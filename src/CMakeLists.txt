@@ -185,6 +185,9 @@ foreach(Keyboard ${KEYBOARDS})
     copy_to(app copy_directory "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>-${SDK_NAME}/${Keyboard}.appex" "PlugIns/${Keyboard}.appex")
 endforeach()
 
+# Settings bundle
+copy_to(app copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/Settings.bundle" "Settings.bundle")
+
 generate_profile(App "." "${DEFAULT_INPUT_METHODS}")
 add_dependencies(${BUNDLE_NAME} AppProfile)
 
