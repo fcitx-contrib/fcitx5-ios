@@ -31,5 +31,5 @@ public func requestReload() {
       to: appGroupTmp.appendingPathComponent("\(keyboard).reload"), atomically: true,
       encoding: .utf8)
   }
-  logger.info("Reload requested")
+  FCITX_INFO("Reload requested")
 }

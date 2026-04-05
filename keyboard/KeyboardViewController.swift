@@ -46,7 +46,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   override func viewDidLoad() {
     id = UInt64(Int(bitPattern: Unmanaged.passUnretained(self).toOpaque()))
-    logger.info("viewDidLoad \(self.id)")
+    FCITX_INFO("viewDidLoad \(self.id)")
     super.viewDidLoad()
     redirectStderr()
     initProfile()
@@ -66,7 +66,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   override func viewWillAppear(_ animated: Bool) {
-    logger.info("viewWillAppear \(self.id)")
+    FCITX_INFO("viewWillAppear \(self.id)")
     SwiftFrontend.setClient(self)
     KeyboardUI.setClient(self)
 
@@ -87,7 +87,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     super.viewWillAppear(animated)
     let keyboard = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
     if removeFile(appGroupTmp.appendingPathComponent("\(keyboard).reload")) {
-      logger.info("Reload accepted")
+      FCITX_INFO("Reload accepted")
       reload()
     }
     vm.setDisplayMode(.initial)
@@ -96,7 +96,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   override func viewWillDisappear(_ animated: Bool) {
-    logger.info("viewWillDisappear \(self.id)")
+    FCITX_INFO("viewWillDisappear \(self.id)")
     super.viewWillDisappear(animated)
     focusOut()
     hostingController.willMove(toParent: nil)
@@ -105,11 +105,11 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   deinit {
-    logger.info("deinit \(self.id)")
+    FCITX_INFO("deinit \(self.id)")
   }
 
   override func viewWillLayoutSubviews() {
-    logger.info("viewWillLayoutSubviews \(self.id)")
+    FCITX_INFO("viewWillLayoutSubviews \(self.id)")
     super.viewWillLayoutSubviews()
   }
 
