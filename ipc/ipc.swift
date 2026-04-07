@@ -9,19 +9,31 @@ public func openURL(_ urlString: String) {
   }
 }
 
+public struct KeyboardInfo {
+  public let id: String
+  public let displayName: String
+}
+
 public func listKeyboards() -> [String] {
+  listKeyboardInfo().map { $0.id }
+}
+
+public func listKeyboardInfo() -> [KeyboardInfo] {
   let pluginsURL = appBundleUrl.appendingPathComponent("PlugIns")
-  var result = [String]()
+  var result = [KeyboardInfo]()
   if let items = try? FileManager.default.contentsOfDirectory(
     at: pluginsURL,
     includingPropertiesForKeys: nil,
     options: [.skipsHiddenFiles])
   {
     for item in items where item.pathExtension == "appex" {
-      result.append(item.deletingPathExtension().lastPathComponent)
+      let id = item.deletingPathExtension().lastPathComponent
+      let displayName =
+        Bundle(url: item)?.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? id
+      result.append(KeyboardInfo(id: id, displayName: displayName))
     }
   }
-  return result
+  return result.sorted { $0.id < $1.id }
 }
 
 public func requestReload() {
