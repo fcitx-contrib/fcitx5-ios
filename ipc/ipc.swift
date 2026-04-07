@@ -25,6 +25,9 @@ public func listKeyboards() -> [String] {
 }
 
 public func requestReload() {
+  if !appGroupAvailable {
+    return
+  }
   mkdirP(appGroupTmp.path)
   for keyboard in listKeyboards() {
     try? "".write(
