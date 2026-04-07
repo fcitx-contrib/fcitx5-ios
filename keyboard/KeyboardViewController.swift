@@ -29,6 +29,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   var hostingController: UIHostingController<VirtualKeyboardView>!
   var removedBySlide = ""
   static private var clipboardText = ""
+  static private var firstLoad = true
 
   private func updateTextIsEmpty() {
     let text =
@@ -48,13 +49,17 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     id = UInt64(Int(bitPattern: Unmanaged.passUnretained(self).toOpaque()))
     FCITX_INFO("viewDidLoad \(self.id)")
     super.viewDidLoad()
-    redirectStderr()
-    initProfile()
-    // TODO: (this is tested in simulator) when user changes app locale in Settings,
-    // app and keyboards are killed, but only if app is started first can it sync
-    // locale to keyboards. Need to find a way to update locale on viewWillAppear.
-    setLocale(syncLocale())
-    startFcitx(appBundlePath, "\(Bundle.main.bundlePath)/share", appGroup.path)
+    if KeyboardViewController.firstLoad {
+      KeyboardViewController.firstLoad = false
+      logPaths()
+      redirectStderr()
+      initProfile()
+      // TODO: (this is tested in simulator) when user changes app locale in Settings,
+      // app and keyboards are killed, but only if app is started first can it sync
+      // locale to keyboards. Need to find a way to update locale on viewWillAppear.
+      setLocale(syncLocale())
+      startFcitx(appBundlePath, "\(Bundle.main.bundlePath)/share", appGroup.path)
+    }
 
     // Must recreate SwiftUI view, otherwise rotating may have old height which can't be updated.
     hostingController = UIHostingController(rootView: VirtualKeyboardView())

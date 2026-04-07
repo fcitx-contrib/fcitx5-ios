@@ -15,6 +15,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    logPaths()
     initProfile()
     let locale = getLocale()
     setLocale(locale)
