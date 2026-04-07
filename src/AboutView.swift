@@ -23,10 +23,10 @@ struct AboutView: View {
         Text(String("Fcitx5 iOS"))  // no i18n by design
           .font(.system(size: 32))
 
-        if appGroup == documents {
-          Text("Unsigned")
-        } else {
+        if appGroupAvailable {
           Text("Signed")
+        } else {
+          Text("Unsigned")
         }
 
         urlButton(String(commit.prefix(7)), sourceRepo + "/commit/" + commit)

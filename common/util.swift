@@ -9,6 +9,7 @@ public let appGroup =
 public let appGroupConfig = appGroup.appendingPathComponent("config")
 public let appGroupTmp = appGroup.appendingPathComponent("tmp")
 public let appGroupData = appGroup.appendingPathComponent("data")
+public let appGroupAvailable = appGroup != documents
 
 private func getAppBundleUrl() -> URL {
   if Bundle.main.bundlePath.hasSuffix(".appex") {
