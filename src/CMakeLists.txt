@@ -118,6 +118,8 @@ if (HALLELUJAH)
     # copy_to(Hallelujah copy "${HALLELUJAH_SOURCE_DIR}/data/cedict.json" "share/hallelujah/cedict.json")
     copy_to(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah-addon.conf" "${ADDON_PREFIX}/hallelujah.conf")
     copy_to(Hallelujah copy "${HALLELUJAH_BINARY_DIR}/src/hallelujah.conf" "${IM_PREFIX}/hallelujah.conf")
+
+    install_cxx_translations("engines/fcitx5-hallelujah/po")
 endif()
 
 if (MOZC)
