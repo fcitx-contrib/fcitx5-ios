@@ -11,6 +11,11 @@ public let appGroupTmp = appGroup.appendingPathComponent("tmp")
 public let appGroupData = appGroup.appendingPathComponent("data")
 public let appGroupAvailable = appGroup != documents
 
+public func logPaths() {
+  FCITX_INFO("Documents: \(documents)")
+  FCITX_INFO("App Group: \(appGroup)")
+}
+
 private func getAppBundleUrl() -> URL {
   if Bundle.main.bundlePath.hasSuffix(".appex") {
     // From Fcitx5.app/Plugins/*.appex to Fcitx5.app
