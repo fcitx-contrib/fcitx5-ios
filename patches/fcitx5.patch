@@ -1,21 +1,5 @@
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index bb3c56c..ea60442 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -230,7 +230,10 @@ else()
-     set(FCITX_LIBRARY_SUFFIX ".so")
- endif()
- 
--check_function_exists(pipe2 HAVE_PIPE2)
-+set(CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
-+check_symbol_exists(pipe2 "unistd.h" HAVE_PIPE2)
-+unset(CMAKE_REQUIRED_DEFINITIONS)
-+
- check_include_file(sys/wait.h HAVE_SYS_WAIT_H)
- check_include_file(sys/mman.h HAVE_SYS_MMAN_H)
- check_include_file(sys/uio.h HAVE_SYS_UIO_H)
 diff --git a/src/lib/fcitx-utils/log.cpp b/src/lib/fcitx-utils/log.cpp
-index 56fb7f6..98fa2ae 100644
+index 56fb7f62..98fa2ae6 100644
 --- a/src/lib/fcitx-utils/log.cpp
 +++ b/src/lib/fcitx-utils/log.cpp
 @@ -35,16 +35,20 @@ using LogRule = std::pair<std::string, LogLevel>;
@@ -56,7 +40,7 @@ index 56fb7f6..98fa2ae 100644
  
  LogMessageBuilder::LogMessageBuilder(std::ostream &out, LogLevel l,
 diff --git a/src/lib/fcitx/addonmanager.cpp b/src/lib/fcitx/addonmanager.cpp
-index ab4e36f..48001b4 100644
+index ab4e36f4..48001b4e 100644
 --- a/src/lib/fcitx/addonmanager.cpp
 +++ b/src/lib/fcitx/addonmanager.cpp
 @@ -249,7 +249,6 @@ void AddonManager::unregisterLoader(const std::string &name) {
