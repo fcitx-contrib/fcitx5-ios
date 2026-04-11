@@ -12,7 +12,7 @@ final class ServerManager: Sendable {
   static nonisolated(unsafe) var onDone: ((String) -> Void)?
 
   private init() {
-    server.listenAddressIPv4 = localhostOnly ? "127.0.0.1" : "0.0.0.0"
+    server.listenAddressIPv4 = localhostOnly ? localhostV4 : "0.0.0.0"
     server["/health"] = { _ in .ok(.text("")) }
     server["/list"] = ServerManager.listHandler
     server["/download"] = ServerManager.downloadHandler
@@ -224,7 +224,7 @@ struct SyncConfigView: View {
       ServerManager.shared.start()
       // Heartbeat
       while !Task.isCancelled {
-        let url = URL(string: "http://localhost:\(syncConfigPort)/health")!
+        let url = URL(string: "http://\(localhostV4):\(syncConfigPort)/health")!
         if let (_, response) = try? await URLSession.shared.data(from: url),
           let httpResponse = response as? HTTPURLResponse
         {

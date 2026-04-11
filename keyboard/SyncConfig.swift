@@ -3,11 +3,11 @@ import KeyboardUI
 import SwiftUtil
 import UIKit
 
-// Given /list and [keyboard: Rime], return http://localhost:32489/list?keyboard=Rime.
+// Given /list and [keyboard: Rime], return http://127.0.0.1:32489/list?keyboard=Rime.
 private func generateURL(_ path: String, params: [String: String]?) -> URL {
   var components = URLComponents()
   components.scheme = "http"
-  components.host = "localhost"
+  components.host = localhostV4
   components.port = Int(syncConfigPort)
   components.path = path
   if let params = params {

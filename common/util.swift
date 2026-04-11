@@ -145,6 +145,7 @@ public func deserialize<T: Codable>(_ type: T.Type, _ s: String) -> T {
 public let syncConfigMagicText = "Fcitx5 iOS sync config context: "
 public let syncConfigFullAccess = "1"
 public let syncConfigNoFullAccess = "0"
+public let localhostV4 = "127.0.0.1"
 public let syncConfigPort: UInt16 = 32489
 public let syncConfigChunkSize = 256 * 1024
 
