@@ -15,7 +15,7 @@ Simulator's log string interpolation visibility defaults to public, while real d
 ## App Group
 App Group is available on simulator, while on real device it needs a paid developer account (i.e., unavailable for side load).
 
-When unavailable, main app and keyboard extensions can's share file system, so they have separate storages in their Documents directories.
+When unavailable, main app and keyboard extensions can't share file system, so they have separate storages in their Documents directories.
 In that case, we start an HTTP server to sync files.
 
 To test the HTTP server on simulator, set `useAppGroup = false`.
