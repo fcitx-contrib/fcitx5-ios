@@ -102,6 +102,10 @@ final class ServerManager: Sendable {
     }
     defer { try? handle.close() }
     let fileSize = (try? handle.seekToEnd()) ?? 0
+    if start > Int(fileSize) {
+      FCITX_WARN("GET /download path=\(path) start=\(start) 400")
+      return .badRequest(nil)
+    }
     try? handle.seek(toOffset: UInt64(start))
     let end = min(start + syncConfigChunkSize, Int(fileSize))
     guard let chunk = try? handle.read(upToCount: end - start) else {
