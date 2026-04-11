@@ -16,6 +16,7 @@ add_library(KeyboardUI STATIC
     Edit.swift
     Symbol.swift
     ReturnBar.swift
+    Sync.swift
     ui.swift
     height.swift
 )

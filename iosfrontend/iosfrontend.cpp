@@ -25,11 +25,7 @@ void IosFrontend::forwardKey(const std::string &key, const std::string &code) {
 
 void IosFrontend::focusIn() { ic_->focusIn(); }
 
-void IosFrontend::focusOut() {
-    // Old viewWillDisappear may be called after new viewWillAppear (if
-    // switching apps), and viewWillDisappear may be called twice.
-    // Do nothing as we use a single InputContext.
-}
+void IosFrontend::focusOut() { ic_->focusOut(); }
 
 void IosFrontend::resetInput() { ic_->reset(); }
 

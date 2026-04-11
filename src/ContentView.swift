@@ -81,6 +81,17 @@ struct ContentView: View {
         }
       }
       .navigationTitle(NSLocalizedString("Fcitx5", comment: ""))
+      .overlay(alignment: .bottomTrailing) {
+        NavigationLink(destination: SyncConfigView()) {
+          Text("Sync config")
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.blue)
+            .foregroundColor(.white)
+            .cornerRadius(8)
+        }
+        .padding()
+      }
     }
     .toast(isPresenting: $showToast, duration: duration) {
       AlertToast(

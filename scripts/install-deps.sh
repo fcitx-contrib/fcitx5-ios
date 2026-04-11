@@ -36,12 +36,12 @@ fi
 
 for dep in "${deps[@]}"; do
   file=$dep$POSTFIX.tar.bz2
-  [[ -f cache/$file ]] || wget -P cache https://github.com/fcitx-contrib/fcitx5-prebuilder/releases/download/ios/$file
+  [[ -f cache/$file ]] || curl -LO --output-dir cache https://github.com/fcitx-contrib/fcitx5-prebuilder/releases/download/ios/$file
   tar xf cache/$file -C $EXTRACT_DIR
 done
 
 file=Fcitx5-arm64.tar.bz2
-[[ -f cache/$file ]] || wget -P cache https://github.com/fcitx-contrib/fcitx5-macos/releases/download/latest/$file
+[[ -f cache/$file ]] || curl -LO --output-dir cache https://github.com/fcitx-contrib/fcitx5-macos/releases/download/latest/$file
 tar xf cache/$file -C $SPELL_DICT_DIR --strip-components=5 Fcitx5.app/Contents/share/fcitx5/spell/en_dict.fscd
 
 plugins=(
@@ -51,6 +51,6 @@ plugins=(
 
 for plugin in "${plugins[@]}"; do
   file=$plugin-any.tar.bz2
-  [[ -f cache/$file ]] || wget -P cache https://github.com/fcitx-contrib/fcitx5-plugins/releases/download/macos-latest/$file
+  [[ -f cache/$file ]] || curl -LO --output-dir cache https://github.com/fcitx-contrib/fcitx5-plugins/releases/download/macos-latest/$file
   tar xf cache/$file -C $EXTRACT_DIR
 done

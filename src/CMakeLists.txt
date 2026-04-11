@@ -19,6 +19,7 @@ add_executable(
     InputMethodsView.swift
     AddonConfigView.swift
     ConfigView.swift
+    SyncConfigView.swift
     App.swift
     AppDelegate.swift
     SceneDelegate.swift
@@ -160,10 +161,12 @@ target_include_directories(${BUNDLE_NAME} PRIVATE
     "${PROJECT_BINARY_DIR}/ipc/$<CONFIG>-${SDK_NAME}"
     "${PROJECT_BINARY_DIR}/iosnotifications/$<CONFIG>-${SDK_NAME}"
     "${PROJECT_BINARY_DIR}/deps/AlertToast/$<CONFIG>-${SDK_NAME}"
+    "${PROJECT_BINARY_DIR}/deps/$<CONFIG>-${SDK_NAME}"
 )
 
 target_link_libraries(${BUNDLE_NAME}
     AlertToast
+    Swifter
     SwiftFrontend
     KeyboardUI
     NotifySwift

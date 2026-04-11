@@ -28,6 +28,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   nonisolated(unsafe) var id: UInt64!
   var hostingController: UIHostingController<VirtualKeyboardView>!
   var removedBySlide = ""
+  static let keyboard = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
   static private var clipboardText = ""
   static private var firstLoad = true
 
@@ -90,20 +91,38 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
     vm.setReturnKeyType(textDocumentProxy.returnKeyType)
     super.viewWillAppear(animated)
-    let keyboard = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
-    if removeFile(appGroupTmp.appendingPathComponent("\(keyboard).reload")) {
-      FCITX_INFO("Reload accepted")
-      reload()
+    if appGroupAvailable {
+      if removeFile(appGroupTmp.appendingPathComponent("\(Self.keyboard).reload")) {
+        FCITX_INFO("Reload accepted")
+        reload()
+      }
     }
-    vm.setDisplayMode(.initial)
-    self.resetInput()  // Avoid old context carried over, since focusOut is dummy.
-    focusIn()
+    self.resetInput()  // Avoid old context carried over.
+
+    if !appGroupAvailable,
+      let textBefore = textDocumentProxy.documentContextBeforeInput,
+      textBefore.hasPrefix(syncConfigMagicText)
+    {
+      // In sync config context.
+      focusOut()  // Avoid reload() to set .initial display mode.
+      textDocumentProxy.insertText(hasFullAccess ? syncConfigFullAccess : syncConfigNoFullAccess)
+      if hasFullAccess {
+        vm.keyboardDisplayName = getKeyboardDisplayName(Bundle.main.bundleURL)
+        syncConfig()
+      } else {
+        vm.setDisplayMode(.syncPending)
+      }
+    } else {
+      vm.setDisplayMode(.initial)
+      focusIn()
+    }
   }
 
   override func viewWillDisappear(_ animated: Bool) {
     FCITX_INFO("viewWillDisappear \(self.id)")
     super.viewWillDisappear(animated)
-    focusOut()
+    // Old viewWillDisappear may be called after new viewWillAppear (if switching apps), and viewWillDisappear may be called twice.
+    // Don't call focusOut as we use a single InputContext.
     hostingController.willMove(toParent: nil)
     hostingController.view.removeFromSuperview()
     hostingController.removeFromParent()
@@ -258,5 +277,10 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       removedBySlide = String(removedBySlide[index...])
       commitString(refill)
     }
+  }
+
+  public func syncConfig() {
+    vm.setDisplayMode(.syncRunning)
+    doSyncConfig(Self.keyboard)
   }
 }

@@ -8,7 +8,9 @@ English
 
 Currently developer beta. Please download [IPA](https://github.com/fcitx-contrib/fcitx5-ios/releases/tag/latest) and install with [SideStore](https://github.com/SideStore/SideStore).
 
-Note: Without developer account, certain features won't work, such as configuring keyboard in main app.
+Note: Without developer account, App Group can't be used, so please
+* grant full access to keyboards;
+* click `Sync config` after making changes to configuration or data.
 
 ## Build for simulator
 This project is NOT managed by Xcode,
@@ -26,10 +28,10 @@ brew install cmake gettext pkg-config
 ### Apply patches
 ```sh
 git apply --directory=fcitx5 patches/fcitx5.patch
+git apply --directory=deps/swifter patches/swifter.patch
 git apply --directory=engines/libime/src/libime/core/kenlm patches/kenlm.patch
 git apply --directory=engines/fcitx5-hallelujah patches/hallelujah.patch
 git apply --directory=engines/fcitx5-rime patches/rime.patch
-git clone https://github.com/google/mozc engines/fcitx5-mozc/mozc --depth=1 --recurse-submodules
 ```
 
 ### Build with CMake
@@ -52,7 +54,6 @@ you need to add Fcitx5 in Settings -> General -> Keyboard -> Keyboards -> Add Ne
 
 * Simulator is not emulator (virtual machine). Simulator file system is mapped from host filesystem. A process in simulator is a process in macOS.
 * App and input method (custom keyboard extension) are different programs. They share a directory (via App Group) in ~/Library/Developer/CoreSimulator/Devices/UUID/data/Containers/Shared/AppGroup.
-* Simulator doesn't have memory limit for keyboard extension.
 
 ## Build for iOS device
 Generate an unsigned IPA and install it with SideStore.
@@ -61,7 +62,6 @@ Below assumes you've already done with simulator.
 
 ```sh
 ./scripts/install-deps.sh OS64
-# By default enable chinese-addons only, as there is a 77 MB memory limit for keyboard process.
 cmake -B build/OS64 -G Xcode -DPLATFORM=OS64
 cmake --build build/OS64 --config Debug -- CODE_SIGNING_ALLOWED=NO
 cd build/OS64/src/Debug-iphoneos && rm -rf Payload Fcitx5.ipa && mkdir Payload

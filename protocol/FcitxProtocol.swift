@@ -12,4 +12,5 @@ public protocol FcitxProtocol {
   func setCurrentInputMethod(_ inputMethod: String)
   func dismissKeyboard()
   func slideBackspace(_ step: Int)
+  func syncConfig()
 }
