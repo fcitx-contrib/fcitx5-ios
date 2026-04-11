@@ -281,6 +281,6 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   public func syncConfig() {
     vm.setDisplayMode(.syncRunning)
-    doSyncConfig(Self.keyboard)
+    Task { await doSyncConfig(Self.keyboard) }
   }
 }

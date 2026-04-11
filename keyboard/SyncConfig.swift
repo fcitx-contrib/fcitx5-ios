@@ -3,6 +3,23 @@ import KeyboardUI
 import SwiftUtil
 import UIKit
 
+private actor SyncState {
+  static let shared = SyncState()
+  var task: Task<Void, Never>?
+
+  func startSync(body: @escaping () async -> Void) async {
+    let oldTask = task
+    task = Task {
+      if let oldTask = oldTask {
+        oldTask.cancel()
+        await oldTask.value
+      }
+      await body()
+      task = nil
+    }
+  }
+}
+
 // Given /list and [keyboard: Rime], return http://127.0.0.1:32489/list?keyboard=Rime.
 private func generateURL(_ path: String, params: [String: String]?) -> URL {
   var components = URLComponents()
@@ -80,8 +97,8 @@ private func reportDone(_ keyboard: String) async {
   try? await URLSession.shared.data(from: url)
 }
 
-func doSyncConfig(_ keyboard: String) {
-  Task {
+func doSyncConfig(_ keyboard: String) async {
+  await SyncState.shared.startSync { [keyboard] in
     while !Task.isCancelled {
       guard let list = await listFiles(keyboard) else {
         try? await Task.sleep(nanoseconds: 1_000_000_000)
@@ -95,6 +112,7 @@ func doSyncConfig(_ keyboard: String) {
       var newChecksums = [String: String]()
       var completedFiles = 0
       for item in list {
+        if Task.isCancelled { return }
         let path = item[0]
         if path.hasSuffix("/") {
           let dir = documents.appendingPathComponent(path)
