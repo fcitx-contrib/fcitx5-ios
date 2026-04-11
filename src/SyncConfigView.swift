@@ -6,6 +6,15 @@ import Swifter
 
 private let localhostOnly = true
 
+private let configPrefix =
+  (documents.appendingPathComponent("config").path as NSString)
+  .standardizingPath + "/"
+private let dataPrefix =
+  (documents.appendingPathComponent("data").path as NSString)
+  .standardizingPath + "/"
+private let localePath = (documents.appendingPathComponent("tmp/locale").path as NSString)
+  .standardizingPath
+
 final class ServerManager: Sendable {
   static let shared = ServerManager()
   nonisolated(unsafe) let server = HttpServer()
@@ -84,13 +93,9 @@ final class ServerManager: Sendable {
     let start = Int(startStr) ?? 0
     let normalizedPath = ((documents.path as NSString).appendingPathComponent(path) as NSString)
       .standardizingPath
-    let configPrefix = (documents.appendingPathComponent("config").path as NSString)
-      .standardizingPath
-    let dataPrefix = (documents.appendingPathComponent("data").path as NSString).standardizingPath
-    let localePath = (documents.appendingPathComponent("tmp/locale").path as NSString)
-      .standardizingPath
     guard
-      normalizedPath.hasPrefix(configPrefix) || normalizedPath.hasPrefix(dataPrefix)
+      normalizedPath == configPrefix || normalizedPath.hasPrefix(configPrefix)
+        || normalizedPath == dataPrefix || normalizedPath.hasPrefix(dataPrefix)
         || normalizedPath == localePath
     else {
       FCITX_WARN("GET /download path=\(path) start=\(start) 403")
