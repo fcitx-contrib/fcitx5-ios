@@ -102,7 +102,7 @@ final class ServerManager: Sendable {
     }
     defer { try? handle.close() }
     let fileSize = (try? handle.seekToEnd()) ?? 0
-    if start > Int(fileSize) {
+    if start < 0 || start > Int(fileSize) {
       FCITX_WARN("GET /download path=\(path) start=\(start) 400")
       return .badRequest(nil)
     }
