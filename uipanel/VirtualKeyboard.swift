@@ -8,6 +8,9 @@ public enum DisplayMode {
   case edit
   case statusArea
   case symbol
+  case syncPending
+  case syncRunning
+  case syncDone
 }
 
 @MainActor
@@ -199,6 +202,18 @@ public class ViewModel: ObservableObject {
     bubbleIndex = index
     bubbleHighlight = highlight
   }
+
+  // Sync config
+  @Published var syncProgress = 0
+  @Published var syncTotal = 0
+  @Published public var fileInSync = ""
+  @Published public var keyboardDisplayName = ""
+
+  public func setSyncProgress(_ progress: Int, _ total: Int) {
+    syncProgress = progress
+    syncTotal = total
+    fileInSync = ""
+  }
 }
 
 public struct VirtualKeyboardView: View {
@@ -210,50 +225,58 @@ public struct VirtualKeyboardView: View {
     GeometryReader { geometry in
       ZStack {
         let width = geometry.size.width
-        VStack(spacing: 0) {
-          if viewModel.mode == .initial {
-            ToolbarView(width: width)
-          } else if viewModel.mode == .candidates {
-            CandidateBarView(
-              width: width, auxUp: viewModel.auxUp, preedit: viewModel.preedit,
-              caret: viewModel.caret, candidates: viewModel.candidates,
-              highlighted: viewModel.highlighted,
-              rowItemCount: viewModel.rowItemCount,
-              batch: viewModel.batch, scrollEnd: viewModel.scrollEnd,
+        if viewModel.mode == .syncPending {
+          SyncPendingView()
+        } else if viewModel.mode == .syncRunning {
+          SyncRunningView()
+        } else if viewModel.mode == .syncDone {
+          SyncDoneView()
+        } else {
+          VStack(spacing: 0) {
+            if viewModel.mode == .initial {
+              ToolbarView(width: width)
+            } else if viewModel.mode == .candidates {
+              CandidateBarView(
+                width: width, auxUp: viewModel.auxUp, preedit: viewModel.preedit,
+                caret: viewModel.caret, candidates: viewModel.candidates,
+                highlighted: viewModel.highlighted,
+                rowItemCount: viewModel.rowItemCount,
+                batch: viewModel.batch, scrollEnd: viewModel.scrollEnd,
+                enterLabel: viewModel.enterLabel,
+                enterHighlight: viewModel.enterHighlight,
+                hasPreedit: viewModel.hasPreedit,
+                expanded: $viewModel.expanded,
+                pendingScroll: $viewModel.pendingScroll)
+            }
+            if viewModel.mode == .statusArea {
+              StatusAreaView(actions: $viewModel.actions)
+            } else if viewModel.mode == .edit {
+              EditView(totalWidth: width)
+            } else if viewModel.mode == .symbol {
+              SymbolView(width: width)
+            }
+            KeyboardView(
+              width: width, layer: viewModel.layer, lock: viewModel.lock,
+              spaceLabel: viewModel.spaceLabel,
               enterLabel: viewModel.enterLabel,
+              textIsEmpty: viewModel.textIsEmpty,
               enterHighlight: viewModel.enterHighlight,
               hasPreedit: viewModel.hasPreedit,
-              expanded: $viewModel.expanded,
-              pendingScroll: $viewModel.pendingScroll)
-          }
-          if viewModel.mode == .statusArea {
-            StatusAreaView(actions: $viewModel.actions)
-          } else if viewModel.mode == .edit {
-            EditView(totalWidth: width)
-          } else if viewModel.mode == .symbol {
-            SymbolView(width: width)
-          }
-          KeyboardView(
-            width: width, layer: viewModel.layer, lock: viewModel.lock,
-            spaceLabel: viewModel.spaceLabel,
-            enterLabel: viewModel.enterLabel,
-            textIsEmpty: viewModel.textIsEmpty,
-            enterHighlight: viewModel.enterHighlight,
-            hasPreedit: viewModel.hasPreedit,
-            bubbleX: viewModel.bubbleX,
-            bubbleY: viewModel.bubbleY,
-            bubbleWidth: viewModel.bubbleWidth,
-            bubbleHeight: viewModel.bubbleHeight,
-            bubbleBackground: viewModel.bubbleBackground,
-            bubbleShadow: viewModel.bubbleShadow,
-            bubbleLabel: viewModel.bubbleLabel,
-            bubbleLabels: viewModel.bubbleLabels,
-            bubbleIndex: viewModel.bubbleIndex,
-            bubbleHighlight: viewModel.bubbleHighlight
-          ).opacity(
-            viewModel.mode == .initial || (viewModel.mode == .candidates && !viewModel.expanded)
-              ? 1 : 0)  // Don't recreate KeyboardView when mode changes.
-        }.background(transparent)  // .clear will make gaps between candidates not scrollable.
+              bubbleX: viewModel.bubbleX,
+              bubbleY: viewModel.bubbleY,
+              bubbleWidth: viewModel.bubbleWidth,
+              bubbleHeight: viewModel.bubbleHeight,
+              bubbleBackground: viewModel.bubbleBackground,
+              bubbleShadow: viewModel.bubbleShadow,
+              bubbleLabel: viewModel.bubbleLabel,
+              bubbleLabels: viewModel.bubbleLabels,
+              bubbleIndex: viewModel.bubbleIndex,
+              bubbleHighlight: viewModel.bubbleHighlight
+            ).opacity(
+              viewModel.mode == .initial || (viewModel.mode == .candidates && !viewModel.expanded)
+                ? 1 : 0)  // Don't recreate KeyboardView when mode changes.
+          }.background(transparent)  // .clear will make gaps between candidates not scrollable.
+        }
         if viewModel.showMenu {
           ContextMenuOverlay(
             items: viewModel.menuItems,

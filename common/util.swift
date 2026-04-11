@@ -1,17 +1,21 @@
 import CryptoKit
 import Foundation
 
+private let useAppGroup = true  // On simulator, turn this off to mock side load on real device.
+
 public let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
 // For SideStore, app group is not available, so fallback to documents.
 public let appGroup =
-  FileManager.default.containerURL(
-    forSecurityApplicationGroupIdentifier: "group.org.fcitx.Fcitx5") ?? documents
+  useAppGroup
+  ? (FileManager.default.containerURL(
+    forSecurityApplicationGroupIdentifier: "group.org.fcitx.Fcitx5") ?? documents) : documents
 public let appGroupConfig = appGroup.appendingPathComponent("config")
 public let appGroupTmp = appGroup.appendingPathComponent("tmp")
 public let appGroupData = appGroup.appendingPathComponent("data")
 public let appGroupAvailable = appGroup != documents
 
 public func logPaths() {
+  FCITX_INFO("Bundle: \(Bundle.main.bundleURL)")
   FCITX_INFO("Documents: \(documents)")
   FCITX_INFO("App Group: \(appGroup)")
 }
@@ -46,7 +50,7 @@ extension URL {
   }
 }
 
-func md5Hash(_ url: URL) -> String {
+public func md5Hash(_ url: URL) -> String {
   guard let fileData = try? Data(contentsOf: url) else {
     return ""
   }
@@ -136,4 +140,15 @@ public struct InputMethod: Codable {
 
 public func deserialize<T: Codable>(_ type: T.Type, _ s: String) -> T {
   return try! JSONDecoder().decode(type, from: s.data(using: .utf8)!)
+}
+
+public let syncConfigMagicText = "Fcitx5 iOS sync config context: "
+public let syncConfigFullAccess = "1"
+public let syncConfigNoFullAccess = "0"
+public let localhostV4 = "127.0.0.1"
+public let syncConfigPort: UInt16 = 32489
+public let syncConfigChunkSize = 256 * 1024
+
+public func getKeyboardDisplayName(_ bundleURL: URL) -> String {
+  Bundle(url: bundleURL)?.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? ""
 }

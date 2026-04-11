@@ -14,6 +14,7 @@ function(add_keyboard_extension keyboard language targets)
     add_executable(${extension} MACOSX_BUNDLE
         "${PROJECT_SOURCE_DIR}/keyboard/KeyboardViewController.swift"
         "${PROJECT_SOURCE_DIR}/keyboard/util.swift"
+        "${PROJECT_SOURCE_DIR}/keyboard/SyncConfig.swift"
         "${PROJECT_SOURCE_DIR}/keyboard/fcitx.cpp"
         "${PROJECT_SOURCE_DIR}/keyboard/keycode.cpp"
     )

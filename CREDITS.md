@@ -4,6 +4,7 @@
 * [ios-cmake](https://github.com/leetal/ios-cmake): BSD-3-Clause
 * [swift-cmake-examples](https://github.com/apple/swift-cmake-examples): Apache-2.0
 * [AlertToast](https://github.com/elai950/AlertToast): MIT
+* [swifter](https://github.com/httpswift/swifter): BSD-3-Clause
 
 ### Chinese
 * [fcitx5-chinese-addons](https://github.com/fcitx/fcitx5-chinese-addons): LGPL-2.1-or-later
@@ -24,6 +25,7 @@
 * [librime-octagram](https://github.com/lotem/librime-octagram): GPL-3.0-only
 * [librime-predict](https://github.com/rime/librime-predict): BSD-3-Clause
 * [librime-qjs](https://github.com/HuangJian/librime-qjs): BSD-3-Clause
+* [rime-ice](https://github.com/iDvel/rime-ice): GPL-3.0-only
 
 ### Other libraries
 * [boost](https://github.com/boostorg): BSL-1.0

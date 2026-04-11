@@ -13,7 +13,7 @@ jobs:
           sudo ln -sf /usr/bin/bsdtar /usr/bin/tar
 
       - name: Download release
-        run: wget -O release.ipa https://github.com/fcitx-contrib/fcitx5-ios/releases/download/latest/Fcitx5.ipa
+        run: curl -Lo release.ipa https://github.com/fcitx-contrib/fcitx5-ios/releases/download/latest/Fcitx5.ipa
 
       - name: Download artifact
         uses: actions/download-artifact@v8

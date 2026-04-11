@@ -28,8 +28,7 @@ public func listKeyboardInfo() -> [KeyboardInfo] {
   {
     for item in items where item.pathExtension == "appex" {
       let id = item.deletingPathExtension().lastPathComponent
-      let displayName =
-        Bundle(url: item)?.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String ?? id
+      let displayName = getKeyboardDisplayName(item)
       result.append(KeyboardInfo(id: id, displayName: displayName))
     }
   }
