@@ -58,14 +58,17 @@ struct CandidateBarView: View {
   var body: some View {
     let barHeight = getBarHeight(totalHeight)
     let keyboardHeight = getKeyboardHeight(totalHeight)
+    let hasAuxPreedit = !auxUp.isEmpty || !preedit.isEmpty
+    let barHeightExcludePreedit = hasAuxPreedit ? barHeight * (1 - auxPreeditRatio) : barHeight
+    let marginTop = max((5 * barHeightExcludePreedit - keyboardHeight) / 11, 0)
+    let paddingBottom = max((keyboardHeight - 5 * barHeightExcludePreedit) / 6, 0)
+    let expandedCandidateHeight =
+      (barHeightExcludePreedit + keyboardHeight - marginTop) / 6 - paddingBottom
 
     ScrollViewReader { proxy in
       HStack(spacing: 0) {
-        let barHeightExcludePreedit =
-          barHeight * (auxUp.isEmpty && preedit.isEmpty ? 1 : (1 - auxPreeditRatio))
-
         VStack(alignment: .leading, spacing: 0) {
-          if !auxUp.isEmpty || !preedit.isEmpty {
+          if hasAuxPreedit {
             Text(auxUp + preeditWithCaret(preedit, caret)).font(.system(size: preeditFontSize))
               .frame(
                 height: barHeight * auxPreeditRatio
@@ -76,6 +79,9 @@ struct CandidateBarView: View {
           if expanded {
             ScrollView(.vertical) {
               LazyVStack(spacing: 0) {
+                if marginTop > 0 {
+                  Spacer().frame(height: marginTop)
+                }
                 ForEach(rowItemCount.indices, id: \.self) { row in
                   HStack(spacing: 0) {
                     ForEach(0..<rowItemCount[row], id: \.self) { col in
@@ -85,7 +91,7 @@ struct CandidateBarView: View {
                           text: candidates[index], index: index, highlighted: highlighted
                         )
                         .frame(minWidth: width / 8).frame(
-                          height: (barHeightExcludePreedit + keyboardHeight) / 6
+                          height: expandedCandidateHeight
                         )
                       }
                     }
@@ -96,6 +102,9 @@ struct CandidateBarView: View {
                     }
                   }.onDisappear {
                     visibleRows.remove(row)
+                  }
+                  if paddingBottom > 0 {
+                    Spacer().frame(height: paddingBottom)
                   }
                 }
               }
