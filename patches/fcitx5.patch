@@ -39,6 +39,46 @@ index 56fb7f62..98fa2ae6 100644
  }
  
  LogMessageBuilder::LogMessageBuilder(std::ostream &out, LogLevel l,
+diff --git a/src/lib/fcitx/addonloader.cpp b/src/lib/fcitx/addonloader.cpp
+index 20a6e616..2869fb3e 100644
+--- a/src/lib/fcitx/addonloader.cpp
++++ b/src/lib/fcitx/addonloader.cpp
+@@ -27,6 +27,7 @@ namespace fcitx {
+ 
+ AddonLoader::~AddonLoader() {}
+ 
++#if 0
+ SharedLibraryLoader::~SharedLibraryLoader() {}
+ 
+ AddonInstance *SharedLibraryLoader::load(const AddonInfo &info,
+@@ -100,6 +101,7 @@ AddonInstance *SharedLibraryLoader::load(const AddonInfo &info,
+     }
+     return nullptr;
+ }
++#endif
+ 
+ StaticLibraryLoader::StaticLibraryLoader(StaticAddonRegistry *registry_)
+     : registry(registry_) {}
+diff --git a/src/lib/fcitx/addonloader_p.h b/src/lib/fcitx/addonloader_p.h
+index 6c0ca9cf..9edc0584 100644
+--- a/src/lib/fcitx/addonloader_p.h
++++ b/src/lib/fcitx/addonloader_p.h
+@@ -27,6 +27,7 @@ namespace {
+ constexpr char FCITX_ADDON_FACTORY_ENTRY[] = "fcitx_addon_factory_instance";
+ }
+ 
++#if 0
+ class SharedLibraryFactory {
+ public:
+     SharedLibraryFactory(const AddonInfo &info, std::vector<Library> libraries)
+@@ -71,6 +72,7 @@ private:
+     std::unordered_map<std::string, std::unique_ptr<SharedLibraryFactory>>
+         registry_;
+ };
++#endif
+ 
+ class StaticLibraryLoader : public AddonLoader {
+ public:
 diff --git a/src/lib/fcitx/addonmanager.cpp b/src/lib/fcitx/addonmanager.cpp
 index ab4e36f4..48001b4e 100644
 --- a/src/lib/fcitx/addonmanager.cpp

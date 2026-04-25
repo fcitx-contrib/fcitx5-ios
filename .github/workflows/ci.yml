@@ -36,7 +36,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          archive: false
+          archive: true # false makes it auto unzip on download-artifact, since it's a zip itself.
           name: artifact.zip
           path: |
             /tmp/deploy-schema/artifact.zip
