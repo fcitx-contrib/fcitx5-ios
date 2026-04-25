@@ -36,6 +36,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
+          archive: false
           name: artifact.zip
           path: |
             /tmp/deploy-schema/artifact.zip
@@ -64,7 +65,7 @@ jobs:
         run: |
           brew install librsvg
           ./scripts/install-deps.sh ${{ matrix.platform }}
-          curl -LO https://github.com/fcitx-contrib/fcitx5-prebuilder/releases/download/macos/marisa-arm64.tar.bz2
+          curl -fsSLO https://github.com/fcitx-contrib/fcitx5-prebuilder/releases/download/macos/marisa-arm64.tar.bz2
           sudo tar xf marisa-arm64.tar.bz2 -C /usr/local bin/marisa-build
 
       - name: Build
@@ -74,14 +75,11 @@ jobs:
           git apply --directory=engines/libime/src/libime/core/kenlm patches/kenlm.patch
           git apply --directory=engines/fcitx5-hallelujah patches/hallelujah.patch
           git apply --directory=engines/fcitx5-rime patches/rime.patch
-          if [[ "${{ matrix.platform }}" == "OS64" ]]; then
-            cmake -B build/${{ matrix.platform }} -G Xcode \
-              -DPLATFORM=${{ matrix.platform }}
-            cmake --build build/${{ matrix.platform }} --config Release -- CODE_SIGNING_ALLOWED=NO
-          else
-            cmake -B build/${{ matrix.platform }} -G Xcode \
-              -DPLATFORM=${{ matrix.platform }}
-            cmake --build build/${{ matrix.platform }} --config Release
+          cmake -B build/${{ matrix.platform }} -G Ninja \
+            -DPLATFORM=${{ matrix.platform }} \
+            -DCMAKE_BUILD_TYPE=Release
+          if [[ "${{ matrix.platform }}" != "OS64" ]]; then
+            ./scripts/code-sign.sh ${{ matrix.platform }}
           fi
 
       - name: Check validity
@@ -92,7 +90,7 @@ jobs:
         if: ${{ matrix.platform == 'SIMULATORARM64' }}
         run: |
           xcrun simctl boot "iPhone 17"
-          xcrun simctl install booted build/${{ matrix.platform }}/src/Release-iphonesimulator/Fcitx5.app
+          xcrun simctl install booted build/${{ matrix.platform }}/src/Fcitx5.app
           xcrun simctl launch booted org.fcitx.Fcitx5
 
       - name: Download artifact
@@ -103,13 +101,13 @@ jobs:
 
       - name: Pack IPA
         if: ${{ matrix.platform == 'OS64' }}
-        working-directory: build/OS64/src/Release-iphoneos
+        working-directory: build/OS64/src
         run: |
           # For developer test period use rime-ice.
           mv Fcitx5.app/PlugIns/Rime.appex/share/rime-data/opencc .
           rm -rf Fcitx5.app/PlugIns/Rime.appex/share/rime-data/*
           mv opencc Fcitx5.app/PlugIns/Rime.appex/share/rime-data
-          tar xf ../../../../artifact.zip -C Fcitx5.app/PlugIns/Rime.appex/share/rime-data
+          tar xf ../../../artifact.zip -C Fcitx5.app/PlugIns/Rime.appex/share/rime-data
           mkdir Payload
           cp -r Fcitx5.app Payload
           zip -r Fcitx5.ipa Payload
@@ -121,7 +119,7 @@ jobs:
           archive: false
           name: Fcitx5.ipa
           path: |
-            build/OS64/src/Release-iphoneos/Fcitx5.ipa
+            build/OS64/src/Fcitx5.ipa
 
       - name: Create Nightly release
         if: ${{ github.ref == 'refs/heads/master' && matrix.platform == 'OS64' }}
@@ -132,7 +130,7 @@ jobs:
           prerelease: true
           title: "Nightly Build"
           files: |
-            build/OS64/src/Release-iphoneos/Fcitx5.ipa
+            build/OS64/src/Fcitx5.ipa
 
       - name: Setup tmate session
         if: ${{ failure() }}

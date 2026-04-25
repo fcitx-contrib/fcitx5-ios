@@ -10,6 +10,9 @@ function(generate_profile keyboard relative_path input_methods)
 endfunction()
 
 function(add_keyboard_extension keyboard language targets)
+    # Create a new target name RimeExtension not to be conflict with fcitx5-rime's rime target.
+    # NSExtensionPrincipalClass is extension.KeyboardViewController for Ninja generator,
+    # and keyboard.KeyboardViewController for Xcode generator.
     set(extension "${keyboard}Extension")
     add_executable(${extension} MACOSX_BUNDLE
         "${PROJECT_SOURCE_DIR}/keyboard/KeyboardViewController.swift"
@@ -22,7 +25,6 @@ function(add_keyboard_extension keyboard language targets)
     configure_file("${PROJECT_SOURCE_DIR}/keyboard/Info.plist.in" "${PROJECT_BINARY_DIR}/${keyboard}.plist" @ONLY)
     set_target_properties(${extension} PROPERTIES
         MACOSX_BUNDLE_INFO_PLIST "${PROJECT_BINARY_DIR}/${keyboard}.plist"
-        XCODE_PRODUCT_TYPE "com.apple.product-type.app-extension"
         OUTPUT_NAME "${keyboard}"
     )
 
@@ -30,9 +32,9 @@ function(add_keyboard_extension keyboard language targets)
 
     target_include_directories(${extension} PRIVATE
         "${PROJECT_SOURCE_DIR}/keyboard"
-        "${PROJECT_BINARY_DIR}/common/$<CONFIG>-${SDK_NAME}"
-        "${PROJECT_BINARY_DIR}/iosfrontend/$<CONFIG>-${SDK_NAME}"
-        "${PROJECT_BINARY_DIR}/uipanel/$<CONFIG>-${SDK_NAME}"
+        "${PROJECT_BINARY_DIR}/common"
+        "${PROJECT_BINARY_DIR}/iosfrontend"
+        "${PROJECT_BINARY_DIR}/uipanel"
     )
 
     target_compile_options(${extension} PUBLIC
@@ -40,6 +42,7 @@ function(add_keyboard_extension keyboard language targets)
     )
 
     target_link_libraries(${extension}
+        "-Xlinker -e -Xlinker _NSExtensionMain -application-extension"
         SwiftFrontend
         KeyboardUI
         NotifySwift

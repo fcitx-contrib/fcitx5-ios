@@ -10,9 +10,7 @@ configure_file(meta.swift.in ${CMAKE_CURRENT_SOURCE_DIR}/meta.swift @ONLY)
 
 file(GLOB CONFIG_UI_FILES CONFIGURE_DEPENDS config/*.swift)
 
-add_executable(
-    ${BUNDLE_NAME}
-    MACOSX_BUNDLE
+add_executable(${BUNDLE_NAME} MACOSX_BUNDLE
     meta.swift
     AboutView.swift
     ContentView.swift
@@ -40,7 +38,7 @@ set(ENGINE_TARGETS)
 if (CHINESE_ADDONS)
     list(APPEND KEYBOARDS Chinese)
     list(APPEND DEFAULT_INPUT_METHODS pinyin shuangpin wbx)
-    generate_profile(Chinese "src/$<CONFIG>-${SDK_NAME}/Chinese.appex" "pinyin;shuangpin;wbx")
+    generate_profile(Chinese "src/Chinese.appex" "pinyin;shuangpin;wbx")
     fcitx5_get_addon_targets(CHINESE_TARGETS "${ENGINES_SOURCE_DIR}/fcitx5-chinese-addons" "${ENGINES_SOURCE_DIR}/fcitx5-lua")
     add_keyboard_extension(Chinese "zh-Hans" "${CHINESE_TARGETS}")
     list(APPEND ENGINE_TARGETS ${CHINESE_TARGETS})
@@ -105,7 +103,7 @@ endif()
 if (HALLELUJAH)
     list(APPEND KEYBOARDS Hallelujah)
     list(APPEND DEFAULT_INPUT_METHODS hallelujah)
-    generate_profile(Hallelujah "src/$<CONFIG>-${SDK_NAME}/Hallelujah.appex" "hallelujah")
+    generate_profile(Hallelujah "src/Hallelujah.appex" "hallelujah")
     fcitx5_get_addon_targets(HALLELUJAH_TARGETS "${ENGINES_SOURCE_DIR}/fcitx5-hallelujah")
     add_keyboard_extension(Hallelujah "en-US" "${HALLELUJAH_TARGETS}")
     list(APPEND ENGINE_TARGETS ${HALLELUJAH_TARGETS})
@@ -126,7 +124,7 @@ endif()
 if (MOZC)
     list(APPEND KEYBOARDS Mozc)
     list(APPEND DEFAULT_INPUT_METHODS mozc)
-    generate_profile(Mozc "src/$<CONFIG>-${SDK_NAME}/Mozc.appex" "mozc")
+    generate_profile(Mozc "src/Mozc.appex" "mozc")
     fcitx5_get_addon_targets(MOZC_TARGETS "${ENGINES_SOURCE_DIR}/fcitx5-mozc")
     add_keyboard_extension(Mozc "ja-JP" "${MOZC_TARGETS}")
     list(APPEND ENGINE_TARGETS ${MOZC_TARGETS})
@@ -141,7 +139,7 @@ endif()
 if (RIME)
     list(APPEND KEYBOARDS Rime)
     list(APPEND DEFAULT_INPUT_METHODS rime)
-    generate_profile(Rime "src/$<CONFIG>-${SDK_NAME}/Rime.appex" "rime")
+    generate_profile(Rime "src/Rime.appex" "rime")
     fcitx5_get_addon_targets(RIME_TARGETS "${ENGINES_SOURCE_DIR}/fcitx5-rime")
     add_keyboard_extension(Rime "mul" "${RIME_TARGETS}")
     list(APPEND ENGINE_TARGETS ${RIME_TARGETS})
@@ -157,11 +155,11 @@ endif()
 target_include_directories(${BUNDLE_NAME} PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${PROJECT_SOURCE_DIR}/common"
-    "${PROJECT_BINARY_DIR}/common/$<CONFIG>-${SDK_NAME}"
-    "${PROJECT_BINARY_DIR}/ipc/$<CONFIG>-${SDK_NAME}"
-    "${PROJECT_BINARY_DIR}/iosnotifications/$<CONFIG>-${SDK_NAME}"
-    "${PROJECT_BINARY_DIR}/deps/AlertToast/$<CONFIG>-${SDK_NAME}"
-    "${PROJECT_BINARY_DIR}/deps/$<CONFIG>-${SDK_NAME}"
+    "${PROJECT_BINARY_DIR}/common"
+    "${PROJECT_BINARY_DIR}/ipc"
+    "${PROJECT_BINARY_DIR}/iosnotifications"
+    "${PROJECT_BINARY_DIR}/deps/AlertToast"
+    "${PROJECT_BINARY_DIR}/deps"
 )
 
 target_link_libraries(${BUNDLE_NAME}
@@ -179,15 +177,13 @@ list(TRANSFORM KEYBOARDS APPEND "Extension" OUTPUT_VARIABLE EXTENSIONS)
 # Make main app the last target so that keyboard can be copied into it.
 add_dependencies(${BUNDLE_NAME} ${EXTENSIONS})
 
-set_target_properties(${BUNDLE_NAME} PROPERTIES
-    XCODE_EMBED_APP_EXTENSIONS "${EXTENSIONS}"
-)
-
 set_xcode_property(${BUNDLE_NAME} CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/assets/app.entitlements All)
 
 foreach(Keyboard ${KEYBOARDS})
+    # Ninja generator wrongly creates .app instead of .appex so symlink for now.
+    execute_process(COMMAND ln -sfh "${Keyboard}.app" "${CMAKE_CURRENT_BINARY_DIR}/${Keyboard}.appex")
     # Embed keyboard.appex in app.
-    copy_to(app copy_directory "${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>-${SDK_NAME}/${Keyboard}.appex" "PlugIns/${Keyboard}.appex")
+    copy_to(app copy_directory "${CMAKE_CURRENT_BINARY_DIR}/${Keyboard}.appex" "PlugIns/${Keyboard}.appex")
 endforeach()
 
 # Settings bundle
