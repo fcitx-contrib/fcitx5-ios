@@ -28,8 +28,6 @@ function(add_keyboard_extension keyboard language targets)
         OUTPUT_NAME "${keyboard}"
     )
 
-    set_xcode_property(${extension} CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/assets/keyboard.entitlements All)
-
     target_include_directories(${extension} PRIVATE
         "${PROJECT_SOURCE_DIR}/keyboard"
         "${PROJECT_BINARY_DIR}/common"

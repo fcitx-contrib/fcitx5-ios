@@ -178,8 +178,6 @@ list(TRANSFORM KEYBOARDS APPEND "Extension" OUTPUT_VARIABLE EXTENSIONS)
 # Make main app the last target so that keyboard can be copied into it.
 add_dependencies(${BUNDLE_NAME} ${EXTENSIONS})
 
-set_xcode_property(${BUNDLE_NAME} CODE_SIGN_ENTITLEMENTS ${PROJECT_SOURCE_DIR}/assets/app.entitlements All)
-
 foreach(Keyboard ${KEYBOARDS})
     # Ninja generator wrongly creates .app instead of .appex so symlink for now.
     execute_process(COMMAND ln -sfh "${Keyboard}.app" "${CMAKE_CURRENT_BINARY_DIR}/${Keyboard}.appex")
