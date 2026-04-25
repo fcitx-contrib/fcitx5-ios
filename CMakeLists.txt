@@ -87,8 +87,11 @@ function(copy_to bundle cmd file relative_path)
     endif()
 
     get_filename_component(filename "${file}" NAME)
-    if(filename MATCHES "\\.conf$" AND NOT filename STREQUAL mozc.conf AND NOT filename STREQUAL mozc-addon.conf)
-        add_dependencies(${target} "${filename}.in-fmt")
+    if(filename MATCHES "\\.conf$")
+        set(fmt_target "${filename}.in-fmt")
+        if (TARGET "${fmt_target}")
+            add_dependencies(${target} "${fmt_target}")
+        endif()
     endif()
 
     add_custom_command(TARGET ${target}
