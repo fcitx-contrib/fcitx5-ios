@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "llvm-vs-code-extensions.lldb-dap",
+        "llvm-vs-code-extensions.vscode-clangd",
         "swiftlang.swift-vscode"
     ]
 }

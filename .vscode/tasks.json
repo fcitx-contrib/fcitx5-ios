@@ -20,7 +20,7 @@
         {
             "type": "shell",
             "label": "Configure (arm64 simulator)",
-            "command": "cmake -B build/SIMULATORARM64 -G Xcode -DPLATFORM=SIMULATORARM64",
+            "command": "cmake -B build/SIMULATORARM64 -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPLATFORM=SIMULATORARM64",
             "group": {
                 "kind": "build"
             }
@@ -28,7 +28,7 @@
         {
             "type": "shell",
             "label": "Build (arm64 simulator)",
-            "command": "cmake --build build/SIMULATORARM64 --config Debug",
+            "command": "cmake --build build/SIMULATORARM64 && ./scripts/code-sign.sh SIMULATORARM64",
             "group": {
                 "kind": "build"
             }
@@ -36,7 +36,7 @@
         {
             "type": "shell",
             "label": "Install (arm64 simulator)",
-            "command": "xcrun simctl install booted build/SIMULATORARM64/src/Debug-iphonesimulator/Fcitx5.app",
+            "command": "xcrun simctl install booted build/SIMULATORARM64/src/Fcitx5.app",
             "group": {
                 "kind": "build"
             }
@@ -52,7 +52,7 @@
         {
             "type": "shell",
             "label": "Configure (x86_64 simulator)",
-            "command": "cmake -B build/SIMULATOR64 -G Xcode -DPLATFORM=SIMULATOR64",
+            "command": "cmake -B build/SIMULATOR64 -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPLATFORM=SIMULATOR64",
             "group": {
                 "kind": "build"
             }
@@ -60,7 +60,7 @@
         {
             "type": "shell",
             "label": "Build (x86_64 simulator)",
-            "command": "cmake --build build/SIMULATOR64 --config Debug",
+            "command": "cmake --build build/SIMULATOR64  && ./scripts/code-sign.sh SIMULATOR64",
             "group": {
                 "kind": "build"
             }
@@ -68,7 +68,7 @@
         {
             "type": "shell",
             "label": "Install (x86_64 simulator)",
-            "command": "xcrun simctl install booted build/SIMULATOR64/src/Debug-iphonesimulator/Fcitx5.app",
+            "command": "xcrun simctl install booted build/SIMULATOR64/src/Fcitx5.app",
             "group": {
                 "kind": "build"
             }
@@ -84,7 +84,7 @@
         {
             "type": "shell",
             "label": "Configure",
-            "command": "cmake -B build/OS64 -G Xcode -DPLATFORM=OS64",
+            "command": "cmake -B build/OS64 -G Ninja -DCMAKE_BUILD_TYPE=Release -DPLATFORM=OS64",
             "group": {
                 "kind": "build"
             }
@@ -92,7 +92,7 @@
         {
             "type": "shell",
             "label": "Build",
-            "command": "cmake --build build/OS64 --config Debug -- CODE_SIGNING_ALLOWED=NO",
+            "command": "cmake --build build/OS64",
             "group": {
                 "kind": "build"
             }
@@ -102,7 +102,7 @@
             "label": "Pack",
             "command": "rm -rf Payload Fcitx5.ipa && mkdir Payload && cp -r Fcitx5.app Payload && zip -r Fcitx5.ipa Payload",
             "options": {
-                "cwd": "${workspaceFolder}/build/OS64/src/Debug-iphoneos"
+                "cwd": "${workspaceFolder}/build/OS64/src"
             },
             "group": {
                 "kind": "build"

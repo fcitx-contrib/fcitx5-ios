@@ -13,15 +13,14 @@ Note: Without developer account, App Group can't be used, so please
 * click `Sync config` after making changes to configuration or data.
 
 ## Build for simulator
-This project is NOT managed by Xcode,
-but Xcode is needed for iOS SDK.
+This project is NOT managed by Xcode, but Xcode is needed for iOS SDK.
 
 Below assumes Apple Silicon.
 For Intel, replace all `SIMULATORARM64` with `SIMULATOR64`.
 
 ### Install dependencies
 ```sh
-brew install cmake gettext pkg-config
+brew install cmake ninja gettext pkg-config
 ./scripts/install-deps.sh SIMULATORARM64
 ```
 
@@ -36,8 +35,8 @@ git apply --directory=engines/fcitx5-rime patches/rime.patch
 
 ### Build with CMake
 ```sh
-cmake -B build/SIMULATORARM64 -G Xcode -DPLATFORM=SIMULATORARM64
-cmake --build build --config Debug
+cmake -B build/SIMULATORARM64 -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPLATFORM=SIMULATORARM64
+cmake --build build/SIMULATORARM64 && ./scripts/code-sign.sh SIMULATORARM64
 ```
 
 You can also use `Cmd+Shift+B` in VSCode to execute a task.
@@ -47,7 +46,7 @@ You can also use `Cmd+Shift+B` in VSCode to execute a task.
 xcrun simctl list devices
 xcrun simctl boot UUID
 open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
-xcrun simctl install booted build/SIMULATORARM64/src/Debug-iphonesimulator/Fcitx5.app
+xcrun simctl install booted build/SIMULATORARM64/src/Fcitx5.app
 ```
 After the first time you execute `xcrun simctl install`,
 you need to add Fcitx5 in Settings -> General -> Keyboard -> Keyboards -> Add New Keyboard.
@@ -62,9 +61,9 @@ Below assumes you've already done with simulator.
 
 ```sh
 ./scripts/install-deps.sh OS64
-cmake -B build/OS64 -G Xcode -DPLATFORM=OS64
-cmake --build build/OS64 --config Debug -- CODE_SIGNING_ALLOWED=NO
-cd build/OS64/src/Debug-iphoneos && rm -rf Payload Fcitx5.ipa && mkdir Payload
+cmake -B build/OS64 -G Ninja -DCMAKE_BUILD_TYPE=Release -DPLATFORM=OS64
+cmake --build build/OS64
+cd build/OS64/src && rm -rf Payload Fcitx5.ipa && mkdir Payload
 cp -r Fcitx5.app Payload && zip -r Fcitx5.ipa Payload
 ```
 
