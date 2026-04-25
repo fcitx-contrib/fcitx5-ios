@@ -85,6 +85,12 @@ function(copy_to bundle cmd file relative_path)
         set(app "${bundle}.appex")
         set(target "${bundle}Extension")
     endif()
+
+    get_filename_component(filename "${file}" NAME)
+    if(filename MATCHES "\\.conf$" AND NOT filename STREQUAL mozc.conf AND NOT filename STREQUAL mozc-addon.conf)
+        add_dependencies(${target} "${filename}.in-fmt")
+    endif()
+
     add_custom_command(TARGET ${target}
         POST_BUILD COMMAND /bin/sh -c \"
         ${CMAKE_COMMAND} -E ${cmd} ${file}
