@@ -78,6 +78,7 @@ jobs:
           cmake -B build/${{ matrix.platform }} -G Ninja \
             -DPLATFORM=${{ matrix.platform }} \
             -DCMAKE_BUILD_TYPE=Release
+          cmake --build build/${{ matrix.platform }}
           if [[ "${{ matrix.platform }}" != "OS64" ]]; then
             ./scripts/code-sign.sh ${{ matrix.platform }}
           fi
