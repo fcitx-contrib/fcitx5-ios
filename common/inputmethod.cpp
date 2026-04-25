@@ -14,7 +14,7 @@ nlohmann::json jsonDescribeIm(const fcitx::InputMethodEntry *entry) {
 }
 
 std::string getInputMethods() {
-    return with_fcitx([] -> std::string {
+    return with_fcitx([]() -> std::string {
         nlohmann::json j;
         auto &imMgr = instance->inputMethodManager();
         auto group = imMgr.currentGroup();

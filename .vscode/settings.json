@@ -1,3 +1,10 @@
 {
+    "clangd.arguments": [
+        "-background-index",
+        "-compile-commands-dir=build/SIMULATORARM64"
+    ],
+    "swift.sourcekit-lsp.supported-languages": [
+        "swift"
+    ],
     "swift.SDK": "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk",
 }

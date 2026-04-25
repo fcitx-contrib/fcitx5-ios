@@ -12,6 +12,8 @@ set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED YES) # Need it for AppGroup even 
 set(CMAKE_Swift_LANGUAGE_VERSION 6)
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(BUNDLE_IDENTIFIER "org.fcitx.Fcitx5")
 set(BUNDLE_NAME "Fcitx5")
 
@@ -83,10 +85,16 @@ function(copy_to bundle cmd file relative_path)
         set(app "${bundle}.appex")
         set(target "${bundle}Extension")
     endif()
+
+    get_filename_component(filename "${file}" NAME)
+    if(filename MATCHES "\\.conf$" AND NOT filename STREQUAL mozc.conf AND NOT filename STREQUAL mozc-addon.conf)
+        add_dependencies(${target} "${filename}.in-fmt")
+    endif()
+
     add_custom_command(TARGET ${target}
         POST_BUILD COMMAND /bin/sh -c \"
         ${CMAKE_COMMAND} -E ${cmd} ${file}
-            ${PROJECT_BINARY_DIR}/src/$<CONFIG>-${SDK_NAME}/${app}/${relative_path}
+            ${PROJECT_BINARY_DIR}/src/${app}/${relative_path}
     \")
 endfunction()
 
