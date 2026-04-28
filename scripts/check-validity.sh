@@ -14,7 +14,7 @@ executables=(
 
 for executable in "${executables[@]}"; do  
   output=$(nm "$executable")
-  if echo "$output" | grep dlopen; then
+  if echo "$output" | grep dlopen && echo in: $executable; then
     has_dl=1
   fi
 done
