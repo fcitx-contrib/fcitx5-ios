@@ -8,6 +8,7 @@ if (CHINESE_ADDONS)
     set(HAS_STD_FILESYSTEM 1)
     set(ENABLE_TOOLS OFF)
     add_subdirectory(libime)
+    target_compile_options(kenlm PRIVATE -w)
     # suppress configure error
     install(TARGETS kenlm EXPORT LibIMECoreTargets LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib)
 

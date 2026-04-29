@@ -129,8 +129,10 @@ struct BackspaceView: View {
   func startDelete() {
     stopDelete()
     deleteTimer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { _ in
-      vm.resetLayerIfNotLocked()
-      client.keyPressed("", "Backspace")
+      Task { @MainActor in
+        vm.resetLayerIfNotLocked()
+        client.keyPressed("", "Backspace")
+      }
     }
   }
 
