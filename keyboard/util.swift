@@ -1,7 +1,7 @@
 import Foundation
 
 func lengthOfFirstLine(_ s: String) -> Int {
-  if let index = s.index(of: "\n") {
+  if let index = s.firstIndex(of: "\n") {
     return s.distance(from: s.startIndex, to: index) - 1
   }
   return s.count

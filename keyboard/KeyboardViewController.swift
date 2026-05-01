@@ -25,7 +25,7 @@ private func syncLocale() -> String {
 
 @MainActor
 class KeyboardViewController: UIInputViewController, FcitxProtocol {
-  nonisolated(unsafe) var id: UInt64!
+  nonisolated(unsafe) var id: UInt64 = 0
   var hostingController: UIHostingController<VirtualKeyboardView>!
   var removedBySlide = ""
   static let keyboard = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent

@@ -6,7 +6,7 @@ if (CHINESE_ADDONS)
 
     option(ENABLE_DATA OFF)
     set(HAS_STD_FILESYSTEM 1)
-    set(ENABLE_TOOLS OFF)
+    option(ENABLE_TOOLS OFF)
     add_subdirectory(libime)
     # suppress kenlm warnings    
     set_property(SOURCE libime/src/libime/core/languagemodel.cpp APPEND PROPERTY COMPILE_FLAGS -Wno-unused-parameter)
