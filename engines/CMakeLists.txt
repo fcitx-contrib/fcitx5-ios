@@ -9,8 +9,8 @@ if (CHINESE_ADDONS)
     option(ENABLE_TOOLS OFF)
     add_subdirectory(libime)
     # suppress kenlm warnings    
-    set_property(SOURCE libime/src/libime/core/languagemodel.cpp APPEND PROPERTY COMPILE_FLAGS -Wno-unused-parameter)
     target_compile_options(kenlm PRIVATE -w)
+    target_compile_options(IMECore PRIVATE -Wno-unused-parameter)
     # suppress configure error
     install(TARGETS kenlm EXPORT LibIMECoreTargets LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib)
 
