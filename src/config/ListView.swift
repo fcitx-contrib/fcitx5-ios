@@ -5,7 +5,7 @@ private struct ListItem: Identifiable {
   var value: Any
 }
 
-private func deserialize(_ value: Any) -> [ListItem] {
+private func deserialize(_ value: Any?) -> [ListItem] {
   guard let value = value as? [String: Any] else {
     return []
   }

@@ -49,9 +49,9 @@ struct SyncDoneView: View {
     VStack {
       Spacer()
       Button {
-        removeFile(documents.appendingPathComponent("tmp/checksums.json"))
-        removeFile(documents.appendingPathComponent("config"))
-        removeFile(documents.appendingPathComponent("data"))
+        let _ = removeFile(documents.appendingPathComponent("tmp/checksums.json"))
+        let _ = removeFile(documents.appendingPathComponent("config"))
+        let _ = removeFile(documents.appendingPathComponent("data"))
         client.syncConfig()
       } label: {
         Text("Clear data and sync again")

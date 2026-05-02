@@ -12,7 +12,7 @@ struct GroupSubView: View {
       OptionView(
         data: child,
         value: Binding(
-          get: { (value as? [String: Any])?[child["Option"] as? String ?? ""] },
+          get: { (value as? [String: Any])?[child["Option"] as? String ?? ""] ?? [:] },
           set: { value = mergeChild(value, child["Option"] as? String ?? "", $0) }
         ))
     }

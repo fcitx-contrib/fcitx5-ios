@@ -6,8 +6,11 @@ if (CHINESE_ADDONS)
 
     option(ENABLE_DATA OFF)
     set(HAS_STD_FILESYSTEM 1)
-    set(ENABLE_TOOLS OFF)
+    option(ENABLE_TOOLS OFF)
     add_subdirectory(libime)
+    # suppress kenlm warnings    
+    target_compile_options(kenlm PRIVATE -w)
+    target_compile_options(IMECore PRIVATE -Wno-unused-parameter)
     # suppress configure error
     install(TARGETS kenlm EXPORT LibIMECoreTargets LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT lib)
 
@@ -41,6 +44,7 @@ if (MOZC)
         "${PROJECT_SOURCE_DIR}/include"
     )
     target_compile_definitions(mozc PRIVATE -DMOZC_DISABLE_SESSION_WATCHDOG)
+    target_compile_options(mozc PRIVATE -Wno-sign-compare -Wno-unused-parameter -Wno-nullability-completeness -Wno-ignored-attributes)
 endif()
 
 if (RIME)
@@ -70,5 +74,6 @@ if (RIME)
 
     add_subdirectory(fcitx5-rime)
     target_include_directories(rime PRIVATE "${PROJECT_BINARY_DIR}/ipc/include")
+    target_compile_options(rime PRIVATE -Wno-missing-field-initializers)
     target_link_libraries(rime FcitxIpc)
 endif()

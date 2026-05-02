@@ -62,7 +62,7 @@ private func saveChecksums(_ checksums: [String: String]) {
 
 private func downloadFile(_ path: String) async -> Bool {
   let file = documents.appendingPathComponent(path)
-  removeFile(file)
+  let _ = removeFile(file)
   FileManager.default.createFile(atPath: file.path, contents: nil)
   var offset = 0
   while !Task.isCancelled {
@@ -77,7 +77,7 @@ private func downloadFile(_ path: String) async -> Bool {
     do {
       let handle = try FileHandle(forWritingTo: file)
       defer { try? handle.close() }
-      try handle.seekToEndOfFile()
+      handle.seekToEndOfFile()
       try handle.write(contentsOf: chunkData)
     } catch {
       FCITX_ERROR("write \(path) failed: \(error)")
@@ -94,7 +94,7 @@ private func downloadFile(_ path: String) async -> Bool {
 
 private func reportDone(_ keyboard: String) async {
   let url = generateURL("/done", params: ["keyboard": keyboard])
-  try? await URLSession.shared.data(from: url)
+  let _ = try? await URLSession.shared.data(from: url)
 }
 
 func doSyncConfig(_ keyboard: String) async {
