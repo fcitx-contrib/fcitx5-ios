@@ -48,8 +48,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - { platform: SIMULATORARM64 }
-          # - { platform: SIMULATOR64 }
+          - { platform: SIMULATORARM64 }
+          - { platform: SIMULATOR64 }
           - { platform: OS64 }
 
     steps:
@@ -82,9 +82,6 @@ jobs:
           if [[ "${{ matrix.platform }}" != "OS64" ]]; then
             ./scripts/code-sign.sh ${{ matrix.platform }}
           fi
-
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
 
       - name: Check validity
         run: |
