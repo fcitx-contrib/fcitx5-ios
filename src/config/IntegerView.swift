@@ -36,9 +36,13 @@ struct IntegerView: OptionViewProtocol {
   var body: some View {
     let minValue = Int(data["IntMin"] as? String ?? "")
     let maxValue = Int(data["IntMax"] as? String ?? "")
+    let option = data["Option"] as? String ?? ""
+    let stepperId = "\(option)_stepper"
     HStack {
       // Limit width of TextField and let Text expand, otherwise they take 1/3 each.
-      Text(label).frame(maxWidth: .infinity, alignment: .leading)
+      Text(label)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityIdentifier(option + "_label")
       TextField("", value: $number, formatter: numberFormatter)
         .submitLabel(.done)
         .multilineTextAlignment(.trailing)
@@ -53,12 +57,14 @@ struct IntegerView: OptionViewProtocol {
           }
         }
         .frame(width: 60)
+        .accessibilityIdentifier(option)
       if let minValue = minValue, let maxValue = maxValue {
         Stepper(
           value: $number,
           in: minValue...maxValue,
           step: 1
         ) {}
+        .accessibilityIdentifier(stepperId)
       } else {
         Stepper {
         } onIncrement: {
@@ -66,6 +72,7 @@ struct IntegerView: OptionViewProtocol {
         } onDecrement: {
           number -= 1
         }
+        .accessibilityIdentifier(stepperId)
       }
     }
     .resetContextMenu(data: data, value: $value)
