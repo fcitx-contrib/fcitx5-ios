@@ -40,11 +40,12 @@ void setupEnv(const char *appBundlePath, const std::string &xdgDataDirs,
     std::string xdg_data_home = group / "data";
     std::string fcitx_config_home = group / "config";
     setenv("XDG_DATA_HOME", xdg_data_home.c_str(), 1);
+    // Don't overwrite since appium test will set them.
     // By default FCITX_DATA_HOME is XDG_DATA_HOME/fcitx5. Flatten it like f5a.
-    setenv("FCITX_DATA_HOME", xdg_data_home.c_str(), 1);
+    setenv("FCITX_DATA_HOME", xdg_data_home.c_str(), 0);
     // By default FCITX_CONFIG_HOME is XDG_CONFIG_HOME/fcitx5. Move it from
     // ~/.config/fcitx5 to appGroupPath/config.
-    setenv("FCITX_CONFIG_HOME", fcitx_config_home.c_str(), 1);
+    setenv("FCITX_CONFIG_HOME", fcitx_config_home.c_str(), 0);
 }
 
 // Collect all share/locale/*/LC_MESSAGES/*.mo

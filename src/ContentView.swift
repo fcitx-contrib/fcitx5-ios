@@ -66,7 +66,9 @@ struct ContentView: View {
         }
         Section {
           ConfigLinkView(
-            title: NSLocalizedString("Global Config", comment: ""), uri: globalConfigUri)
+            title: NSLocalizedString("Global Config", comment: ""), uri: globalConfigUri
+          )
+          .accessibilityIdentifier("Global Config")
           NavigationLink(
             destination: AddonConfigView()
           ) {

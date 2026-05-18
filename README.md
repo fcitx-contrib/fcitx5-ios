@@ -54,6 +54,16 @@ you need to add Fcitx5 in Settings -> General -> Keyboard -> Keyboards -> Add Ne
 * Simulator is not emulator (virtual machine). Simulator file system is mapped from host filesystem. A process in simulator is a process in macOS.
 * App and input method (custom keyboard extension) are different programs. They share a directory (via App Group) in ~/Library/Developer/CoreSimulator/Devices/UUID/data/Containers/Shared/AppGroup.
 
+## Test
+### E2E test
+```sh
+npm i -g appium
+appium driver install xcuitest
+pip install -r appium/requirements.txt
+pytest appium
+```
+Use `/Applications/Xcode.app/Contents/Applications/Accessibility Inspector.app` to check identifier of UI elements.
+
 ## Build for iOS device
 Generate an unsigned IPA and install it with SideStore.
 

@@ -47,9 +47,11 @@ struct ConfigView: View {
       // Punctuation map already has List-level reset button, which can update List UI.
       if !isPunctuationMap {
         ToolbarItem(placement: .navigationBarTrailing) {
-          Button("Reset") {
+          Button {
             manager.reset()
-          }
+          } label: {
+            Text("Reset")
+          }.accessibilityIdentifier("ResetPage")
         }
       }
     }

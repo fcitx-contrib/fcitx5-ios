@@ -5,3 +5,4 @@ build
 meta.swift
 assets/SwiftTranslations/Main/en.lproj/Localizable.strings
 assets/SwiftTranslations/Keyboard/en.lproj/Localizable.strings
+*.pyc

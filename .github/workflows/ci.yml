@@ -13,7 +13,9 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install dependencies
-        run: brew install clang-format swift-format
+        run: |
+          brew install clang-format swift-format
+          pip install ruff
 
       - name: Lint
         run: ./scripts/lint.sh
