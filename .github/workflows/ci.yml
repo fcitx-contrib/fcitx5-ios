@@ -96,10 +96,6 @@ jobs:
           xcrun simctl install booted build/${{ matrix.platform }}/src/Fcitx5.app
           xcrun simctl launch booted org.fcitx.Fcitx5
 
-      - name: Setup tmate session
-        if: ${{ matrix.platform == 'SIMULATORARM64' }}
-        uses: mxschmitt/action-tmate@v3
-
       - name: Download artifact
         if: ${{ matrix.platform == 'OS64' }}
         uses: actions/download-artifact@v8
