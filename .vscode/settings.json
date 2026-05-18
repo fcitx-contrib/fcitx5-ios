@@ -7,4 +7,9 @@
         "swift"
     ],
     "swift.SDK": "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk",
+    "python.testing.pytestArgs": [
+        "appium"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
 }

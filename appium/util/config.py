@@ -1,0 +1,24 @@
+import configparser
+import os
+from typing import Any
+
+
+def read_config(base_path: str, filename: str) -> dict[str, Any]:
+    """Read and return the deserialized INI config as a dictionary."""
+    config = configparser.ConfigParser()
+    config.optionxform = str
+    path = os.path.join(base_path, filename)
+    if not os.path.exists(path):
+        return {}
+    with open(path, "r") as f:
+        content = f.read()
+    # Handle config files without section headers
+    if not content.startswith("["):
+        content = "[Global]\n" + content
+    config.read_string(content)
+    return {section: dict(config[section]) for section in config.sections()}
+
+
+def read_global_config(app_config_dir: str) -> dict[str, Any]:
+    """Read the global config file from the app config directory."""
+    return read_config(app_config_dir, "config")

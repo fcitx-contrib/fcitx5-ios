@@ -13,6 +13,7 @@ struct BooleanView: OptionViewProtocol {
         set: { value = $0 ? "True" : "False" }
       )
     )
+    .accessibilityIdentifier(data["Option"] as? String ?? "")
     .resetContextMenu(data: data, value: $value)
   }
 }
