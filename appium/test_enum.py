@@ -1,5 +1,3 @@
-import time
-
 import pytest
 from appium.webdriver.webdriver import WebDriver
 from util.button import reset_item
@@ -30,10 +28,8 @@ def test_enum_selection(
     target_config_value: str,
 ):
     open_addon_config(driver)
-    time.sleep(1)
     # Click on Simplified/Traditional Chinese translation addon
     find_element_by_id(driver, ADDON_ID).click()
-    time.sleep(1)
 
     def read_config_value() -> str:
         cfg = read_config(app, "conf/chttrans.conf")

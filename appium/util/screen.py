@@ -1,11 +1,14 @@
 from appium.webdriver.common.appiumby import AppiumBy
 from appium.webdriver.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 def find_elements_by_id(driver: WebDriver, identifier: str) -> list[WebElement]:
     """Find elements by their accessibility identifier."""
     elements = driver.find_elements(AppiumBy.ACCESSIBILITY_ID, identifier)
+    # Filter for actionable elements (not just static text/containers)
     actionable = [
         element
         for element in elements
@@ -14,12 +17,21 @@ def find_elements_by_id(driver: WebDriver, identifier: str) -> list[WebElement]:
     return actionable or elements
 
 
-def find_element_by_id(driver: WebDriver, identifier: str) -> WebElement:
-    """Find an element by its accessibility identifier."""
-    elements = find_elements_by_id(driver, identifier)
-    if len(elements) != 1:
-        raise ValueError(f"{len(elements)} elements match identifier {identifier}")
-    return elements[0]
+def find_element_by_id(
+    driver: WebDriver, identifier: str, timeout: float = 10.0
+) -> WebElement:
+    """Find an element by its accessibility identifier with explicit wait."""
+    wait = WebDriverWait(driver, timeout)
+    try:
+        # Wait until at least one element with this ID is present
+        wait.until(
+            EC.presence_of_element_located((AppiumBy.ACCESSIBILITY_ID, identifier))
+        )
+        # Use our filtering logic to pick the best candidate
+        elements = find_elements_by_id(driver, identifier)
+        return elements[0]
+    except Exception:
+        raise ValueError(f"Timeout after {timeout}s: element {identifier} not found")
 
 
 def open_global_config(driver: WebDriver):
