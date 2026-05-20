@@ -74,6 +74,7 @@ struct ContentView: View {
           ) {
             Text("Addon Config")
           }
+          .accessibilityIdentifier("Addon Config")
         }
 
         Section {
