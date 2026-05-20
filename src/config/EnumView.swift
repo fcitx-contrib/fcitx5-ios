@@ -34,6 +34,7 @@ struct EnumView: OptionViewProtocol {
         Text(pair.1).tag(pair.0)
       }
     }
+    .accessibilityIdentifier(data["Option"] as? String ?? "")
     .resetContextMenu(data: data, value: $value)
   }
 }

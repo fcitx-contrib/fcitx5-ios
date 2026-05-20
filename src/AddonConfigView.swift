@@ -15,6 +15,7 @@ struct AddonConfigView: View {
       ForEach(addons) { addon in
         Section(footer: addon.comment.count > 0 ? Text(addon.comment) : nil) {
           ConfigLinkView(title: addon.name, uri: "fcitx://config/addon/\(addon.id)")
+            .accessibilityIdentifier(addon.id)
         }
       }
     }
