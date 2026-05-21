@@ -53,7 +53,9 @@ struct ContentView: View {
         {
           let forEach = ForEach(viewModel.inputMethods, id: \.name) { inputMethod in
             ConfigLinkView(
-              title: inputMethod.displayName, uri: "fcitx://config/inputmethod/\(inputMethod.name)")
+              title: inputMethod.displayName, uri: "fcitx://config/inputmethod/\(inputMethod.name)"
+            )
+            .accessibilityIdentifier(inputMethod.name)
           }
           if viewModel.inputMethods.count > 1 {
             forEach.onDelete { offsets in viewModel.removeInputMethods(at: offsets) }

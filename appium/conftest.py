@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 import time
 import urllib.request
@@ -110,6 +111,9 @@ def app(
     os.makedirs(config_home)
     data_home = os.path.join(session_base_dir, request.node.name, "data")
     os.makedirs(data_home)
+
+    profile_src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "profile")
+    shutil.copy2(profile_src, os.path.join(config_home, "profile"))
 
     driver.terminate_app(BUNDLE_ID)
     driver.execute_script(

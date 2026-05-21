@@ -46,3 +46,11 @@ def open_addon_config(driver: WebDriver):
 
 def reset_page(driver: WebDriver):
     find_element_by_id(driver, "ResetPage").click()
+
+
+def scroll_to_id(driver: WebDriver, identifier: str) -> WebElement:
+    while True:
+        elements = find_elements_by_id(driver, identifier)
+        if elements and elements[0].is_displayed():
+            return elements[0]
+        driver.execute_script("mobile: swipe", {"direction": "up"})
