@@ -7,7 +7,7 @@ from util.message import (
     UI_NOT_UPDATED,
     UI_WRONGLY_UPDATED,
 )
-from util.screen import back, find_element_by_id, scroll_to_id
+from util.screen import find_element_by_id, scroll_to_id
 
 FUZZY = "Fuzzy"
 SWITCH_IDS = ["VAsQuickphrase", "VE_UE", "NG_GN"]
@@ -53,7 +53,7 @@ def test_reset_group(driver: WebDriver, app: str):
             get_switch_state(find_element_by_id(driver, toggle_id)) != toggled_ui[i]
         ), UI_NOT_UPDATED
 
-    back(driver)
+    driver.back()
     assert (
         get_switch_state(find_element_by_id(driver, SWITCH_IDS[0]))
         != v_as_quickphrase_on
