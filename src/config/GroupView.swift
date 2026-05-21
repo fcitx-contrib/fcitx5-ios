@@ -37,6 +37,7 @@ struct GroupLinkView: OptionViewProtocol {
   @Binding var value: Any
 
   var body: some View {
+    let option = data["Option"] as? String ?? ""
     NavigationLink(
       destination: List {
         GroupSubView(data: data, value: $value)
@@ -47,11 +48,12 @@ struct GroupLinkView: OptionViewProtocol {
               value = extractValue(data, reset: true)
             } label: {
               Text("Reset")
-            }
+            }.accessibilityIdentifier("ResetGroup")
           }
         }
     ) {
       Text(label)
     }
+    .accessibilityIdentifier(option)
   }
 }
