@@ -21,7 +21,7 @@ def test_integer(driver: WebDriver, app: str):
         return cfg["Behavior"][DEFAULT_PAGE_SIZE]
 
     text_field = find_element_by_id(driver, DEFAULT_PAGE_SIZE)
-    stepper_id = DEFAULT_PAGE_SIZE + "_stepper"
+    stepper_id = f"{DEFAULT_PAGE_SIZE}_stepper"
     initial_value = get_integer_value(text_field)
 
     # Test Stepper
@@ -40,7 +40,7 @@ def test_integer(driver: WebDriver, app: str):
     assert read_config_value() == str(new_value), CHANGE_NOT_SAVED
 
     # Test Reset Item
-    label = find_element_by_id(driver, DEFAULT_PAGE_SIZE + "_label")
+    label = find_element_by_id(driver, f"{DEFAULT_PAGE_SIZE}_label")
     reset_item(label)
     assert get_integer_value(text_field) == initial_value, UI_NOT_UPDATED
     assert read_config_value() == str(initial_value), CHANGE_NOT_SAVED

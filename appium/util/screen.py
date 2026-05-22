@@ -39,9 +39,15 @@ def open_global_config(driver: WebDriver):
     find_element_by_id(driver, "Global Config").click()
 
 
-def open_addon_config(driver: WebDriver):
-    """Open the Addon Config screen."""
+def open_addon_config(driver: WebDriver, name: str):
+    """Open the configuration for a specific addon."""
     find_element_by_id(driver, "Addon Config").click()
+    find_element_by_id(driver, name).click()
+
+
+def open_input_method_config(driver: WebDriver, name: str):
+    """Open the configuration for a specific input method."""
+    find_element_by_id(driver, name).click()
 
 
 def reset_page(driver: WebDriver):

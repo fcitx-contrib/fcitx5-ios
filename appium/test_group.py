@@ -7,14 +7,14 @@ from util.message import (
     UI_NOT_UPDATED,
     UI_WRONGLY_UPDATED,
 )
-from util.screen import find_element_by_id, scroll_to_id
+from util.screen import find_element_by_id, open_input_method_config, scroll_to_id
 
 FUZZY = "Fuzzy"
 SWITCH_IDS = ["VAsQuickphrase", "VE_UE", "NG_GN"]
 
 
 def test_reset_group(driver: WebDriver, app: str):
-    find_element_by_id(driver, "pinyin").click()
+    open_input_method_config(driver, "pinyin")
 
     def read_config_values() -> list[str]:
         cfg = read_config(app, "conf/pinyin.conf")
