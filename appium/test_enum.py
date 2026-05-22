@@ -27,9 +27,7 @@ def test_enum_selection(
     target_value: str,
     target_config_value: str,
 ):
-    open_addon_config(driver)
-    # Click on Simplified/Traditional Chinese translation addon
-    find_element_by_id(driver, ADDON_ID).click()
+    open_addon_config(driver, ADDON_ID)
 
     def read_config_value() -> str:
         cfg = read_config(app, "conf/chttrans.conf")

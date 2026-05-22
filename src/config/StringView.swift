@@ -21,9 +21,11 @@ struct StringView: View, OptionViewProtocol {
   }
 
   var body: some View {
+    let option = data["Option"] as? String ?? ""
     HStack {
       if !label.isEmpty {
         Text(label)
+          .accessibilityIdentifier(option + "_label")
       }
       TextField("", text: $text)
         .submitLabel(.done)
@@ -40,6 +42,7 @@ struct StringView: View, OptionViewProtocol {
         }
         // Leading for List item, trailing for String option.
         .multilineTextAlignment(label.isEmpty ? .leading : .trailing)
+        .accessibilityIdentifier(option)
     }
     .resetContextMenu(data: data, value: $value)
   }
