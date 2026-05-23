@@ -85,7 +85,7 @@ struct ListSubView: OptionViewProtocol {
             value = data["DefaultValue"] as Any
           } label: {
             Text("Reset")
-          }
+          }.accessibilityIdentifier("ResetList")
         }
       }
       .onAppear {
@@ -100,6 +100,7 @@ struct ListView: OptionViewProtocol {
   @Binding var value: Any
 
   var body: some View {
+    let option = data["Option"] as? String ?? ""
     let subView = ListSubView(label: label, data: data, value: $value)
     if data["Type"] as? String == "List|Entries$PunctuationMapEntryConfig" {
       subView
@@ -107,6 +108,7 @@ struct ListView: OptionViewProtocol {
       NavigationLink(destination: subView) {
         Text(label)
       }
+      .accessibilityIdentifier(option)
     }
   }
 }
