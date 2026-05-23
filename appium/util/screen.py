@@ -1,5 +1,6 @@
 from appium.webdriver.common.appiumby import AppiumBy
 from appium.webdriver.webdriver import WebDriver
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -7,14 +8,19 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 def find_elements_by_id(driver: WebDriver, identifier: str) -> list[WebElement]:
     """Find elements by their accessibility identifier."""
-    elements = driver.find_elements(AppiumBy.ACCESSIBILITY_ID, identifier)
-    # Filter for actionable elements (not just static text/containers)
-    actionable = [
-        element
-        for element in elements
-        if element.tag_name not in ("XCUIElementTypeStaticText", "XCUIElementTypeOther")
-    ]
-    return actionable or elements
+    while True:
+        elements = driver.find_elements(AppiumBy.ACCESSIBILITY_ID, identifier)
+        try:
+            # Filter for actionable elements (not just static text/containers)
+            actionable = [
+                element
+                for element in elements
+                if element.tag_name
+                not in ("XCUIElementTypeStaticText", "XCUIElementTypeOther")
+            ]
+            return actionable or elements
+        except StaleElementReferenceException:
+            pass
 
 
 def find_element_by_id(
