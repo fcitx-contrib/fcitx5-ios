@@ -21,6 +21,7 @@ add_executable(${BUNDLE_NAME} MACOSX_BUNDLE
     App.swift
     AppDelegate.swift
     SceneDelegate.swift
+    DataManager.swift
     ${CONFIG_UI_FILES}
     fcitx.cpp
     config.cpp
@@ -172,6 +173,7 @@ target_link_libraries(${BUNDLE_NAME}
     FcitxIpc
     FcitxCommon
     SwiftUtil
+    ZIPFoundation
 )
 
 list(TRANSFORM KEYBOARDS APPEND "Extension" OUTPUT_VARIABLE EXTENSIONS)

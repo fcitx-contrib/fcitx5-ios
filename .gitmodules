@@ -31,3 +31,6 @@
 [submodule "deps/swifter"]
 	path = deps/swifter
 	url = https://github.com/httpswift/swifter
+[submodule "deps/ZIPFoundation"]
+	path = deps/ZIPFoundation
+	url = https://github.com/weichsel/ZIPFoundation

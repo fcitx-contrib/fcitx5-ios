@@ -5,3 +5,7 @@ add_library(Swifter STATIC ${SWIFTER_FILES})
 set_target_properties(Swifter PROPERTIES Swift_MODULE_NAME Swifter)
 # We don't care 3rd-party warnings as long as it works.
 target_compile_options(Swifter PRIVATE -suppress-warnings)
+
+file(GLOB ZIP_FOUNDATION_FILES CONFIGURE_DEPENDS ZIPFoundation/Sources/ZIPFoundation/*.swift)
+add_library(ZIPFoundation STATIC ${ZIP_FOUNDATION_FILES})
+set_target_properties(ZIPFoundation PROPERTIES Swift_MODULE_NAME ZIPFoundation)
