@@ -80,6 +80,10 @@ struct ContentView: View {
         }
 
         Section {
+          NavigationLink(destination: DataManagerView()) {
+            Text("Data Manager")
+          }
+          .accessibilityIdentifier("Data Manager")
           NavigationLink(destination: AboutView()) {
             Text("About")
           }
