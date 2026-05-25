@@ -5,6 +5,7 @@
 * [swift-cmake-examples](https://github.com/apple/swift-cmake-examples): Apache-2.0
 * [AlertToast](https://github.com/elai950/AlertToast): MIT
 * [swifter](https://github.com/httpswift/swifter): BSD-3-Clause
+* [ZIPFoundation](https://github.com/weichsel/ZIPFoundation): MIT
 
 ### Chinese
 * [fcitx5-chinese-addons](https://github.com/fcitx/fcitx5-chinese-addons): LGPL-2.1-or-later

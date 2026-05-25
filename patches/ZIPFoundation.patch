@@ -1,0 +1,15 @@
+diff --git a/Sources/ZIPFoundation/Archive+ZIP64.swift b/Sources/ZIPFoundation/Archive+ZIP64.swift
+index 8b94b7c..321da39 100644
+--- a/Sources/ZIPFoundation/Archive+ZIP64.swift
++++ b/Sources/ZIPFoundation/Archive+ZIP64.swift
+@@ -143,8 +143,8 @@ extension Archive.ZIP64EndOfCentralDirectory {
+ }
+ 
+ /// Properties that represent the maximum value of each field
+-var maxUInt32 = UInt32.max
+-var maxUInt16 = UInt16.max
++let maxUInt32 = UInt32.max
++let maxUInt16 = UInt16.max
+ 
+ var maxCompressedSize: UInt32 { maxUInt32 }
+ var maxUncompressedSize: UInt32 { maxUInt32 }

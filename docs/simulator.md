@@ -29,6 +29,6 @@ Simulator directories all have prefix `~/Library/Developer/CoreSimulator/Devices
 -|Simulator|Real device
 -|-|-
 App Bundle|Bundle/Application/APP_BUNDLE_UUID/Fcitx5.app|/private/var/containers/Bundle/Application/APP_BUNDLE_UUID/App.app
-App documents|Containers/Data/Application/APP_UUID/Documents|/private/var/mobile/Containers/Data/Application/APP_UUID/Documents
-Keyboard documents|Containers/Data/PluginKitPlugin/PLUGIN_UUID/Documents|/private/var/mobile/Containers/Data/PluginKitPlugin/PLUGIN_UUID/Documents
-App Group|Containers/Shared/AppGroup/GROUP_UUID
+App documents|Data/Application/APP_UUID/Documents|/private/var/mobile/Containers/Data/Application/APP_UUID/Documents
+Keyboard documents|Data/PluginKitPlugin/PLUGIN_UUID/Documents|/private/var/mobile/Containers/Data/PluginKitPlugin/PLUGIN_UUID/Documents
+App Group|Shared/AppGroup/GROUP_UUID
