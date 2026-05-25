@@ -330,13 +330,15 @@ struct DataManagerView: View {
     importTask = Task.detached(priority: .userInitiated) {
       do {
         try importArchive(from: url, source: source)
-        guard !Task.isCancelled else {
-          return
-        }
+        try Task.checkCancellation()
         await MainActor.run {
           importing = false
           requestReload()
           displayToast(NSLocalizedString("Import succeeded", comment: ""), icon: "success")
+        }
+      } catch is CancellationError {
+        await MainActor.run {
+          importing = false
         }
       } catch is InvalidZipError {
         await MainActor.run {
