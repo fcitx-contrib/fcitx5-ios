@@ -1,6 +1,7 @@
 import AlertToast
 import SwiftUI
 import SwiftUtil
+import UIKit
 import ZIPFoundation
 
 private struct ExportedArchive: Identifiable {
@@ -118,8 +119,13 @@ private func createExportArchive() throws -> URL {
 
   let destinationURL = FileManager.default.temporaryDirectory
     .appendingPathComponent(archiveFileName(date))
-  if FileManager.default.fileExists(atPath: destinationURL.path) {
-    try FileManager.default.removeItem(at: destinationURL)
+  try? FileManager.default.removeItem(at: destinationURL)
+
+  var success = false
+  defer {
+    if !success {
+      try? FileManager.default.removeItem(at: destinationURL)
+    }
   }
 
   let archive = try Archive(url: destinationURL, accessMode: .create)
@@ -157,6 +163,7 @@ private func createExportArchive() throws -> URL {
       return metadata.subdata(in: start..<end)
     })
 
+  success = true
   return destinationURL
 }
 
@@ -229,6 +236,12 @@ struct DataManagerView: View {
         type: .loading,
         subTitle: NSLocalizedString("Exporting", comment: ""),
         style: AlertToast.AlertStyle.style(subTitleFont: Font.system(size: 20)))
+    }
+    .onDisappear {
+      if let url = exportedArchive?.url {
+        try? FileManager.default.removeItem(at: url)
+        exportedArchive = nil
+      }
     }
   }
 }
