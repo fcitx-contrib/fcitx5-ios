@@ -1,3 +1,4 @@
+#!/bin/zsh
 set -e
 
 git apply --directory=fcitx5 patches/fcitx5.patch
