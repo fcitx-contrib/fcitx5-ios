@@ -170,13 +170,12 @@ struct DataManagerView: View {
   @State private var toastMessage = ""
   @State private var toastIcon = "success"
   @State private var exportTask: Task<Void, Never>?
-  // Cleanup test procedure:
-  // 0. Open the FileManager.default.temporaryDirectory directory.
-  // 1. Click export, back immediately, see file disappears.
-  // 2. Click export, close sheet, see file disappears.
-  // 3. Click export, save, see file disappears.
-  // 4. Click export, swipe down sheet, see file remains;
-  // 5. Click export, see old file replaced, swipe down sheet, back, see file disappears.
+  // Cleanup test procedure (each case should see file disappears in the end):
+  // 0. Open the FileManager.default.temporaryDirectory (Documents/../tmp) on macOS.
+  // 1. Click export, back immediately.
+  // 2. Click export, swipe down sheet.
+  // 3. Click export, close sheet.
+  // 4. Click export, save.
   @State private var currentExportURL: URL?
 
   private func displayToast(_ message: String, icon: String) {
@@ -188,9 +187,6 @@ struct DataManagerView: View {
   private func exportData() {
     let date = Date()
     let url = FileManager.default.temporaryDirectory.appendingPathComponent(archiveFileName(date))
-    if let oldURL = currentExportURL {
-      try? FileManager.default.removeItem(at: oldURL)
-    }
     currentExportURL = url
     exporting = true
     exportTask = Task.detached(priority: .userInitiated) {
@@ -228,10 +224,17 @@ struct DataManagerView: View {
     }
     .navigationTitle(NSLocalizedString("Data Manager", comment: ""))
     .navigationBarTitleDisplayMode(.inline)
-    .sheet(item: $exportedArchive) { archive in
+    .sheet(
+      item: $exportedArchive,
+      onDismiss: {
+        if let url = currentExportURL {
+          try? FileManager.default.removeItem(at: url)
+          currentExportURL = nil
+        }
+      }
+    ) { archive in
       ActivityView(activityItems: [archive.url]) { completed in
         // This callback doesn't execute if the sheet is swiped down, so can't rely on remove here.
-        try? FileManager.default.removeItem(at: archive.url)
         exportedArchive = nil
         if completed {
           displayToast(NSLocalizedString("Export succeeded", comment: ""), icon: "success")
