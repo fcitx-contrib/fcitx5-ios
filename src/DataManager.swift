@@ -53,7 +53,7 @@ private func archiveFileName(_ date: Date) -> String {
   return "fcitx5-ios_\(timestamp).zip"
 }
 
-private func metadata(_ date: Date) throws -> Data {
+private func getMetadata(_ date: Date) throws -> Data {
   let object: [String: Any] = [
     "packageName": "org.fcitx.fcitx5.android",
     "versionCode": 0,
@@ -151,7 +151,7 @@ private func createExportArchive() throws -> URL {
     }
   }
 
-  let metadata = try metadata(date)
+  let metadata = try getMetadata(date)
   try archive.addEntry(
     with: metadataEntry,
     type: .file,
