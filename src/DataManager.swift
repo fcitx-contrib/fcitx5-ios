@@ -5,7 +5,7 @@ import ZIPFoundation
 
 private struct ExportedArchive: Identifiable {
   let url: URL
-  var id: String { url.path }
+  let id = UUID()
 }
 
 private struct ArchiveEntry {
