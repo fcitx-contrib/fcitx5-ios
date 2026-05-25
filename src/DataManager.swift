@@ -113,12 +113,9 @@ private func addDirectory(_ path: String, to archive: Archive) throws {
     provider: { _, _ in Data() })
 }
 
-private func createExportArchive() throws -> URL {
-  let date = Date()
+private func createExportArchive(at destinationURL: URL, date: Date) throws {
   let entries = collectEntries()
 
-  let destinationURL = FileManager.default.temporaryDirectory
-    .appendingPathComponent(archiveFileName(date))
   try? FileManager.default.removeItem(at: destinationURL)
 
   var success = false
@@ -164,7 +161,6 @@ private func createExportArchive() throws -> URL {
     })
 
   success = true
-  return destinationURL
 }
 
 struct DataManagerView: View {
@@ -173,6 +169,15 @@ struct DataManagerView: View {
   @State private var showToast = false
   @State private var toastMessage = ""
   @State private var toastIcon = "success"
+  @State private var exportTask: Task<Void, Never>?
+  // Cleanup test procedure:
+  // 0. Open the FileManager.default.temporaryDirectory directory.
+  // 1. Click export, back immediately, see file disappears.
+  // 2. Click export, close sheet, see file disappears.
+  // 3. Click export, save, see file disappears.
+  // 4. Click export, swipe down sheet, see file remains;
+  // 5. Click export, see old file replaced, swipe down sheet, back, see file disappears.
+  @State private var currentExportURL: URL?
 
   private func displayToast(_ message: String, icon: String) {
     toastMessage = message
@@ -181,14 +186,23 @@ struct DataManagerView: View {
   }
 
   private func exportData() {
+    let date = Date()
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent(archiveFileName(date))
+    if let oldURL = currentExportURL {
+      try? FileManager.default.removeItem(at: oldURL)
+    }
+    currentExportURL = url
     exporting = true
-    Task.detached(priority: .userInitiated) {
+    exportTask = Task.detached(priority: .userInitiated) {
       do {
-        let url = try createExportArchive()
-        let archive = ExportedArchive(url: url)
+        try createExportArchive(at: url, date: date)
+        guard !Task.isCancelled else {
+          try? FileManager.default.removeItem(at: url)
+          return
+        }
         await MainActor.run {
           exporting = false
-          exportedArchive = archive
+          exportedArchive = ExportedArchive(url: url)
         }
       } catch {
         await MainActor.run {
@@ -216,6 +230,7 @@ struct DataManagerView: View {
     .navigationBarTitleDisplayMode(.inline)
     .sheet(item: $exportedArchive) { archive in
       ActivityView(activityItems: [archive.url]) { completed in
+        // This callback doesn't execute if the sheet is swiped down, so can't rely on remove here.
         try? FileManager.default.removeItem(at: archive.url)
         exportedArchive = nil
         if completed {
@@ -238,9 +253,10 @@ struct DataManagerView: View {
         style: AlertToast.AlertStyle.style(subTitleFont: Font.system(size: 20)))
     }
     .onDisappear {
-      if let url = exportedArchive?.url {
+      exportTask?.cancel()
+      if let url = currentExportURL {
         try? FileManager.default.removeItem(at: url)
-        exportedArchive = nil
+        currentExportURL = nil
       }
     }
   }
