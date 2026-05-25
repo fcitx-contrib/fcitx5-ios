@@ -246,7 +246,12 @@ private func importArchive(from sourceURL: URL, source: ImportSource) throws {
 
     switch entry.type {
     case .directory:
-      try? FileManager.default.removeItem(at: destination)
+      var isDirectory: ObjCBool = false
+      if FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory),
+        !isDirectory.boolValue
+      {
+        try FileManager.default.removeItem(at: destination)
+      }
       try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
     case .file:
       try FileManager.default.createDirectory(
