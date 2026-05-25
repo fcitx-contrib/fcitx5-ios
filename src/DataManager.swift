@@ -1,7 +1,9 @@
 import AlertToast
+import FcitxIpc
 import SwiftUI
 import SwiftUtil
 import UIKit
+import UniformTypeIdentifiers
 import ZIPFoundation
 
 private struct ExportedArchive: Identifiable {
@@ -45,6 +47,28 @@ private let requiredDirectoryEntries = [
 ]
 
 private let metadataEntry = "metadata.json"
+private let hamsterRimePrefix = "HamsterBackup/RIME/Rime/"
+
+private struct InvalidZipError: Error {}
+
+private enum ImportSource: Sendable {
+  case fcitx5
+  case hamster
+
+  var mappings: [(source: String, destination: URL)] {
+    switch self {
+    case .fcitx5:
+      return [
+        ("external/config/", appGroupConfig),
+        ("external/data/", appGroupData),
+      ]
+    case .hamster:
+      return [
+        (hamsterRimePrefix, appGroupData.appendingPathComponent("rime"))
+      ]
+    }
+  }
+}
 
 private func archiveFileName(_ date: Date) -> String {
   let formatter = ISO8601DateFormatter()
@@ -163,13 +187,89 @@ private func createExportArchive(at destinationURL: URL, date: Date) throws {
   success = true
 }
 
+private func validateImportArchive(_ archive: Archive, source: ImportSource) -> Bool {
+  switch source {
+  case .fcitx5:
+    return archive.contains { $0.path == metadataEntry }
+  case .hamster:
+    return archive.contains { $0.path == hamsterRimePrefix || $0.path.hasPrefix(hamsterRimePrefix) }
+  }
+}
+
+private func destinationURL(root: URL, relativePath: String) throws -> URL {
+  guard !relativePath.hasPrefix("/"), !relativePath.contains("\\") else {
+    throw InvalidZipError()
+  }
+
+  var destination = root
+  for component in relativePath.split(separator: "/", omittingEmptySubsequences: true) {
+    guard component != "." && component != ".." else {
+      throw InvalidZipError()
+    }
+    destination.appendPathComponent(String(component))
+  }
+
+  let rootPath = (root.path as NSString).standardizingPath
+  let destinationPath = (destination.path as NSString).standardizingPath
+  guard destinationPath == rootPath || destinationPath.hasPrefix(rootPath + "/") else {
+    throw InvalidZipError()
+  }
+  return destination
+}
+
+private func destinationURL(for entry: Entry, source: ImportSource) throws -> URL? {
+  for mapping in source.mappings where entry.path.hasPrefix(mapping.source) {
+    let relativePath = String(entry.path.dropFirst(mapping.source.count))
+    return try destinationURL(root: mapping.destination, relativePath: relativePath)
+  }
+  return nil
+}
+
+private func importArchive(from sourceURL: URL, source: ImportSource) throws {
+  let scoped = sourceURL.startAccessingSecurityScopedResource()
+  defer {
+    if scoped {
+      sourceURL.stopAccessingSecurityScopedResource()
+    }
+  }
+
+  let archive = try Archive(url: sourceURL, accessMode: .read)
+  guard validateImportArchive(archive, source: source) else {
+    throw InvalidZipError()
+  }
+
+  for entry in archive {
+    try Task.checkCancellation()
+    guard let destination = try destinationURL(for: entry, source: source) else {
+      continue
+    }
+
+    switch entry.type {
+    case .directory:
+      try? FileManager.default.removeItem(at: destination)
+      try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
+    case .file:
+      try FileManager.default.createDirectory(
+        at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+      try? FileManager.default.removeItem(at: destination)
+      _ = try archive.extract(entry, to: destination)
+    case .symlink:
+      continue
+    }
+  }
+}
+
 struct DataManagerView: View {
   @State private var exporting = false
+  @State private var importing = false
+  @State private var importSource: ImportSource?
+  @State private var showImporter = false
   @State private var exportedArchive: ExportedArchive?
   @State private var showToast = false
   @State private var toastMessage = ""
   @State private var toastIcon = "success"
   @State private var exportTask: Task<Void, Never>?
+  @State private var importTask: Task<Void, Never>?
   // Cleanup test procedure (each case should see file disappears in the end):
   // 0. Open the FileManager.default.temporaryDirectory (Documents/../tmp) on macOS.
   // 1. Click export, back immediately.
@@ -185,6 +285,9 @@ struct DataManagerView: View {
   }
 
   private func exportData() {
+    guard !exporting && !importing else {
+      return
+    }
     let date = Date()
     let url = FileManager.default.temporaryDirectory.appendingPathComponent(archiveFileName(date))
     currentExportURL = url
@@ -209,21 +312,88 @@ struct DataManagerView: View {
     }
   }
 
+  private func displayImporter(source: ImportSource) {
+    guard !exporting && !importing else {
+      return
+    }
+    importSource = source
+    showImporter = true
+  }
+
+  private func importData(from url: URL, source: ImportSource) {
+    importing = true
+    importTask = Task.detached(priority: .userInitiated) {
+      do {
+        try importArchive(from: url, source: source)
+        guard !Task.isCancelled else {
+          return
+        }
+        await MainActor.run {
+          importing = false
+          requestReload()
+          displayToast(NSLocalizedString("Import succeeded", comment: ""), icon: "success")
+        }
+      } catch is InvalidZipError {
+        await MainActor.run {
+          importing = false
+          displayToast(NSLocalizedString("Invalid zip", comment: ""), icon: "error")
+        }
+      } catch {
+        await MainActor.run {
+          importing = false
+          displayToast(NSLocalizedString("Import failed", comment: ""), icon: "error")
+        }
+      }
+    }
+  }
+
   var body: some View {
     Form {
+      Section {
+        Button {
+          displayImporter(source: .fcitx5)
+        } label: {
+          Text("Fcitx5 Android/iOS/macOS")
+        }
+        .disabled(exporting || importing)
+        Button {
+          displayImporter(source: .hamster)
+        } label: {
+          Text("Hamster")
+        }
+        .disabled(exporting || importing)
+      } header: {
+        Text("Import data from …").textCase(nil)
+      }
+
       Section {
         Button {
           exportData()
         } label: {
           Text("Fcitx5 Android/iOS/macOS")
         }
-        .disabled(exporting)
+        .disabled(exporting || importing)
       } header: {
         Text("Export data to …").textCase(nil)
       }
     }
     .navigationTitle(NSLocalizedString("Data Manager", comment: ""))
     .navigationBarTitleDisplayMode(.inline)
+    .fileImporter(isPresented: $showImporter, allowedContentTypes: [.zip]) { result in
+      guard let source = importSource else {
+        return
+      }
+      importSource = nil
+      switch result {
+      case .success(let url):
+        importData(from: url, source: source)
+      case .failure(let error):
+        if let cocoaError = error as? CocoaError, cocoaError.code == .userCancelled {
+          return
+        }
+        displayToast(NSLocalizedString("Import failed", comment: ""), icon: "error")
+      }
+    }
     .sheet(
       item: $exportedArchive,
       onDismiss: {
@@ -255,8 +425,16 @@ struct DataManagerView: View {
         subTitle: NSLocalizedString("Exporting", comment: ""),
         style: AlertToast.AlertStyle.style(subTitleFont: Font.system(size: 20)))
     }
+    .toast(isPresenting: $importing) {
+      AlertToast(
+        displayMode: .alert,
+        type: .loading,
+        subTitle: NSLocalizedString("Importing", comment: ""),
+        style: AlertToast.AlertStyle.style(subTitleFont: Font.system(size: 20)))
+    }
     .onDisappear {
       exportTask?.cancel()
+      importTask?.cancel()
       if let url = currentExportURL {
         try? FileManager.default.removeItem(at: url)
         currentExportURL = nil
