@@ -72,6 +72,147 @@ struct KeyModifier: ViewModifier {
   var bubbleWidth: CGFloat { width - hMargin }
   var bubbleHeight: CGFloat { height - rowGap }
 
+  private func onTimer(_ currentTouchId: Int) {
+    if touchId != currentTouchId {
+      // Called from a previous touch.
+      return
+    }
+    if isPressed && !didTriggerLongPress && !didMoveFarEnough {
+      didTriggerLongPress = true
+      if longPressIndex >= 0 && longPressIndex < longPressLabels.count {
+        bubbleHighlight = longPressIndex
+        vm.setBubble(
+          bubbleX, bubbleY, bubbleWidth, bubbleHeight,
+          background, colorScheme, shadow, nil, longPressLabels, longPressIndex,
+          bubbleHighlight)
+      } else {
+        clearBubble()
+        action.onLongPress?(0)
+      }
+    }
+  }
+
+  private func onTouchStart(_ location: CGPoint) {
+    let touchTime = Date()
+    touchId = (touchId + 1) & 0xFFFF
+    let currentTouchId = touchId
+    isPressed = true
+    startLocation = location
+    lastLocation = location.x
+
+    vm.setBubble(
+      bubbleX, bubbleY, bubbleWidth, bubbleHeight,
+      background, colorScheme, shadow,
+      bubbleLabel, [], 0, 0)
+
+    if let t = lastTouchTime, let onDoubleTap = action.onDoubleTap,
+      touchTime.timeIntervalSince(t) < 0.3
+    {
+      onDoubleTap()
+      lastTouchTime = nil
+    } else {
+      action.onPress?()
+      lastTouchTime = touchTime
+    }
+
+    // Schedule long press that can be interrupted by move.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+      onTimer(currentTouchId)
+    }
+  }
+
+  private func onTouchMove(_ location: CGPoint) {
+    let dx = location.x - (startLocation?.x ?? 0)
+    let dy = location.y - (startLocation?.y ?? 0)
+
+    if !didTriggerLongPress {
+      if !didMoveFarEnough && (abs(dx) > threshold || abs(dy) > threshold) {
+        didMoveFarEnough = true
+      }
+      if didMoveFarEnough {
+        if getSwipeDirection(dx, dy) == .up {
+          vm.setBubble(
+            bubbleX, bubbleY, bubbleWidth, bubbleHeight, background, colorScheme,
+            shadow, swipeUpLabel, [], 0, 0)
+        } else {
+          clearBubble()
+        }
+      }
+    }
+    // Process slide and long press + move.
+    if let onSlide = action.onSlide {
+      if !slideActivated {
+        if abs(dx) >= threshold, let start = startLocation {
+          slideActivated = true
+          lastLocation = start.x + (dx > 0 ? threshold : -threshold)
+        }
+      }
+      if slideActivated {
+        if let start = startLocation, let last = lastLocation {
+          let totalPast = getNStep(start.x, last, stepSize)
+          let totalNow = getNStep(start.x, location.x, stepSize)
+          let delta = totalNow - totalPast
+          if delta != 0 {
+            onSlide(delta)
+          }
+          lastLocation = location.x
+        }
+      }
+    } else if didTriggerLongPress && longPressLabels.count > 1, let last = lastLocation {
+      let delta = getNStep(last, location.x, moveSize)
+      if delta != 0 {
+        bubbleHighlight = max(
+          0, min(bubbleHighlight + delta, longPressLabels.count - 1))
+        vm.setBubble(
+          bubbleX, bubbleY, bubbleWidth, bubbleHeight,
+          background, colorScheme, shadow, nil, longPressLabels, longPressIndex,
+          bubbleHighlight)
+        lastLocation = (lastLocation ?? 0) + CGFloat(delta) * moveSize
+      }
+    }
+  }
+
+  private func onTouchEnd(_ location: CGPoint) {
+    clearBubble()
+    defer {
+      action.onRelease?()
+      isPressed = false
+      startLocation = nil
+      lastLocation = nil
+      didTriggerLongPress = false
+      didMoveFarEnough = false
+      slideActivated = false
+      bubbleHighlight = 0
+    }
+
+    let dx = location.x - (startLocation?.x ?? 0)
+    let dy = location.y - (startLocation?.y ?? 0)
+
+    if slideActivated {
+      if let onSlide = action.onSlide {
+        onSlide(0)
+        return
+      }
+    }
+
+    if didTriggerLongPress && bubbleHighlight >= 0
+      && bubbleHighlight < longPressLabels.count
+    {
+      action.onLongPress?(bubbleHighlight)
+      return
+    }
+
+    if didMoveFarEnough {
+      if !didTriggerLongPress {
+        action.onSwipe?(getSwipeDirection(dx, dy))
+      }
+    } else {
+      if !didTriggerLongPress {
+        action.onTap?()
+      }
+    }
+  }
+
   func body(content: Content) -> some View {
     VStack {
       if isPressed, let pressedView = pressedView {
@@ -98,138 +239,14 @@ struct KeyModifier: ViewModifier {
       .gesture(
         DragGesture(minimumDistance: 0)
           .onChanged { value in
-            if !isPressed {  // touch start
-              let touchTime = Date()
-              touchId = (touchId + 1) & 0xFFFF
-              let currentTouchId = touchId
-              isPressed = true
-              startLocation = value.startLocation
-              lastLocation = value.startLocation.x
-
-              vm.setBubble(
-                bubbleX, bubbleY, bubbleWidth, bubbleHeight,
-                background, colorScheme, shadow,
-                bubbleLabel, [], 0, 0)
-
-              // Schedule long press that can be interrupted by move.
-              DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                if touchId != currentTouchId {
-                  // Called from a previous touch.
-                  return
-                }
-                if isPressed && !didTriggerLongPress && !didMoveFarEnough {
-                  didTriggerLongPress = true
-                  if longPressIndex >= 0 && longPressIndex < longPressLabels.count {
-                    bubbleHighlight = longPressIndex
-                    vm.setBubble(
-                      bubbleX, bubbleY, bubbleWidth, bubbleHeight,
-                      background, colorScheme, shadow, nil, longPressLabels, longPressIndex,
-                      bubbleHighlight)
-                  } else {
-                    clearBubble()
-                    action.onLongPress?(0)
-                  }
-                }
-              }
-              if let t = lastTouchTime, let onDoubleTap = action.onDoubleTap,
-                touchTime.timeIntervalSince(t) < 0.3
-              {
-                onDoubleTap()
-                lastTouchTime = nil
-              } else {
-                action.onPress?()
-                lastTouchTime = touchTime
-              }
-            } else {  // touch move
-              let dx = value.location.x - (startLocation?.x ?? 0)
-              let dy = value.location.y - (startLocation?.y ?? 0)
-
-              if !didTriggerLongPress {
-                if !didMoveFarEnough && (abs(dx) > threshold || abs(dy) > threshold) {
-                  didMoveFarEnough = true
-                }
-                if didMoveFarEnough {
-                  if getSwipeDirection(dx, dy) == .up {
-                    vm.setBubble(
-                      bubbleX, bubbleY, bubbleWidth, bubbleHeight, background, colorScheme,
-                      shadow, swipeUpLabel, [], 0, 0)
-                  } else {
-                    clearBubble()
-                  }
-                }
-              }
-              // Process slide and long press + move.
-              if let onSlide = action.onSlide {
-                if !slideActivated {
-                  if abs(dx) >= threshold, let start = startLocation {
-                    slideActivated = true
-                    lastLocation = start.x + (dx > 0 ? threshold : -threshold)
-                  }
-                }
-                if slideActivated {
-                  if let start = startLocation, let last = lastLocation {
-                    let totalPast = getNStep(start.x, last, stepSize)
-                    let totalNow = getNStep(start.x, value.location.x, stepSize)
-                    let delta = totalNow - totalPast
-                    if delta != 0 {
-                      onSlide(delta)
-                    }
-                    lastLocation = value.location.x
-                  }
-                }
-              } else if didTriggerLongPress && longPressLabels.count > 1, let last = lastLocation {
-                let delta = getNStep(last, value.location.x, moveSize)
-                if delta != 0 {
-                  bubbleHighlight = max(
-                    0, min(bubbleHighlight + delta, longPressLabels.count - 1))
-                  vm.setBubble(
-                    bubbleX, bubbleY, bubbleWidth, bubbleHeight,
-                    background, colorScheme, shadow, nil, longPressLabels, longPressIndex,
-                    bubbleHighlight)
-                  lastLocation = (lastLocation ?? 0) + CGFloat(delta) * moveSize
-                }
-              }
+            if !isPressed {
+              onTouchStart(value.startLocation)
+            } else {
+              onTouchMove(value.location)
             }
           }
           .onEnded { value in
-            clearBubble()
-            defer {
-              action.onRelease?()
-              isPressed = false
-              startLocation = nil
-              lastLocation = nil
-              didTriggerLongPress = false
-              didMoveFarEnough = false
-              slideActivated = false
-              bubbleHighlight = 0
-            }
-
-            let dx = value.location.x - (startLocation?.x ?? 0)
-            let dy = value.location.y - (startLocation?.y ?? 0)
-
-            if slideActivated {
-              if let onSlide = action.onSlide {
-                onSlide(0)
-                return
-              }
-            }
-
-            if didTriggerLongPress && bubbleHighlight >= 0
-              && bubbleHighlight < longPressLabels.count
-            {
-              action.onLongPress?(bubbleHighlight)
-              return
-            }
-
-            if didMoveFarEnough {
-              if !didTriggerLongPress {
-                action.onSwipe?(getSwipeDirection(dx, dy))
-              }
-            } else {
-              if !didTriggerLongPress {
-                action.onTap?()
-              }
-            }
+            onTouchEnd(value.location)
           }
       ).position(x: x + width / 2, y: y + height / 2)
   }
