@@ -45,7 +45,6 @@ struct KeyModifier: ViewModifier {
   @State private var lastLocation: CGFloat?
   @State private var didTriggerLongPress = false
   @State private var didMoveFarEnough = false
-  @State private var didTriggerSwipe = false
   @State private var slideActivated = false
   @State private var bubbleHighlight = 0
 
@@ -119,7 +118,7 @@ struct KeyModifier: ViewModifier {
                   // Called from a previous touch.
                   return
                 }
-                if isPressed && !didTriggerSwipe && !didTriggerLongPress && !didMoveFarEnough {
+                if isPressed && !didTriggerLongPress && !didMoveFarEnough {
                   didTriggerLongPress = true
                   if longPressIndex >= 0 && longPressIndex < longPressLabels.count {
                     bubbleHighlight = longPressIndex
@@ -149,7 +148,6 @@ struct KeyModifier: ViewModifier {
               if !didTriggerLongPress {
                 if !didMoveFarEnough && (abs(dx) > threshold || abs(dy) > threshold) {
                   didMoveFarEnough = true
-                  didTriggerSwipe = true
                 }
                 if didMoveFarEnough {
                   if getSwipeDirection(dx, dy) == .up {
@@ -203,7 +201,6 @@ struct KeyModifier: ViewModifier {
               lastLocation = nil
               didTriggerLongPress = false
               didMoveFarEnough = false
-              didTriggerSwipe = false
               slideActivated = false
               bubbleHighlight = 0
             }
@@ -218,7 +215,7 @@ struct KeyModifier: ViewModifier {
               }
             }
 
-            if !didTriggerSwipe && didTriggerLongPress && bubbleHighlight >= 0
+            if didTriggerLongPress && bubbleHighlight >= 0
               && bubbleHighlight < longPressLabels.count
             {
               action.onLongPress?(bubbleHighlight)
