@@ -167,7 +167,7 @@ struct KeyModifier: ViewModifier {
           bubbleX, bubbleY, bubbleWidth, bubbleHeight,
           background, colorScheme, shadow, nil, longPressLabels, longPressIndex,
           bubbleHighlight)
-        lastLocation = (lastLocation ?? 0) + CGFloat(delta) * moveSize
+        lastLocation = last + CGFloat(delta) * moveSize
       }
     }
   }
