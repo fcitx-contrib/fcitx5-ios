@@ -67,6 +67,10 @@ struct KeyModifier: ViewModifier {
   let swipeUpLabel: String?
   let longPressLabels: [String]
   let longPressIndex: Int
+  var bubbleX: CGFloat { x + width / 2 }
+  var bubbleY: CGFloat { y + height / 2 }
+  var bubbleWidth: CGFloat { width - hMargin }
+  var bubbleHeight: CGFloat { height - rowGap }
 
   func body(content: Content) -> some View {
     VStack {
@@ -94,11 +98,6 @@ struct KeyModifier: ViewModifier {
       .gesture(
         DragGesture(minimumDistance: 0)
           .onChanged { value in
-            let bubbleX = x + width / 2
-            let bubbleY = y + height / 2
-            let bubbleWidth = width - hMargin
-            let bubbleHeight = height - rowGap
-
             if !isPressed {  // touch start
               let touchTime = Date()
               touchId = (touchId + 1) & 0xFFFF
