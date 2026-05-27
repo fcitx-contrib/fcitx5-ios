@@ -189,7 +189,7 @@ public class ViewModel: ObservableObject {
   }
 
   func beginOrderedKeyPress(_ action: @escaping () -> Void) -> Int {
-    for id in shiftPresses.keys {
+    for id in Array(shiftPresses.keys) {
       shiftPresses[id]?.usedWithKey = true
     }
     let id = allocateTouchId()
