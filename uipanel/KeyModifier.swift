@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftUtil
 
 struct GestureAction {
+  var onOrderedKeyPress: (() -> (() -> Void))? = nil
   var onPress: (() -> Void)? = nil
   var onTap: (() -> Void)? = nil
   var onDoubleTap: (() -> Void)? = nil
@@ -47,6 +48,7 @@ struct KeyModifier: ViewModifier {
   @State private var didMoveFarEnough = false
   @State private var slideActivated = false
   @State private var bubbleHighlight = 0
+  @State private var orderedKeyPressId: Int?
 
   let x: CGFloat
   let y: CGFloat
@@ -72,12 +74,39 @@ struct KeyModifier: ViewModifier {
   var bubbleWidth: CGFloat { width - hMargin }
   var bubbleHeight: CGFloat { height - rowGap }
 
+  private func cancelOrderedKeyPress() {
+    if let id = orderedKeyPressId {
+      vm.removeOrderedKeyPress(id)
+      orderedKeyPressId = nil
+    }
+  }
+
+  private func processedByAnotherKeyPress() -> Bool {
+    if let id = orderedKeyPressId, vm.orderedKeyPressWasSent(id) {
+      return true
+    }
+    return false
+  }
+
+  private func isDoubleTap(_ touchTime: Date) -> Bool {
+    if action.onDoubleTap != nil, let t = lastTouchTime,
+      touchTime.timeIntervalSince(t) < 0.3
+    {
+      return true
+    }
+    return false
+  }
+
   private func onTimer(_ currentTouchId: Int) {
     if touchId != currentTouchId {
       // Called from a previous touch.
       return
     }
+    if processedByAnotherKeyPress() {
+      return
+    }
     if isPressed && !didTriggerLongPress && !didMoveFarEnough {
+      cancelOrderedKeyPress()
       didTriggerLongPress = true
       if longPressIndex >= 0 && longPressIndex < longPressLabels.count {
         bubbleHighlight = longPressIndex
@@ -105,14 +134,17 @@ struct KeyModifier: ViewModifier {
       background, colorScheme, shadow,
       bubbleLabel, [], 0, 0)
 
-    if let t = lastTouchTime, let onDoubleTap = action.onDoubleTap,
-      touchTime.timeIntervalSince(t) < 0.3
-    {
-      onDoubleTap()
+    vm.flushOrderedKeyPresses()
+    if isDoubleTap(touchTime) {
       lastTouchTime = nil
-    } else {
-      action.onPress?()
+      action.onDoubleTap?()
+    } else {  // Single tap
       lastTouchTime = touchTime
+      if let onOrderedKeyPress = action.onOrderedKeyPress {  // Normal keys
+        orderedKeyPressId = vm.beginOrderedKeyPress(onOrderedKeyPress())
+      } else {  // Shift
+        action.onPress?()
+      }
     }
 
     // Schedule long press that can be interrupted by move.
@@ -122,12 +154,17 @@ struct KeyModifier: ViewModifier {
   }
 
   private func onTouchMove(_ location: CGPoint) {
+    if processedByAnotherKeyPress() {
+      return
+    }
+
     let dx = location.x - (startLocation?.x ?? 0)
     let dy = location.y - (startLocation?.y ?? 0)
 
     if !didTriggerLongPress {
       if !didMoveFarEnough && (abs(dx) > threshold || abs(dy) > threshold) {
         didMoveFarEnough = true
+        cancelOrderedKeyPress()
       }
       if didMoveFarEnough {
         if getSwipeDirection(dx, dy) == .up {
@@ -175,6 +212,7 @@ struct KeyModifier: ViewModifier {
   private func onTouchEnd(_ location: CGPoint) {
     clearBubble()
     defer {
+      cancelOrderedKeyPress()
       action.onRelease?()
       isPressed = false
       startLocation = nil
@@ -183,6 +221,10 @@ struct KeyModifier: ViewModifier {
       didMoveFarEnough = false
       slideActivated = false
       bubbleHighlight = 0
+    }
+
+    if processedByAnotherKeyPress() {
+      return
     }
 
     let dx = location.x - (startLocation?.x ?? 0)
@@ -208,6 +250,10 @@ struct KeyModifier: ViewModifier {
       }
     } else {
       if !didTriggerLongPress {
+        if let id = orderedKeyPressId {
+          vm.releaseOrderedKeyPress(id)
+          return
+        }
         action.onTap?()
       }
     }

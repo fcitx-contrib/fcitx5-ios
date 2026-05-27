@@ -44,9 +44,11 @@ struct KeyView: View {
         foreground: getNormalForeground(colorScheme),
         shadow: getShadow(colorScheme),
         action: GestureAction(
-          onTap: {
-            vm.resetLayerIfNotLocked()
-            client.keyPressed(key, "")
+          onOrderedKeyPress: {
+            return {
+              vm.resetLayerIfNotLocked()
+              client.keyPressed(key, "")
+            }
           },
           onLongPress: { highlight in
             if let actionsList =
@@ -282,6 +284,8 @@ enum ShiftState {
 
 struct ShiftView: View {
   @Environment(\.colorScheme) var colorScheme
+  @State private var shiftPressId: Int?
+
   let x: CGFloat
   let y: CGFloat
   let width: CGFloat
@@ -304,12 +308,16 @@ struct ShiftView: View {
       shadow: getShadow(colorScheme),
       action: GestureAction(
         onPress: {
-          vm.setLayer(
-            state == .normal ? "shift" : "default"
-          )
+          shiftPressId = vm.beginShiftPress(state: state)
         },
         onDoubleTap: {
           vm.setLayer("shift", lock: true)
+        },
+        onRelease: {
+          if let shiftPressId {
+            vm.endShiftPress(shiftPressId)
+            self.shiftPressId = nil
+          }
         }
       )
     )

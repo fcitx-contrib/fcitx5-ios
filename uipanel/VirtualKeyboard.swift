@@ -26,6 +26,20 @@ public let vm = ViewModel()
 
 @MainActor
 public class ViewModel: ObservableObject {
+  private struct OrderedKeyPress {
+    let action: () -> Void
+    var sent = false
+  }
+
+  private struct ShiftPress {
+    var usedWithKey = false
+  }
+
+  private var nextTouchId = 0
+  private var orderedKeyPresses = [Int: OrderedKeyPress]()
+  private var orderedKeyPressOrder = [Int]()
+  private var shiftPresses = [Int: ShiftPress]()
+
   @Published var mode: DisplayMode = .initial
   @Published var returnMode: DisplayMode = .initial  // or .candidates
 
@@ -163,8 +177,73 @@ public class ViewModel: ObservableObject {
   }
 
   func resetLayerIfNotLocked() {
-    if !lock {
+    if !lock && shiftPresses.isEmpty {
       self.layer = "default"
+    }
+  }
+
+  private func allocateTouchId() -> Int {
+    let id = nextTouchId
+    nextTouchId = (nextTouchId + 1) & 0xFFFF
+    return id
+  }
+
+  func beginOrderedKeyPress(_ action: @escaping () -> Void) -> Int {
+    for id in Array(shiftPresses.keys) {
+      shiftPresses[id]?.usedWithKey = true
+    }
+    let id = allocateTouchId()
+    orderedKeyPresses[id] = OrderedKeyPress(action: action)
+    orderedKeyPressOrder.append(id)
+    return id
+  }
+
+  func orderedKeyPressWasSent(_ id: Int) -> Bool {
+    return orderedKeyPresses[id]?.sent ?? false
+  }
+
+  func releaseOrderedKeyPress(_ id: Int) {
+    sendOrderedKeyPress(id)
+    removeOrderedKeyPress(id)
+  }
+
+  func flushOrderedKeyPresses() {
+    for id in orderedKeyPressOrder {
+      sendOrderedKeyPress(id)
+    }
+  }
+
+  private func sendOrderedKeyPress(_ id: Int) {
+    guard var press = orderedKeyPresses[id], !press.sent else {
+      return
+    }
+    press.action()
+    press.sent = true
+    orderedKeyPresses[id] = press
+  }
+
+  func removeOrderedKeyPress(_ id: Int) {
+    orderedKeyPresses.removeValue(forKey: id)
+    orderedKeyPressOrder.removeAll { $0 == id }
+  }
+
+  func beginShiftPress(state: ShiftState) -> Int {
+    let id = allocateTouchId()
+    shiftPresses[id] = ShiftPress()
+    switch state {
+    case .normal:
+      setLayer("shift")
+    case .shift, .capslock:
+      setLayer("default")
+    }
+    return id
+  }
+
+  func endShiftPress(_ id: Int) {
+    let usedWithKey = shiftPresses[id]?.usedWithKey ?? false
+    shiftPresses.removeValue(forKey: id)
+    if usedWithKey && !lock && shiftPresses.isEmpty {
+      setLayer("default")
     }
   }
 
