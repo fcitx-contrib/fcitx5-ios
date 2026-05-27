@@ -74,6 +74,13 @@ struct KeyModifier: ViewModifier {
   var bubbleWidth: CGFloat { width - hMargin }
   var bubbleHeight: CGFloat { height - rowGap }
 
+  private func cancelOrderedKeyPress() {
+    if let id = orderedKeyPressId {
+      vm.removeOrderedKeyPress(id)
+      orderedKeyPressId = nil
+    }
+  }
+
   private func isDoubleTap(_ touchTime: Date) -> Bool {
     if action.onDoubleTap != nil, let t = lastTouchTime,
       touchTime.timeIntervalSince(t) < 0.3
@@ -93,8 +100,7 @@ struct KeyModifier: ViewModifier {
         if vm.orderedKeyPressWasSent(orderedKeyPressId) {
           return
         }
-        vm.removeOrderedKeyPress(orderedKeyPressId)
-        self.orderedKeyPressId = nil
+        cancelOrderedKeyPress()
       }
       didTriggerLongPress = true
       if longPressIndex >= 0 && longPressIndex < longPressLabels.count {
@@ -156,10 +162,7 @@ struct KeyModifier: ViewModifier {
     if !didTriggerLongPress {
       if !didMoveFarEnough && (abs(dx) > threshold || abs(dy) > threshold) {
         didMoveFarEnough = true
-        if let orderedKeyPressId {
-          vm.removeOrderedKeyPress(orderedKeyPressId)
-          self.orderedKeyPressId = nil
-        }
+        cancelOrderedKeyPress()
       }
       if didMoveFarEnough {
         if getSwipeDirection(dx, dy) == .up {
@@ -206,13 +209,10 @@ struct KeyModifier: ViewModifier {
 
   private func onTouchEnd(_ location: CGPoint) {
     clearBubble()
-    let currentOrderedKeyPressId = orderedKeyPressId
     let orderedKeyPressWasSent =
-      currentOrderedKeyPressId.map { vm.orderedKeyPressWasSent($0) } ?? false
+      orderedKeyPressId.map { vm.orderedKeyPressWasSent($0) } ?? false
     defer {
-      if let currentOrderedKeyPressId {
-        vm.removeOrderedKeyPress(currentOrderedKeyPressId)
-      }
+      cancelOrderedKeyPress()
       action.onRelease?()
       isPressed = false
       startLocation = nil
@@ -221,7 +221,6 @@ struct KeyModifier: ViewModifier {
       didMoveFarEnough = false
       slideActivated = false
       bubbleHighlight = 0
-      orderedKeyPressId = nil
     }
 
     let dx = location.x - (startLocation?.x ?? 0)
@@ -251,8 +250,8 @@ struct KeyModifier: ViewModifier {
       }
     } else {
       if !didTriggerLongPress {
-        if let currentOrderedKeyPressId {
-          vm.releaseOrderedKeyPress(currentOrderedKeyPressId)
+        if let id = orderedKeyPressId {
+          vm.releaseOrderedKeyPress(id)
           return
         }
         action.onTap?()
