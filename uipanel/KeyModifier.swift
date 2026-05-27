@@ -81,6 +81,13 @@ struct KeyModifier: ViewModifier {
     }
   }
 
+  private func processedByAnotherKeyPress() -> Bool {
+    if let id = orderedKeyPressId, vm.orderedKeyPressWasSent(id) {
+      return true
+    }
+    return false
+  }
+
   private func isDoubleTap(_ touchTime: Date) -> Bool {
     if action.onDoubleTap != nil, let t = lastTouchTime,
       touchTime.timeIntervalSince(t) < 0.3
@@ -95,13 +102,11 @@ struct KeyModifier: ViewModifier {
       // Called from a previous touch.
       return
     }
+    if processedByAnotherKeyPress() {
+      return
+    }
     if isPressed && !didTriggerLongPress && !didMoveFarEnough {
-      if let orderedKeyPressId {
-        if vm.orderedKeyPressWasSent(orderedKeyPressId) {
-          return
-        }
-        cancelOrderedKeyPress()
-      }
+      cancelOrderedKeyPress()
       didTriggerLongPress = true
       if longPressIndex >= 0 && longPressIndex < longPressLabels.count {
         bubbleHighlight = longPressIndex
@@ -149,10 +154,7 @@ struct KeyModifier: ViewModifier {
   }
 
   private func onTouchMove(_ location: CGPoint) {
-    // If action is already triggered by another key press, don't react with move.
-    if let orderedKeyPressId,
-      vm.orderedKeyPressWasSent(orderedKeyPressId)
-    {
+    if processedByAnotherKeyPress() {
       return
     }
 
@@ -209,8 +211,6 @@ struct KeyModifier: ViewModifier {
 
   private func onTouchEnd(_ location: CGPoint) {
     clearBubble()
-    let orderedKeyPressWasSent =
-      orderedKeyPressId.map { vm.orderedKeyPressWasSent($0) } ?? false
     defer {
       cancelOrderedKeyPress()
       action.onRelease?()
@@ -223,12 +223,12 @@ struct KeyModifier: ViewModifier {
       bubbleHighlight = 0
     }
 
-    let dx = location.x - (startLocation?.x ?? 0)
-    let dy = location.y - (startLocation?.y ?? 0)
-
-    if orderedKeyPressWasSent {
+    if processedByAnotherKeyPress() {
       return
     }
+
+    let dx = location.x - (startLocation?.x ?? 0)
+    let dy = location.y - (startLocation?.y ?? 0)
 
     if slideActivated {
       if let onSlide = action.onSlide {
