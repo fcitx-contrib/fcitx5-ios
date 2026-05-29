@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftUtil
 
 func getNormalBackground(_ colorScheme: ColorScheme) -> Color {
   return colorScheme == .dark ? darkNormalBackground : lightNormalBackground
@@ -21,6 +22,41 @@ func adjustFontSize(_ text: String, _ fontSize: CGFloat, _ widthLimit: CGFloat) 
   return textWidth <= widthLimit ? fontSize : fontSize * widthLimit / textWidth
 }
 
+struct LongPressCell {
+  let type: String?
+  let label: String?
+  let actions: [[String: String]]
+
+  var bubbleItem: BubbleItem {
+    BubbleItem(label: label, type: type)
+  }
+
+  @MainActor
+  func perform() {
+    switch type {
+    case "unicode":
+      client.resetInput()
+      client.triggerUnicode()
+    case nil:
+      executeActions(actions)
+    default:
+      FCITX_ERROR("Unknown long press cell type: \(type ?? "")")
+    }
+  }
+}
+
+private func parseLongPressCells(_ longPress: [String: Any]?) -> [LongPressCell] {
+  guard let cells = longPress?["cells"] as? [[String: Any]] else {
+    return []
+  }
+  return cells.map { cell in
+    LongPressCell(
+      type: cell["type"] as? String,
+      label: cell["label"] as? String,
+      actions: cell["actions"] as? [[String: String]] ?? [])
+  }
+}
+
 struct KeyView: View {
   @Environment(\.colorScheme) var colorScheme
   let x: CGFloat
@@ -35,6 +71,7 @@ struct KeyView: View {
   let longPress: [String: Any]?
 
   var body: some View {
+    let longPressCells = parseLongPressCells(longPress)
     Text(label)
       .font(.system(size: height * 0.5).weight(.light))
       .keyProperties(
@@ -51,12 +88,8 @@ struct KeyView: View {
             }
           },
           onLongPress: { highlight in
-            if let actionsList =
-              ((longPress?["cells"] as? [[String: Any]])?.map {
-                $0["actions"] as? [[String: String]]
-              } as? [[[String: String]]]), highlight >= 0, highlight < actionsList.count
-            {
-              executeActions(actionsList[highlight])
+            if highlight >= 0, highlight < longPressCells.count {
+              longPressCells[highlight].perform()
             }
           },
           onSwipe: { direction in
@@ -70,8 +103,7 @@ struct KeyView: View {
         topRight: subLabel?["topRight"] as? String,
         bubbleLabel: label,
         swipeUpLabel: swipeUp?["label"] as? String,
-        longPressLabels: (longPress?["cells"] as? [[String: Any]])?.map { $0["label"] as? String }
-          as? [String],
+        longPressItems: longPressCells.map { $0.bubbleItem },
         longPressIndex: longPress?["index"] as? Int
       )
   }

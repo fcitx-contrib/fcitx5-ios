@@ -211,6 +211,10 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     Fcitx.resetInput()
   }
 
+  public func triggerUnicode() {
+    Fcitx.triggerUnicode()
+  }
+
   public func commitString(_ commit: String) {
     textDocumentProxy.insertText(commit)
     updateTextIsEmpty()
