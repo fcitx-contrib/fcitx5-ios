@@ -194,7 +194,7 @@ copy_to(app copy "${PROJECT_BINARY_DIR}/iosnotifications/notifications.conf" "${
 copy_to(app copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "${ADDON_PREFIX}/uipanel.conf")
 # spell
 copy_to(app copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
-copy_share_to(app copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
+copy_share_to(app copy fcitx5/spell/en_dict.fscd)
 
 # quickphrase
 copy_to(app copy "${FCITX5_MODULE_BINARY_DIR}/quickphrase/quickphrase.conf" "${ADDON_PREFIX}/quickphrase.conf")
