@@ -44,13 +44,6 @@ if (CHINESE_ADDONS)
     add_keyboard_extension(Chinese "zh-Hans" "${CHINESE_TARGETS}")
     list(APPEND ENGINE_TARGETS ${CHINESE_TARGETS})
 
-    # quickphrase
-    copy_to(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/quickphrase/quickphrase.conf" "${ADDON_PREFIX}/quickphrase.conf")
-    copy_to(Chinese copy_directory "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/quickphrase/quickphrase.d" "share/fcitx5/data/quickphrase.d")
-
-    # unicode
-    copy_to(Chinese copy "${FCITX5_MODULE_BINARY_DIR}/unicode/unicode.conf" "${ADDON_PREFIX}/unicode.conf")
-
     set(LUA_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-lua")
     copy_to(Chinese copy "${LUA_BINARY_DIR}/src/addonloader/luaaddonloader.conf" "${ADDON_PREFIX}/luaaddonloader.conf")
     copy_to(Chinese copy "${LUA_BINARY_DIR}/src/imeapi/imeapi.conf" "${ADDON_PREFIX}/imeapi.conf")
@@ -201,7 +194,15 @@ copy_to(app copy "${PROJECT_BINARY_DIR}/iosnotifications/notifications.conf" "${
 copy_to(app copy "${PROJECT_BINARY_DIR}/uipanel/uipanel.conf" "${ADDON_PREFIX}/uipanel.conf")
 # spell
 copy_to(app copy "${FCITX5_MODULE_BINARY_DIR}/spell/spell.conf" "${ADDON_PREFIX}/spell.conf")
-copy_share_to(app copy fcitx5/spell/en_dict.fscd "share/fcitx5/spell/en_dict.fscd")
+copy_share_to(app copy fcitx5/spell/en_dict.fscd)
+
+# quickphrase
+copy_to(app copy "${FCITX5_MODULE_BINARY_DIR}/quickphrase/quickphrase.conf" "${ADDON_PREFIX}/quickphrase.conf")
+copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/quickphrase/quickphrase.d" "share/fcitx5/data/quickphrase.d")
+
+# unicode
+copy_to(app copy "${FCITX5_MODULE_BINARY_DIR}/unicode/unicode.conf" "${ADDON_PREFIX}/unicode.conf")
+copy_to(app copy "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/unicode/charselectdata" "share/fcitx5/unicode/charselectdata")
 
 # Copy layouts, icons, profile and Swift translations.
 copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/fcitx5-keyboard-layouts/layout" "share/layout")
