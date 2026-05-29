@@ -5,6 +5,9 @@ set(CMAKE_CONFIGURATION_TYPES Debug Release CACHE STRING INTERNAL FORCE)
 
 set(ENABLE_STRICT_TRY_COMPILE ON)
 set(DEPLOYMENT_TARGET 16.3)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY CACHE INTERNAL "")
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY CACHE INTERNAL "")
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY CACHE INTERNAL "")
 set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/ios-cmake/ios.toolchain.cmake")
 
 project(fcitx5-ios VERSION 0.1.0 LANGUAGES CXX Swift)
@@ -55,6 +58,11 @@ option(BUILD_SPELL_DICT "" OFF)
 
 find_host_package(PkgConfig)
 find_host_package(Gettext)
+# Revert side-effect of find_host_package so that homebrew libintl won't be linked.
+unset(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY)
+unset(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE)
+unset(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE)
+
 find_package(nlohmann_json REQUIRED)
 
 add_library(Libuv_static STATIC IMPORTED)
