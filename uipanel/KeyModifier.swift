@@ -67,7 +67,7 @@ struct KeyModifier: ViewModifier {
   let topRight: String?
   let bubbleLabel: String?
   let swipeUpLabel: String?
-  let longPressLabels: [String]
+  let longPressItems: [BubbleItem]
   let longPressIndex: Int
   var bubbleX: CGFloat { x + width / 2 }
   var bubbleY: CGFloat { y + height / 2 }
@@ -108,11 +108,11 @@ struct KeyModifier: ViewModifier {
     if isPressed && !didTriggerLongPress && !didMoveFarEnough {
       cancelOrderedKeyPress()
       didTriggerLongPress = true
-      if longPressIndex >= 0 && longPressIndex < longPressLabels.count {
+      if longPressIndex >= 0 && longPressIndex < longPressItems.count {
         bubbleHighlight = longPressIndex
         vm.setBubble(
           bubbleX, bubbleY, bubbleWidth, bubbleHeight,
-          background, colorScheme, shadow, nil, longPressLabels, longPressIndex,
+          background, colorScheme, shadow, nil, longPressItems, longPressIndex,
           bubbleHighlight)
       } else {
         clearBubble()
@@ -195,14 +195,14 @@ struct KeyModifier: ViewModifier {
           lastLocation = location.x
         }
       }
-    } else if didTriggerLongPress && longPressLabels.count > 1, let last = lastLocation {
+    } else if didTriggerLongPress && longPressItems.count > 1, let last = lastLocation {
       let delta = getNStep(last, location.x, moveSize)
       if delta != 0 {
         bubbleHighlight = max(
-          0, min(bubbleHighlight + delta, longPressLabels.count - 1))
+          0, min(bubbleHighlight + delta, longPressItems.count - 1))
         vm.setBubble(
           bubbleX, bubbleY, bubbleWidth, bubbleHeight,
-          background, colorScheme, shadow, nil, longPressLabels, longPressIndex,
+          background, colorScheme, shadow, nil, longPressItems, longPressIndex,
           bubbleHighlight)
         lastLocation = last + CGFloat(delta) * moveSize
       }
@@ -238,7 +238,7 @@ struct KeyModifier: ViewModifier {
     }
 
     if didTriggerLongPress && bubbleHighlight >= 0
-      && bubbleHighlight < longPressLabels.count
+      && bubbleHighlight < longPressItems.count
     {
       action.onLongPress?(bubbleHighlight)
       return
@@ -317,7 +317,7 @@ extension View {
     radius: CGFloat = keyCornerRadius, background: Color, pressedBackground: Color,
     foreground: Color, shadow: Color, action: GestureAction, pressedForeground: Color? = nil,
     pressedView: (any View)? = nil, topRight: String? = nil, bubbleLabel: String? = nil,
-    swipeUpLabel: String? = nil, longPressLabels: [String]? = nil, longPressIndex: Int? = nil
+    swipeUpLabel: String? = nil, longPressItems: [BubbleItem]? = nil, longPressIndex: Int? = nil
   ) -> some View {
     self.modifier(
       KeyModifier(
@@ -327,7 +327,7 @@ extension View {
         foreground: foreground, pressedForeground: pressedForeground ?? foreground,
         shadow: shadow, action: action, pressedView: pressedView, topRight: topRight,
         bubbleLabel: bubbleLabel, swipeUpLabel: swipeUpLabel,
-        longPressLabels: longPressLabels ?? [],
+        longPressItems: longPressItems ?? [],
         longPressIndex: longPressIndex ?? 0
       )
     )

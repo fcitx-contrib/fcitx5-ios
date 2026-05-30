@@ -6,6 +6,7 @@
 #include "keycode.h"
 
 #include <fcitx/inputmethodmanager.h>
+#include <unicode_public.h>
 
 fcitx::IosFrontend *frontend;
 
@@ -44,6 +45,20 @@ void processKey(const char *k, const char *c) {
 
 void resetInput() {
     dispatcher->schedule([] { frontend->resetInput(); });
+}
+
+void triggerUnicode() {
+    dispatcher->schedule([] {
+        auto *unicode = instance->addonManager().addon("unicode");
+        if (!unicode) {
+            return;
+        }
+        auto *ic = instance->mostRecentInputContext();
+        if (!ic) {
+            return;
+        }
+        unicode->call<fcitx::IUnicode::trigger>(ic);
+    });
 }
 
 void reload() {

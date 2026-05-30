@@ -79,7 +79,7 @@ public class ViewModel: ObservableObject {
   @Published var bubbleBackground: Color = .clear
   @Published var bubbleShadow: Color = .clear
   @Published var bubbleLabel: String? = nil
-  @Published var bubbleLabels = [String]()
+  @Published var bubbleItems = [BubbleItem]()
   @Published var bubbleIndex = 0
   @Published var bubbleHighlight = 0
 
@@ -265,7 +265,7 @@ public class ViewModel: ObservableObject {
 
   func setBubble(
     _ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat, _ background: Color,
-    _ colorScheme: ColorScheme, _ shadow: Color, _ label: String?, _ labels: [String],
+    _ colorScheme: ColorScheme, _ shadow: Color, _ label: String?, _ items: [BubbleItem],
     _ index: Int, _ highlight: Int
   ) {
     bubbleX = x
@@ -277,7 +277,7 @@ public class ViewModel: ObservableObject {
     bubbleBackground = background.blend(with: getBackground(colorScheme))
     bubbleShadow = shadow
     bubbleLabel = label
-    bubbleLabels = labels
+    bubbleItems = items
     bubbleIndex = index
     bubbleHighlight = highlight
   }
@@ -348,7 +348,7 @@ public struct VirtualKeyboardView: View {
               bubbleBackground: viewModel.bubbleBackground,
               bubbleShadow: viewModel.bubbleShadow,
               bubbleLabel: viewModel.bubbleLabel,
-              bubbleLabels: viewModel.bubbleLabels,
+              bubbleItems: viewModel.bubbleItems,
               bubbleIndex: viewModel.bubbleIndex,
               bubbleHighlight: viewModel.bubbleHighlight
             ).opacity(

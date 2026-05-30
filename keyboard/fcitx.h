@@ -6,6 +6,7 @@ void focusIn();
 void focusOut();
 void processKey(const char *key, const char *code);
 void resetInput();
+void triggerUnicode();
 void reload();
 void toggle();
 void setCurrentInputMethod(const char *inputMethod);

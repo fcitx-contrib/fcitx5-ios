@@ -18,6 +18,15 @@ let sideRatio = 0.4
 let shadowRadius: CGFloat = 2
 let cellWidth: CGFloat = 30
 
+struct BubbleItem: Equatable {
+  let label: String?
+  let type: String?
+
+  static func text(_ label: String) -> BubbleItem {
+    BubbleItem(label: label, type: nil)
+  }
+}
+
 enum BubblePosition {
   case left
   case middle
@@ -28,7 +37,7 @@ struct BubbleShape: Shape {
   let s: CGFloat
   let height: CGFloat
   let position: BubblePosition
-  let labels: [String]
+  let items: [BubbleItem]
   let index: Int
 
   func path(in rect: CGRect) -> Path {
@@ -42,9 +51,9 @@ struct BubbleShape: Shape {
     let right =
       w
       - (position == .right
-        ? 0 : ((position == .middle ? s : 2 * s) + CGFloat(labels.count - 1 - index) * cellWidth))
+        ? 0 : ((position == .middle ? s : 2 * s) + CGFloat(items.count - 1 - index) * cellWidth))
     let leftArc = position != .left && index > 0
-    let rightArc = position != .right && index < labels.count - 1
+    let rightArc = position != .right && index < items.count - 1
     let middle = h - height - columnGap
 
     path.move(to: CGPoint(x: 0, y: c))
@@ -150,9 +159,23 @@ struct BubbleView: View {
   let background: Color
   let shadow: Color
   let label: String?
-  let labels: [String]
+  let items: [BubbleItem]
   let index: Int
   let highlight: Int
+
+  @ViewBuilder
+  private func itemView(_ item: BubbleItem, _ h: CGFloat) -> some View {
+    if item.type == "unicode" {
+      VStack {
+        Image(systemName: "u.circle")
+          .resizable()
+          .aspectRatio(contentMode: .fit)
+          .frame(height: h * 0.25)
+      }.frame(height: h * 0.3)
+    } else {
+      Text(item.label ?? "").font(.system(size: h * 0.25).weight(.light))
+    }
+  }
 
   var body: some View {
     let h = 2 * height + 1.5 * rowGap - shadowRadius
@@ -161,7 +184,7 @@ struct BubbleView: View {
       x - width / 2 - s < 0 ? .left : (x + width / 2 + s > keyboardWidth ? .right : .middle)
     let offsetX = position == .left ? s : (position == .middle ? 0 : -s)
     if let label = label {
-      BubbleShape(s: s, height: height, position: position, labels: [label], index: 0)
+      BubbleShape(s: s, height: height, position: position, items: [.text(label)], index: 0)
         .fill(background)
         .shadow(color: shadow, radius: shadowRadius)
         .frame(width: (1 + 2 * sideRatio) * width, height: h)
@@ -171,17 +194,17 @@ struct BubbleView: View {
         )
         .position(x: x + offsetX, y: y - (h - height) / 2)
     } else {
-      let offsetCell = (CGFloat(labels.count - 1) / 2 - CGFloat(index)) * cellWidth
-      BubbleShape(s: s, height: height, position: position, labels: labels, index: index)
+      let offsetCell = (CGFloat(items.count - 1) / 2 - CGFloat(index)) * cellWidth
+      BubbleShape(s: s, height: height, position: position, items: items, index: index)
         .fill(background)
         .shadow(color: shadow, radius: shadowRadius)
         .frame(
-          width: (1 + 2 * sideRatio) * width + CGFloat(labels.count - 1) * cellWidth, height: h
+          width: (1 + 2 * sideRatio) * width + CGFloat(items.count - 1) * cellWidth, height: h
         )
         .overlay(
           HStack(spacing: 0) {
-            ForEach(Array(labels.enumerated()), id: \.offset) { i, label in
-              Text(label).font(.system(size: h * 0.25).weight(.light))
+            ForEach(Array(items.enumerated()), id: \.offset) { i, item in
+              itemView(item, h)
                 .frame(width: cellWidth)
                 .condition(i == highlight) {
                   $0.foregroundColor(.white).background(highlightBackground)

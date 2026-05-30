@@ -45,7 +45,7 @@ struct KeyboardView: View {
   let bubbleBackground: Color
   let bubbleShadow: Color
   let bubbleLabel: String?
-  let bubbleLabels: [String]
+  let bubbleItems: [BubbleItem]
   let bubbleIndex: Int
   let bubbleHighlight: Int
 
@@ -61,11 +61,11 @@ struct KeyboardView: View {
       ForEach(Array(rows.enumerated()), id: \.offset) { i, row in
         renderRow(row, CGFloat(i) * height, width, height)
       }
-      if bubbleLabel != nil || !bubbleLabels.isEmpty {
+      if bubbleLabel != nil || !bubbleItems.isEmpty {
         BubbleView(
           x: bubbleX, y: bubbleY, width: bubbleWidth, height: bubbleHeight,
           keyboardWidth: width, background: bubbleBackground, shadow: bubbleShadow,
-          label: bubbleLabel, labels: bubbleLabels, index: bubbleIndex, highlight: bubbleHighlight)
+          label: bubbleLabel, items: bubbleItems, index: bubbleIndex, highlight: bubbleHighlight)
       }
     }
     .frame(height: keyboardHeight)
