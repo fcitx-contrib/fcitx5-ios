@@ -31,6 +31,7 @@ function(add_keyboard_extension keyboard language targets)
     target_include_directories(${extension} PRIVATE
         "${PROJECT_SOURCE_DIR}/keyboard"
         "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/unicode"
+        "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/quickphrase"
         "${PROJECT_BINARY_DIR}/common"
         "${PROJECT_BINARY_DIR}/iosfrontend"
         "${PROJECT_BINARY_DIR}/uipanel"
