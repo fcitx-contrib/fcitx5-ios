@@ -6,6 +6,7 @@
 #include "keycode.h"
 
 #include <fcitx/inputmethodmanager.h>
+#include <quickphrase_public.h>
 #include <unicode_public.h>
 
 fcitx::IosFrontend *frontend;
@@ -58,6 +59,21 @@ void triggerUnicode() {
             return;
         }
         unicode->call<fcitx::IUnicode::trigger>(ic);
+    });
+}
+
+void triggerQuickPhrase() {
+    dispatcher->schedule([] {
+        auto *quickphrase = instance->addonManager().addon("quickphrase");
+        if (!quickphrase) {
+            return;
+        }
+        auto *ic = instance->mostRecentInputContext();
+        if (!ic) {
+            return;
+        }
+        quickphrase->call<fcitx::IQuickPhrase::trigger>(ic, "", "", "", "",
+                                                        fcitx::Key());
     });
 }
 

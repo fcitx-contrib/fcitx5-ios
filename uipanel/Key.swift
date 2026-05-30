@@ -37,6 +37,9 @@ struct LongPressCell {
     case "unicode":
       client.resetInput()
       client.triggerUnicode()
+    case "quickphrase":
+      client.resetInput()
+      client.triggerQuickPhrase()
     case nil:
       executeActions(actions)
     default:

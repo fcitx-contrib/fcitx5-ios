@@ -165,9 +165,9 @@ struct BubbleView: View {
 
   @ViewBuilder
   private func itemView(_ item: BubbleItem, _ h: CGFloat) -> some View {
-    if item.type == "unicode" {
+    if let type = item.type, ["unicode", "quickphrase"].contains(item.type) {
       VStack {
-        Image(systemName: "u.circle")
+        Image(systemName: type == "unicode" ? "u.circle" : "q.circle")
           .resizable()
           .aspectRatio(contentMode: .fit)
           .frame(height: h * 0.25)
