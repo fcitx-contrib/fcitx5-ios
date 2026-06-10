@@ -99,6 +99,10 @@ swift::Array<swift::String> getBulkCandidates(Instance *instance, int start,
     return candidates;
 }
 
+static void pushAction(nlohmann::json &j, const CandidateAction &action) {
+    j.push_back({{"id", action.id()}, {"text", action.text()}});
+}
+
 void UIPanel::expand(const std::string &auxUp, const std::string &preedit,
                      int caret, bool hasClientPreedit) {
     auto candidates =
@@ -151,18 +155,6 @@ void UIPanel::updateStatusArea(InputContext *ic) {
     KeyboardUI::setStatusAreaAsync(actions);
 }
 
-static std::string serializeActions(ActionableCandidateList *actionableList,
-                                    const CandidateWord &candidate) {
-    if (actionableList->hasAction(candidate)) {
-        auto j = nlohmann::json::array();
-        for (const auto &action : actionableList->candidateActions(candidate)) {
-            j.push_back({{"id", action.id()}, {"text", action.text()}});
-        }
-        return j.dump();
-    }
-    return "[]";
-}
-
 } // namespace fcitx
 
 FCITX_ADDON_FACTORY_V2(uipanel, fcitx::UIPanelFactory);
@@ -177,31 +169,32 @@ void page(bool next) {
 
 std::string getCandidateActions(int index) {
     return with_fcitx([index]() -> std::string {
+        auto j = nlohmann::json::array();
         auto ic = instance->mostRecentInputContext();
         const auto &list = ic->inputPanel().candidateList();
-        if (!list)
-            return "[]";
-        auto *actionableList = list->toActionable();
-        if (!actionableList) {
-            return "[]";
-        }
-        const auto &bulk = list->toBulk();
-        if (bulk) {
+        do {
+            if (!list) {
+                break;
+            }
+            auto *actionableList = list->toActionable();
+            if (!actionableList) {
+                break;
+            }
+            const auto &bulk = list->toBulk();
             try {
-                auto &candidate = bulk->candidateFromAll(index);
-                return serializeActions(actionableList, candidate);
+                auto &candidate = bulk ? bulk->candidateFromAll(index)
+                                       : list->candidate(index);
+                if (actionableList->hasAction(candidate)) {
+                    for (const auto &action :
+                         actionableList->candidateActions(candidate)) {
+                        pushAction(j, action);
+                    }
+                }
             } catch (const std::invalid_argument &e) {
                 FCITX_ERROR() << "action candidate index out of range";
             }
-        } else {
-            try {
-                const auto &candidate = list->candidate(index);
-                return serializeActions(actionableList, candidate);
-            } catch (const std::invalid_argument &e) {
-                FCITX_ERROR() << "action candidate index out of range";
-            }
-        }
-        return "[]";
+        } while (0);
+        return j.dump();
     });
 }
 
@@ -215,24 +208,14 @@ void activateCandidateAction(int index, int id) {
         if (!actionableList)
             return;
         const auto &bulk = list->toBulk();
-        if (bulk) {
-            try {
-                const auto &candidate = bulk->candidateFromAll(index);
-                if (actionableList->hasAction(candidate)) {
-                    actionableList->triggerAction(candidate, id);
-                }
-            } catch (const std::invalid_argument &e) {
-                FCITX_ERROR() << "action candidate index out of range";
+        try {
+            const auto &candidate =
+                bulk ? bulk->candidateFromAll(index) : list->candidate(index);
+            if (actionableList->hasAction(candidate)) {
+                actionableList->triggerAction(candidate, id);
             }
-        } else {
-            try {
-                const auto &candidate = list->candidate(index);
-                if (actionableList->hasAction(candidate)) {
-                    actionableList->triggerAction(candidate, id);
-                }
-            } catch (const std::invalid_argument &e) {
-                FCITX_ERROR() << "action candidate index out of range";
-            }
+        } catch (const std::invalid_argument &e) {
+            FCITX_ERROR() << "action candidate index out of range";
         }
     });
 }
@@ -244,19 +227,13 @@ void selectCandidate(int index) {
         if (!list)
             return;
         const auto &bulk = list->toBulk();
-        // Engine is responsible for updating UI
-        if (bulk) {
-            try {
-                bulk->candidateFromAll(index).select(ic);
-            } catch (const std::invalid_argument &e) {
-                FCITX_ERROR() << "select candidate index out of range";
-            }
-        } else {
-            try {
-                list->candidate(index).select(ic);
-            } catch (const std::invalid_argument &e) {
-                FCITX_ERROR() << "select candidate index out of range";
-            }
+        try {
+            const auto &candidate =
+                bulk ? bulk->candidateFromAll(index) : list->candidate(index);
+            // Engine is responsible for updating UI
+            candidate.select(ic);
+        } catch (const std::invalid_argument &e) {
+            FCITX_ERROR() << "select candidate index out of range";
         }
     });
 }
