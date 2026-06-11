@@ -1,4 +1,5 @@
 #include <fcitx/action.h>
+#include <fcitx/candidatelist.h>
 #include <fcitx/inputpanel.h>
 #include <fcitx/menu.h>
 #include <fcitx/statusarea.h>
@@ -44,7 +45,7 @@ void UIPanel::update(UserInterfaceComponent component,
         if (const auto &list = inputPanel.candidateList()) {
             const auto &bulk = list->toBulk();
             if (bulk) {
-                return expand(auxUp, preedit, caret, hasClientPreedit);
+                return expand(auxUp, preedit, caret, hasClientPreedit, list);
             }
             size = list->size();
             for (int i = 0; i < size; i++) {
@@ -56,7 +57,8 @@ void UIPanel::update(UserInterfaceComponent component,
             highlighted = list->cursorIndex();
         }
         KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates,
-                                       highlighted, false, hasClientPreedit);
+                                       highlighted, false, hasClientPreedit,
+                                       "[]");
         break;
     }
     case UserInterfaceComponent::StatusArea:
@@ -100,15 +102,31 @@ swift::Array<swift::String> getBulkCandidates(Instance *instance, int start,
 }
 
 static void pushAction(nlohmann::json &j, const CandidateAction &action) {
-    j.push_back({{"id", action.id()}, {"text", action.text()}});
+    j.push_back({{"id", action.id()},
+                 {"text", action.text()},
+                 {"checked", action.isChecked()},
+                 {"checkable", action.isCheckable()},
+                 {"separator", action.isSeparator()}});
+}
+
+static std::string serializeTabActions(TabbedCandidateList *tabbedList) {
+    auto j = nlohmann::json::array();
+    if (tabbedList) {
+        for (const auto &action : tabbedList->tabActions()) {
+            pushAction(j, action);
+        }
+    }
+    return j.dump();
 }
 
 void UIPanel::expand(const std::string &auxUp, const std::string &preedit,
-                     int caret, bool hasClientPreedit) {
+                     int caret, bool hasClientPreedit,
+                     std::shared_ptr<CandidateList> list) {
     auto candidates =
         getBulkCandidates(instance_, 0, 72); // Vertically 2 screens.
+    auto tabActions = serializeTabActions(list->toTabbed());
     KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates, 0, true,
-                                   hasClientPreedit);
+                                   hasClientPreedit, tabActions);
 }
 
 void UIPanel::scroll(int start, int count) {
@@ -217,6 +235,21 @@ void activateCandidateAction(int index, int id) {
         } catch (const std::invalid_argument &e) {
             FCITX_ERROR() << "action candidate index out of range";
         }
+    });
+}
+
+void activateCandidateTabAction(int id) {
+    dispatcher->schedule([id] {
+        auto ic = instance->mostRecentInputContext();
+        const auto &list = ic->inputPanel().candidateList();
+        if (!list) {
+            return;
+        }
+        auto *tabbedList = list->toTabbed();
+        if (!tabbedList) {
+            return;
+        }
+        tabbedList->triggerTabAction(id);
     });
 }
 

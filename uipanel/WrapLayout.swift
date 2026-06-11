@@ -6,11 +6,11 @@ func getTextWidth(_ text: String, _ fontSize: CGFloat) -> CGFloat {
   ]).width
 }
 
-func calculateLayout(_ candidates: [String], _ width: CGFloat) -> [Int] {
+func calculateLayout(_ candidates: [String], _ width: CGFloat, maxColumns: Int) -> [Int] {
   var rowItemCount = [Int]()
   var currentRowCount = 0
   var currentRowWidth: CGFloat = 0
-  let minWidth = width / 6
+  let minWidth = width / CGFloat(maxColumns)
 
   for candidate in candidates {
     let itemWidth = max(

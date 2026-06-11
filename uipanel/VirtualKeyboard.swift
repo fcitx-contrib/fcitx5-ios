@@ -55,6 +55,7 @@ public class ViewModel: ObservableObject {
   @Published var expanded = false
   // Have requested load more candidates starting from this index. -1 means not scrollable.
   @Published var pendingScroll = 0
+  @Published var tabActions = [CandidateAction]()
 
   @Published var actions = [StatusAreaAction]()
   @Published var inputMethods = [InputMethod]()
@@ -103,7 +104,7 @@ public class ViewModel: ObservableObject {
 
   func setCandidates(
     _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String],
-    _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool
+    _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool, _ tabActions: [CandidateAction]
   ) {
     if !auxUp.isEmpty || !preedit.isEmpty || !candidates.isEmpty {
       setDisplayMode(.candidates)
@@ -121,17 +122,29 @@ public class ViewModel: ObservableObject {
     self.candidates = candidates
     self.highlighted = Int(highlighted)
     self.hasClientPreedit = hasClientPreedit
+    self.tabActions = tabActions
     batch = (batch + 1) & 0xFFFF
     scrollEnd = false
-    rowItemCount = calculateLayout(candidates, totalWidth * 4 / 5)
+    rowItemCount = calculateLayout(
+      candidates, expandedCandidateListWidth(), maxColumns: expandedCandidateColumnCount())
     pendingScroll = bulk ? 0 : -1
   }
 
   func scroll(_ candidates: [String], _ end: Bool) {
     self.candidates.append(contentsOf: candidates)
-    rowItemCount = calculateLayout(self.candidates, totalWidth * 4 / 5)
+    rowItemCount = calculateLayout(
+      self.candidates, expandedCandidateListWidth(), maxColumns: expandedCandidateColumnCount())
     // Don't update batch as we don't want to reset scroll position.
     scrollEnd = end
+  }
+
+  private func expandedCandidateColumnCount() -> Int {
+    return tabActions.isEmpty ? 6 : 5
+  }
+
+  private func expandedCandidateListWidth() -> CGFloat {
+    let expandedListWidth = totalWidth * 4 / 5
+    return tabActions.isEmpty ? expandedListWidth : expandedListWidth * 5 / 6
   }
 
   func setStatusArea(_ actions: [StatusAreaAction]) {
@@ -320,6 +333,7 @@ public struct VirtualKeyboardView: View {
                 caret: viewModel.caret, candidates: viewModel.candidates,
                 highlighted: viewModel.highlighted,
                 rowItemCount: viewModel.rowItemCount,
+                tabActions: viewModel.tabActions,
                 batch: viewModel.batch, scrollEnd: viewModel.scrollEnd,
                 enterLabel: viewModel.enterLabel,
                 enterHighlight: viewModel.enterHighlight,
