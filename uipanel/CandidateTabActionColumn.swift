@@ -18,7 +18,8 @@ struct CandidateTabActionItemView: View {
           .padding([.top, .bottom], candidateVerticalPadding)
           .hidden()
 
-        Text(action.text)
+        // iOS 18 doesn't render ㇏, while iOS 26 does.
+        Text(action.text == "㇏" ? "丶" : action.text)
           .font(.system(size: candidateFontSize))
           .lineLimit(1)
           .minimumScaleFactor(0.5)  // Fit zhuang.
