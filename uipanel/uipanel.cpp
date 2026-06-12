@@ -1,5 +1,4 @@
 #include <fcitx/action.h>
-#include <fcitx/candidatelist.h>
 #include <fcitx/inputpanel.h>
 #include <fcitx/menu.h>
 #include <fcitx/statusarea.h>
