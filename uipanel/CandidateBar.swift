@@ -39,6 +39,7 @@ struct CandidateBarView: View {
   let candidates: [String]
   let highlighted: Int
   let rowItemCount: [Int]
+  let tabActions: [CandidateAction]
   let batch: Int
   let scrollEnd: Bool
   let enterLabel: String
@@ -62,8 +63,12 @@ struct CandidateBarView: View {
     let barHeightExcludePreedit = hasAuxPreedit ? barHeight * (1 - auxPreeditRatio) : barHeight
     let marginTop = max((5 * barHeightExcludePreedit - keyboardHeight) / 11, 0)
     let paddingBottom = max((keyboardHeight - 5 * barHeightExcludePreedit) / 6, 0)
-    let expandedCandidateHeight =
-      (barHeightExcludePreedit + keyboardHeight - marginTop) / 6 - paddingBottom
+    let expandedListHeight = barHeightExcludePreedit + keyboardHeight - marginTop
+    let expandedCandidateHeight = expandedListHeight / 6 - paddingBottom
+    let expandedListWidth = width * 4 / 5
+    let tabActionColumnWidth = expandedListWidth / 6
+    let candidateListWidth =
+      tabActions.isEmpty ? expandedListWidth : expandedListWidth - tabActionColumnWidth
 
     ScrollViewReader { proxy in
       HStack(spacing: 0) {
@@ -77,42 +82,51 @@ struct CandidateBarView: View {
           }
 
           if expanded {
-            ScrollView(.vertical) {
-              LazyVStack(spacing: 0) {
-                if marginTop > 0 {
-                  Spacer().frame(height: marginTop)
-                }
-                ForEach(rowItemCount.indices, id: \.self) { row in
-                  HStack(spacing: 0) {
-                    ForEach(0..<rowItemCount[row], id: \.self) { col in
-                      let index = rowItemCount.prefix(row).reduce(0, +) + col
-                      if index < candidates.count {
-                        CandidateView(
-                          text: candidates[index], index: index, highlighted: highlighted
-                        )
-                        .frame(minWidth: width / 8).frame(
-                          height: expandedCandidateHeight
-                        )
+            if marginTop > 0 {
+              Spacer().frame(height: marginTop)
+            }
+            HStack(spacing: 0) {
+              if !tabActions.isEmpty {
+                CandidateTabActionColumnView(
+                  actions: tabActions, width: tabActionColumnWidth,
+                  actionHeight: expandedCandidateHeight,
+                  paddingBottom: paddingBottom,
+                  height: expandedListHeight)
+              }
+              ScrollView(.vertical) {
+                LazyVStack(spacing: 0) {
+                  ForEach(rowItemCount.indices, id: \.self) { row in
+                    HStack(spacing: 0) {
+                      ForEach(0..<rowItemCount[row], id: \.self) { col in
+                        let index = rowItemCount.prefix(row).reduce(0, +) + col
+                        if index < candidates.count {
+                          CandidateView(
+                            text: candidates[index], index: index, highlighted: highlighted
+                          )
+                          .frame(minWidth: width / 8).frame(
+                            height: expandedCandidateHeight
+                          )
+                        }
                       }
+                    }.onAppear {
+                      visibleRows.insert(row)
+                      if pendingScroll >= 0 && !scrollEnd && row == rowItemCount.count - 5 {
+                        loadMoreCandidates(candidates.count, candidateCountInScreen)
+                      }
+                    }.onDisappear {
+                      visibleRows.remove(row)
                     }
-                  }.onAppear {
-                    visibleRows.insert(row)
-                    if pendingScroll >= 0 && !scrollEnd && row == rowItemCount.count - 5 {
-                      loadMoreCandidates(candidates.count, candidateCountInScreen)
+                    if paddingBottom > 0 {
+                      Spacer().frame(height: paddingBottom)
                     }
-                  }.onDisappear {
-                    visibleRows.remove(row)
-                  }
-                  if paddingBottom > 0 {
-                    Spacer().frame(height: paddingBottom)
                   }
                 }
-              }
-            }.frame(width: width * 4 / 5, height: barHeightExcludePreedit + keyboardHeight)
-              .scrollIndicators(.hidden)  // Hide scroll bar as native keyboard.
-              .onChange(of: batch) { _ in
-                proxy.scrollTo(0, anchor: .leading)
-              }
+              }.frame(width: candidateListWidth, height: expandedListHeight)
+                .scrollIndicators(.hidden)  // Hide scroll bar as native keyboard.
+                .onChange(of: batch) { _ in
+                  proxy.scrollTo(0, anchor: .leading)
+                }
+            }
           } else {
             ScrollView(.horizontal) {
               // Use LazyHStack so that onAppear is triggered only when candidate is scrolled into view.

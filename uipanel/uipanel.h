@@ -3,6 +3,7 @@
 #include <fcitx/addonfactory.h>
 #include <fcitx/addoninstance.h>
 #include <fcitx/addonmanager.h>
+#include <fcitx/candidatelist.h>
 #include <fcitx/instance.h>
 
 namespace fcitx {
@@ -37,7 +38,7 @@ class UIPanel final : public VirtualKeyboardUserInterface {
 
     void updateStatusArea(InputContext *ic);
     void expand(const std::string &auxUp, const std::string &preedit, int caret,
-                bool hasClientPreedit);
+                bool hasClientPreedit, std::shared_ptr<CandidateList> list);
 };
 
 class UIPanelFactory : public AddonFactory {

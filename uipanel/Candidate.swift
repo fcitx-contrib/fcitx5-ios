@@ -5,6 +5,9 @@ import UIPanel
 struct CandidateAction: Codable, Identifiable {
   let id: Int32
   let text: String
+  let checked: Bool
+  let checkable: Bool
+  let separator: Bool
 }
 
 func getHighlightBackground(_ colorScheme: ColorScheme) -> Color {
