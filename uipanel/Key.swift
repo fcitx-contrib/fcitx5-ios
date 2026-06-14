@@ -1,6 +1,8 @@
 import SwiftUI
 import SwiftUtil
 
+let keyRepeatInterval = 0.08
+
 func getNormalBackground(_ colorScheme: ColorScheme) -> Color {
   return colorScheme == .dark ? darkNormalBackground : lightNormalBackground
 }
@@ -165,7 +167,7 @@ struct BackspaceView: View {
 
   func startDelete() {
     stopDelete()
-    deleteTimer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { _ in
+    deleteTimer = Timer.scheduledTimer(withTimeInterval: keyRepeatInterval, repeats: true) { _ in
       Task { @MainActor in
         vm.resetLayerIfNotLocked()
         client.keyPressed("", "Backspace")

@@ -89,11 +89,57 @@ struct EditView: View {
     image: String, shrink: CGFloat, normal: Bool,
     index: Int, width: CGFloat, height: CGFloat, action: @escaping () -> Void
   ) -> some View {
+    let p = position(index, width, height)
+    if image == "delete.left" {
+      return AnyView(
+        BackspaceView(
+          x: p.x, y: p.y, width: width, height: height, hMargin: editKeyGap, vMargin: editKeyGap,
+          radius: editKeyCornerRadius))
+    }
+    return AnyView(
+      EditKeyView(
+        image: image, shrink: shrink, normal: normal,
+        x: p.x, y: p.y, width: width, height: height,
+        repeatable: image.hasPrefix("arrowtriangle."),
+        action: action))
+  }
+}
+
+struct EditKeyView: View {
+  @Environment(\.colorScheme) var colorScheme
+  @Environment(\.totalHeight) var totalHeight
+  let image: String
+  let shrink: CGFloat
+  let normal: Bool
+  let x: CGFloat
+  let y: CGFloat
+  let width: CGFloat
+  let height: CGFloat
+  let repeatable: Bool
+  let action: () -> Void
+
+  @State private var timer: Timer? = nil
+
+  func startRepeat() {
+    guard repeatable else { return }
+    stopRepeat()
+    timer = Timer.scheduledTimer(withTimeInterval: keyRepeatInterval, repeats: true) { _ in
+      Task { @MainActor in
+        action()
+      }
+    }
+  }
+
+  func stopRepeat() {
+    timer?.invalidate()
+    timer = nil
+  }
+
+  var body: some View {
     let background = normal ? getNormalBackground(colorScheme) : getFunctionBackground(colorScheme)
     let pressedBackground =
       normal ? getFunctionBackground(colorScheme) : getNormalBackground(colorScheme)
     let foreground = getNormalForeground(colorScheme)
-    let p = position(index, width, height)
     let size = getKeyboardHeight(totalHeight) / shrink
     let useWidth = image == "arrowtriangle.up.fill" || image == "arrowtriangle.down.fill"
     let symbol = Image(systemName: image)
@@ -105,24 +151,28 @@ struct EditView: View {
       .condition(!useWidth) {
         $0.frame(height: size)
       }
-    if image == "delete.left" {
-      return AnyView(
-        BackspaceView(
-          x: p.x, y: p.y, width: width, height: height, hMargin: editKeyGap, vMargin: editKeyGap,
-          radius: editKeyCornerRadius))
-    }
-    return AnyView(
-      symbol.keyProperties(
-        x: p.x, y: p.y, width: width, height: height, hMargin: editKeyGap, vMargin: editKeyGap,
-        radius: editKeyCornerRadius,
-        background: background,
-        pressedBackground: pressedBackground,
-        foreground: foreground,
-        shadow: getShadow(colorScheme),
-        action: GestureAction(
-          onTap: {
-            action()
-          }))
+
+    symbol.keyProperties(
+      x: x, y: y, width: width, height: height, hMargin: editKeyGap, vMargin: editKeyGap,
+      radius: editKeyCornerRadius,
+      background: background,
+      pressedBackground: pressedBackground,
+      foreground: foreground,
+      shadow: getShadow(colorScheme),
+      action: GestureAction(
+        onTap: {
+          action()
+        },
+        onLongPress: { _ in
+          startRepeat()
+        },
+        onRelease: {
+          stopRepeat()
+        }
+      )
     )
+    .onDisappear {
+      stopRepeat()
+    }
   }
 }
