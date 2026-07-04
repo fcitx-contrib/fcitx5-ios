@@ -1,3 +1,5 @@
+set -e
+
 deps=(
   boost
   curl
