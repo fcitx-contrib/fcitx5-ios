@@ -131,3 +131,10 @@ add_subdirectory(assets)
 add_subdirectory(common)
 add_subdirectory(keyboard)
 add_subdirectory(src)
+
+get_property(RUNTIME_ADDONS GLOBAL PROPERTY FCITX_RUNTIME_ADDONS)
+fcitx5_import_addons(FcitxRuntime
+    REGISTRY_VARNAME getStaticAddon
+    ADDONS ${COMMON_TARGETS} ${RUNTIME_ADDONS}
+)
+set_target_properties(FcitxRuntime PROPERTIES INTERFACE_LINK_LIBRARIES "")

@@ -1,5 +1,7 @@
-#include "../common/common.h"
-#include "../common/util.h"
+#include "common.h"
+#include "runtime-api.h"
+#include "util.h"
+
 #include <fcitx-config/configuration.h>
 #include <fcitx-config/rawconfig.h>
 #include <fcitx-utils/stringutils.h>

@@ -1,6 +1,5 @@
 import AlertToast
 import Fcitx
-import FcitxCommon
 import FcitxIpc
 import NotifySwift
 import SwiftUI

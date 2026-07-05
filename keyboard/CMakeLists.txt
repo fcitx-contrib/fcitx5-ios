@@ -18,8 +18,6 @@ function(add_keyboard_extension keyboard language targets)
         "${PROJECT_SOURCE_DIR}/keyboard/KeyboardViewController.swift"
         "${PROJECT_SOURCE_DIR}/keyboard/util.swift"
         "${PROJECT_SOURCE_DIR}/keyboard/SyncConfig.swift"
-        "${PROJECT_SOURCE_DIR}/keyboard/fcitx.cpp"
-        "${PROJECT_SOURCE_DIR}/keyboard/keycode.cpp"
     )
 
     configure_file("${PROJECT_SOURCE_DIR}/keyboard/Info.plist.in" "${PROJECT_BINARY_DIR}/${keyboard}.plist" @ONLY)
@@ -30,32 +28,32 @@ function(add_keyboard_extension keyboard language targets)
 
     target_include_directories(${extension} PRIVATE
         "${PROJECT_SOURCE_DIR}/keyboard"
+        "${PROJECT_SOURCE_DIR}/common"
+        "${PROJECT_SOURCE_DIR}/uipanel"
         "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/unicode"
         "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/quickphrase"
         "${PROJECT_BINARY_DIR}/common"
         "${PROJECT_BINARY_DIR}/iosfrontend"
         "${PROJECT_BINARY_DIR}/uipanel"
+        "${PROJECT_BINARY_DIR}/protocol"
     )
 
     target_compile_options(${extension} PUBLIC
         "$<$<COMPILE_LANGUAGE:Swift>:-cxx-interoperability-mode=default>"
     )
 
+    target_link_directories(${extension} PRIVATE
+        "${PROJECT_BINARY_DIR}/protocol"
+    )
     target_link_libraries(${extension}
         "-Xlinker -e -Xlinker _NSExtensionMain -application-extension"
-        SwiftFrontend
-        KeyboardUI
-        NotifySwift
-        FcitxCommon
-        SwiftUtil
+        "-Xlinker -rpath -Xlinker @executable_path/../../Frameworks"
+        FcitxRuntime
     )
 
     add_dependencies(${extension} "${keyboard}Profile")
 
-    fcitx5_import_addons(${extension}
-        REGISTRY_VARNAME getStaticAddon
-        ADDONS ${COMMON_TARGETS} ${targets}
-    )
+    set_property(GLOBAL APPEND PROPERTY FCITX_RUNTIME_ADDONS ${targets})
 
     copy_to(${keyboard} copy_directory "${PROJECT_SOURCE_DIR}/assets/SwiftTranslations/${keyboard}" "")
     copy_to(${keyboard} copy_directory "${PROJECT_SOURCE_DIR}/assets/SwiftTranslations/Keyboard" "")

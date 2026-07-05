@@ -1,18 +1,20 @@
-#include "../iosfrontend/iosfrontend.h"
+#include "common.h"
+#include "runtime-api.h"
+#include "util.h"
 
-#include "../common/common.h"
-#include "../common/util.h"
-#include "fcitx.h"
+#include "../iosfrontend/iosfrontend.h"
 #include "keycode.h"
 
 #include <fcitx/inputmethodmanager.h>
 #include <quickphrase_public.h>
 #include <unicode_public.h>
 
+namespace {
 fcitx::IosFrontend *frontend;
+}
 
-void startFcitx(const char *appBundlePath, const char *xdgDataDirs,
-                const char *appGroupPath) {
+void startKeyboardFcitx(const char *appBundlePath, const char *xdgDataDirs,
+                        const char *appGroupPath) {
     if (instance) {
         return;
     }
@@ -20,15 +22,14 @@ void startFcitx(const char *appBundlePath, const char *xdgDataDirs,
     auto &addonMgr = instance->addonManager();
     frontend =
         dynamic_cast<fcitx::IosFrontend *>(addonMgr.addon("iosfrontend"));
-    return;
 }
 
 void focusIn() {
-    return dispatcher->schedule([] { frontend->focusIn(); });
+    dispatcher->schedule([] { frontend->focusIn(); });
 }
 
 void focusOut() {
-    return dispatcher->schedule([] { frontend->focusOut(); });
+    dispatcher->schedule([] { frontend->focusOut(); });
 }
 
 void processKey(const char *k, const char *c) {

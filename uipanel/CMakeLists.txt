@@ -29,7 +29,7 @@ target_include_directories(KeyboardUI PUBLIC
     "${PROJECT_BINARY_DIR}/protocol"
     "${PROJECT_BINARY_DIR}/common"
 )
-target_link_libraries(KeyboardUI FcitxProtocol FcitxCommon SwiftUtil)
+target_link_libraries(KeyboardUI FcitxProtocol SwiftUtil)
 
 _swift_generate_cxx_header(
     KeyboardUI
