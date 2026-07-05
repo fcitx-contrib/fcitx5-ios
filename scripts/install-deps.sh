@@ -1,3 +1,5 @@
+set -e
+
 deps=(
   boost
   curl
@@ -44,13 +46,12 @@ file=Fcitx5-arm64.tar.bz2
 [[ -f cache/$file ]] || curl -fsSLO --output-dir cache https://github.com/fcitx-contrib/fcitx5-macos/releases/download/latest/$file
 tar xf cache/$file -C $SPELL_DICT_DIR --strip-components=5 Fcitx5.app/Contents/share/fcitx5/spell/en_dict.fscd
 
-plugins=(
-  chinese-addons
-  rime
+files=(
+  chinese-addons-slim.tar.bz2
+  rime-any.tar.bz2
 )
 
-for plugin in "${plugins[@]}"; do
-  file=$plugin-any.tar.bz2
+for file in "${files[@]}"; do
   [[ -f cache/$file ]] || curl -fsSLO --output-dir cache https://github.com/fcitx-contrib/fcitx5-plugins/releases/download/macos-latest/$file
   tar xf cache/$file -C $EXTRACT_DIR
 done
