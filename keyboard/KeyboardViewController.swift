@@ -1,5 +1,4 @@
 import Fcitx
-import FcitxCommon
 import FcitxProtocol
 import KeyboardUI
 import SwiftFrontend
@@ -59,7 +58,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       // app and keyboards are killed, but only if app is started first can it sync
       // locale to keyboards. Need to find a way to update locale on viewWillAppear.
       setLocale(syncLocale())
-      startFcitx(appBundlePath, "\(Bundle.main.bundlePath)/share", appGroup.path)
+      startKeyboardFcitx(appBundlePath, "\(Bundle.main.bundlePath)/share", appGroup.path)
     }
 
     // Must recreate SwiftUI view, otherwise rotating may have old height which can't be updated.

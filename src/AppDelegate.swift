@@ -1,5 +1,4 @@
 import Fcitx
-import FcitxCommon
 import FcitxIpc
 import SwiftUtil
 import UIKit

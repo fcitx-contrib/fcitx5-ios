@@ -7,7 +7,6 @@
 
 #include "../common/util.h"
 #include "../iosfrontend/iosfrontend.h"
-#include "../keyboard/fcitx.h"
 #include "keyboardui-swift.h"
 #include "uipanel-public.h"
 #include "uipanel.h"

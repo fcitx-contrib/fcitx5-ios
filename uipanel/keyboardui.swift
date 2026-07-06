@@ -1,4 +1,4 @@
-import FcitxCommon
+import Fcitx
 import FcitxProtocol
 import SwiftUI
 import SwiftUtil

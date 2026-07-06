@@ -23,8 +23,6 @@ add_executable(${BUNDLE_NAME} MACOSX_BUNDLE
     SceneDelegate.swift
     DataManager.swift
     ${CONFIG_UI_FILES}
-    fcitx.cpp
-    config.cpp
 )
 
 set(ADDON_PREFIX "share/fcitx5/addon")
@@ -158,14 +156,11 @@ target_include_directories(${BUNDLE_NAME} PRIVATE
 )
 
 target_link_libraries(${BUNDLE_NAME}
+    "-Xlinker -rpath -Xlinker @executable_path/Frameworks"
+    FcitxRuntime
     AlertToast
     Swifter
-    SwiftFrontend
-    KeyboardUI
-    NotifySwift
     FcitxIpc
-    FcitxCommon
-    SwiftUtil
     ZIPFoundation
 )
 
@@ -217,7 +212,12 @@ copy_to(app copy "${PROJECT_BINARY_DIR}/profile" profile)
 
 copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/assets/SwiftTranslations/Main" "")
 
-fcitx5_import_addons(${BUNDLE_NAME}
-    REGISTRY_VARNAME getStaticAddon
-    ADDONS ${COMMON_TARGETS} ${ENGINE_TARGETS}
+add_dependencies(${BUNDLE_NAME} FcitxRuntime)
+add_custom_command(TARGET ${BUNDLE_NAME}
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "$<TARGET_BUNDLE_DIR:${BUNDLE_NAME}>/Frameworks"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "$<TARGET_BUNDLE_DIR:FcitxRuntime>"
+        "$<TARGET_BUNDLE_DIR:${BUNDLE_NAME}>/Frameworks/FcitxRuntime.framework"
 )

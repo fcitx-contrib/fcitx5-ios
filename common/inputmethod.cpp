@@ -1,5 +1,5 @@
-#include "common-public.h"
 #include "common.h"
+#include "runtime-api.h"
 #include "util.h"
 #include <fcitx/inputmethodmanager.h>
 
