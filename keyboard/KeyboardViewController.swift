@@ -169,9 +169,12 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
         }
       }
     case "ArrowLeft":
-      textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
+      let textBefore = textDocumentProxy.documentContextBeforeInput ?? ""
+      textDocumentProxy.adjustTextPosition(
+        byCharacterOffset: -utf16LengthOfLastGrapheme(textBefore))
     case "ArrowRight":
-      textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
+      let textAfter = textDocumentProxy.documentContextAfterInput ?? ""
+      textDocumentProxy.adjustTextPosition(byCharacterOffset: utf16LengthOfFirstGrapheme(textAfter))
     case "ArrowUp":
       let offset = lengthOfLastLine(textDocumentProxy.documentContextBeforeInput ?? "")
       textDocumentProxy.adjustTextPosition(byCharacterOffset: -offset)
