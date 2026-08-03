@@ -14,7 +14,7 @@ cmake -B build/SIMULATORARM64 -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPLATFORM=SIMUL
 cmake --build build/SIMULATORARM64 && ./scripts/code-sign.sh SIMULATORARM64
 ```
 
-If the change targets the device build (`OS64`, Release), build there instead:
+If the change targets the device build (`OS64`, Release), build it in addition to the required simulator build:
 
 ```sh
 cmake -B build/OS64 -G Ninja -DCMAKE_BUILD_TYPE=Release -DPLATFORM=OS64
