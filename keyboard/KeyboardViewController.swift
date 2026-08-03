@@ -154,40 +154,42 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     // In the latter case, it will be '\n' if caret is at the beginning of a non-first line.
     switch code {
     case "ArrowDown":
-      let offset = lengthOfLastLine(textDocumentProxy.documentContextBeforeInput ?? "")
-      let step = lengthOfFirstLine(textDocumentProxy.documentContextAfterInput ?? "")
+      let offset = lastLine(textDocumentProxy.documentContextBeforeInput ?? "").count
+      let step = firstLine(textDocumentProxy.documentContextAfterInput ?? "").utf16.count
       textDocumentProxy.adjustTextPosition(byCharacterOffset: step)
       DispatchQueue.main.async {
         // Move to the start of next line if exists.
         self.textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
         // Must have a delay, otherwise nextLineLength is always 0.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-          let nextLineLength = lengthOfFirstLine(
-            self.textDocumentProxy.documentContextAfterInput ?? "")
+          let textAfter = self.textDocumentProxy.documentContextAfterInput ?? ""
+          let column = min(offset, firstLine(textAfter).count)
           self.textDocumentProxy.adjustTextPosition(
-            byCharacterOffset: min(offset, nextLineLength))
+            byCharacterOffset: textAfter.prefix(column).utf16.count)
         }
       }
     case "ArrowLeft":
       let textBefore = textDocumentProxy.documentContextBeforeInput ?? ""
       textDocumentProxy.adjustTextPosition(
-        byCharacterOffset: -utf16LengthOfLastGrapheme(textBefore))
+        byCharacterOffset: -max(1, textBefore.suffix(1).utf16.count))
     case "ArrowRight":
       let textAfter = textDocumentProxy.documentContextAfterInput ?? ""
-      textDocumentProxy.adjustTextPosition(byCharacterOffset: utf16LengthOfFirstGrapheme(textAfter))
+      textDocumentProxy.adjustTextPosition(
+        byCharacterOffset: max(1, textAfter.prefix(1).utf16.count))
     case "ArrowUp":
-      let offset = lengthOfLastLine(textDocumentProxy.documentContextBeforeInput ?? "")
-      textDocumentProxy.adjustTextPosition(byCharacterOffset: -offset)
+      let textBefore = lastLine(textDocumentProxy.documentContextBeforeInput ?? "")
+      let offset = textBefore.count
+      textDocumentProxy.adjustTextPosition(byCharacterOffset: -textBefore.utf16.count)
       DispatchQueue.main.async {
         // Move to the end of previous line if exists.
         self.textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
         // Must have a delay, otherwise previousLineLength may always be 0.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-          let previousLineLength = lengthOfLastLine(
-            self.textDocumentProxy.documentContextBeforeInput ?? "")
-          if previousLineLength > offset {
+          let textBefore = lastLine(self.textDocumentProxy.documentContextBeforeInput ?? "")
+          if textBefore.count > offset {
             self.textDocumentProxy.adjustTextPosition(
-              byCharacterOffset: -(previousLineLength - offset))
+              byCharacterOffset:
+                -textBefore.suffix(textBefore.count - offset).utf16.count)
           }
         }
       }
@@ -196,12 +198,12 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       updateTextIsEmpty()
     case "End":
       let textAfter = textDocumentProxy.documentContextAfterInput ?? ""
-      textDocumentProxy.adjustTextPosition(byCharacterOffset: lengthOfFirstLine(textAfter))
+      textDocumentProxy.adjustTextPosition(byCharacterOffset: firstLine(textAfter).utf16.count)
     case "Enter":
       commitString("\n")  // \r doesn't work in Safari address bar.
     case "Home":
       let textBefore = textDocumentProxy.documentContextBeforeInput ?? ""
-      textDocumentProxy.adjustTextPosition(byCharacterOffset: -lengthOfLastLine(textBefore))
+      textDocumentProxy.adjustTextPosition(byCharacterOffset: -lastLine(textBefore).utf16.count)
     default:
       if !key.isEmpty {
         commitString(key)
