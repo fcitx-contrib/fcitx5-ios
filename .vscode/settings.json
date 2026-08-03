@@ -3,6 +3,7 @@
         "-background-index",
         "-compile-commands-dir=build/SIMULATORARM64"
     ],
+    "lldb.library": "/Applications/Xcode.app/Contents/SharedFrameworks/LLDB.framework/LLDB",
     "swift.sourcekit-lsp.supported-languages": [
         "swift"
     ],
