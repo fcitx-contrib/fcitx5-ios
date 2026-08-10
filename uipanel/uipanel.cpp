@@ -30,11 +30,16 @@ void UIPanel::update(UserInterfaceComponent component,
     switch (component) {
     case UserInterfaceComponent::InputPanel: {
         const InputPanel &inputPanel = inputContext->inputPanel();
-        auto auxUp = instance_->outputFilter(inputContext, inputPanel.auxUp())
-                         .toString();
-        auto preedit =
-            instance_->outputFilter(inputContext, inputPanel.preedit())
-                .toString();
+        std::string auxUp, preedit;
+        if (!inputPanel.empty()) {
+            auxUp = instance_->outputFilter(inputContext, inputPanel.auxUp())
+                        .toString();
+            preedit =
+                instance_->outputFilter(inputContext, inputPanel.preedit())
+                    .toString();
+        } else if (!inputPanel.overlayMessage().empty()) {
+            auxUp = inputPanel.overlayMessage().toString();
+        }
         auto caret = inputPanel.preedit().cursor();
         bool hasClientPreedit = !inputPanel.clientPreedit().empty();
         int size = 0;
