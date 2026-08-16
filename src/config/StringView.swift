@@ -1,3 +1,4 @@
+import Fcitx
 import SwiftUI
 
 struct StringView: View, OptionViewProtocol {
@@ -14,35 +15,52 @@ struct StringView: View, OptionViewProtocol {
     self._text = State(initialValue: value.wrappedValue as? String ?? "")
   }
 
+  private var isRegex: Bool {
+    data["IsRegex"] as? String == "True"
+      || (data["ListConstrain"] as? [String: Any])?["IsRegex"] as? String == "True"
+  }
+
+  private var isValid: Bool {
+    !isRegex || text.isEmpty || Fcitx.isRegexValid(text)
+  }
+
   private func submit() {
-    if ($value.wrappedValue as? String) != text {
+    if isValid, ($value.wrappedValue as? String) != text {
       $value.wrappedValue = text
     }
   }
 
   var body: some View {
     let option = data["Option"] as? String ?? ""
-    HStack {
-      if !label.isEmpty {
-        Text(label)
-          .accessibilityIdentifier(option + "_label")
-      }
-      TextField("", text: $text)
-        .submitLabel(.done)
-        .focused($isFocused)
-        // Don't update real-time. It changes parent state so the whole view is re-rendered.
-        // Don't use onSubmit. It requires Enter key to be pressed.
-        .onChange(of: isFocused) { focused in
-          if !focused {
-            submit()
+    VStack(alignment: .leading, spacing: 2) {
+      HStack {
+        if !label.isEmpty {
+          Text(label)
+            .accessibilityIdentifier(option + "_label")
+        }
+        TextField("", text: $text)
+          .submitLabel(.done)
+          .focused($isFocused)
+          // Don't update real-time. It changes parent state so the whole view is re-rendered.
+          // Don't use onSubmit. It requires Enter key to be pressed.
+          .onChange(of: isFocused) { focused in
+            if !focused {
+              submit()
+            }
           }
-        }
-        .onChange(of: value as? String) {
-          text = $0 ?? ""
-        }
-        // Leading for List item, trailing for String option.
-        .multilineTextAlignment(label.isEmpty ? .leading : .trailing)
-        .accessibilityIdentifier(option)
+          .onChange(of: value as? String) {
+            text = $0 ?? ""
+          }
+          // Leading for List item, trailing for String option.
+          .multilineTextAlignment(label.isEmpty ? .leading : .trailing)
+          .accessibilityIdentifier(option)
+      }
+      if !isValid {
+        Text("Invalid regular expression")
+          .font(.footnote)
+          .foregroundColor(.red)
+          .accessibilityIdentifier("InvalidRegex")
+      }
     }
     .resetContextMenu(data: data, value: $value)
   }
