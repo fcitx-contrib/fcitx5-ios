@@ -3,6 +3,7 @@
 #include "util.h"
 
 #include <fcitx-config/configuration.h>
+#include <fcitx-config/option.h>
 #include <fcitx-config/rawconfig.h>
 #include <fcitx-utils/stringutils.h>
 #include <fcitx/addonmanager.h>
@@ -273,4 +274,8 @@ void setConfig(const char *uri_, const char *value) {
 
 std::string getAddons() {
     return with_fcitx([] { return fcitx::getAddons(); });
+}
+
+bool isRegexValid(const char *regex) {
+    return fcitx::RegexConstrain().check(regex);
 }
