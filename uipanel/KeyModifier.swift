@@ -29,7 +29,7 @@ private func getNStep(_ start: CGFloat, _ end: CGFloat, _ step: CGFloat) -> Int 
 
 @MainActor
 private func clearBubble() {
-  vm.setBubble(0, 0, 0, 0, .clear, .light, .clear, nil, [], 0, 0)
+  vm.setBubble(0, 0, 0, 0, .clear, .light, .clear, nil, [], 0, 0, nil)
 }
 
 struct KeyModifier: ViewModifier {
@@ -58,6 +58,8 @@ struct KeyModifier: ViewModifier {
   let vMargin: CGFloat
   let radius: CGFloat
   let background: Color
+  let bubbleBackground: Color?
+  let bubbleFontSize: CGFloat?
   let pressedBackground: Color
   let foreground: Color
   let pressedForeground: Color
@@ -112,8 +114,8 @@ struct KeyModifier: ViewModifier {
         bubbleHighlight = longPressIndex
         vm.setBubble(
           bubbleX, bubbleY, bubbleWidth, bubbleHeight,
-          background, colorScheme, shadow, nil, longPressItems, longPressIndex,
-          bubbleHighlight)
+          bubbleBackground ?? background, colorScheme, shadow, nil, longPressItems, longPressIndex,
+          bubbleHighlight, bubbleFontSize)
       } else {
         clearBubble()
         action.onLongPress?(0)
@@ -131,8 +133,8 @@ struct KeyModifier: ViewModifier {
 
     vm.setBubble(
       bubbleX, bubbleY, bubbleWidth, bubbleHeight,
-      background, colorScheme, shadow,
-      bubbleLabel, [], 0, 0)
+      bubbleBackground ?? background, colorScheme, shadow,
+      bubbleLabel, [], 0, 0, bubbleFontSize)
 
     vm.flushOrderedKeyPresses()
     if isDoubleTap(touchTime) {
@@ -169,8 +171,8 @@ struct KeyModifier: ViewModifier {
       if didMoveFarEnough {
         if getSwipeDirection(dx, dy) == .up {
           vm.setBubble(
-            bubbleX, bubbleY, bubbleWidth, bubbleHeight, background, colorScheme,
-            shadow, swipeUpLabel, [], 0, 0)
+            bubbleX, bubbleY, bubbleWidth, bubbleHeight, bubbleBackground ?? background,
+            colorScheme, shadow, swipeUpLabel, [], 0, 0, bubbleFontSize)
         } else {
           clearBubble()
         }
@@ -202,8 +204,8 @@ struct KeyModifier: ViewModifier {
           0, min(bubbleHighlight + delta, longPressItems.count - 1))
         vm.setBubble(
           bubbleX, bubbleY, bubbleWidth, bubbleHeight,
-          background, colorScheme, shadow, nil, longPressItems, longPressIndex,
-          bubbleHighlight)
+          bubbleBackground ?? background, colorScheme, shadow, nil, longPressItems, longPressIndex,
+          bubbleHighlight, bubbleFontSize)
         lastLocation = last + CGFloat(delta) * moveSize
       }
     }
@@ -317,13 +319,15 @@ extension View {
     radius: CGFloat = keyCornerRadius, background: Color, pressedBackground: Color,
     foreground: Color, shadow: Color, action: GestureAction, pressedForeground: Color? = nil,
     pressedView: (any View)? = nil, topRight: String? = nil, bubbleLabel: String? = nil,
-    swipeUpLabel: String? = nil, longPressItems: [BubbleItem]? = nil, longPressIndex: Int? = nil
+    swipeUpLabel: String? = nil, longPressItems: [BubbleItem]? = nil, longPressIndex: Int? = nil,
+    bubbleBackground: Color? = nil, bubbleFontSize: CGFloat? = nil
   ) -> some View {
     self.modifier(
       KeyModifier(
         x: x, y: y, width: width, height: height, hMargin: hMargin, vMargin: vMargin,
         radius: radius,
-        background: background, pressedBackground: pressedBackground,
+        background: background, bubbleBackground: bubbleBackground,
+        bubbleFontSize: bubbleFontSize, pressedBackground: pressedBackground,
         foreground: foreground, pressedForeground: pressedForeground ?? foreground,
         shadow: shadow, action: action, pressedView: pressedView, topRight: topRight,
         bubbleLabel: bubbleLabel, swipeUpLabel: swipeUpLabel,

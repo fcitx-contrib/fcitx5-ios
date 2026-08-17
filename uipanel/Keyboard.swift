@@ -48,6 +48,7 @@ struct KeyboardView: View {
   let bubbleItems: [BubbleItem]
   let bubbleIndex: Int
   let bubbleHighlight: Int
+  let bubbleFontSize: CGFloat?
 
   @State private var defaultRows = [[String: Any]]()
   @State private var shiftRows = [[String: Any]]()
@@ -65,7 +66,8 @@ struct KeyboardView: View {
         BubbleView(
           x: bubbleX, y: bubbleY, width: bubbleWidth, height: bubbleHeight,
           keyboardWidth: width, background: bubbleBackground, shadow: bubbleShadow,
-          label: bubbleLabel, items: bubbleItems, index: bubbleIndex, highlight: bubbleHighlight)
+          label: bubbleLabel, items: bubbleItems, index: bubbleIndex,
+          highlight: bubbleHighlight, fontSize: bubbleFontSize)
       }
     }
     .frame(height: keyboardHeight)
