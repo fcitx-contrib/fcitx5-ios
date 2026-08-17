@@ -2,6 +2,7 @@
 public protocol FcitxProtocol {
   func keyPressed(_ key: String, _ code: String)
   func forwardKey(_ key: String, _ code: String)
+  func carriageReturn()
   func resetInput()
   func triggerUnicode()
   func triggerQuickPhrase()

@@ -83,6 +83,7 @@ public class ViewModel: ObservableObject {
   @Published var bubbleItems = [BubbleItem]()
   @Published var bubbleIndex = 0
   @Published var bubbleHighlight = 0
+  @Published var bubbleFontSize: CGFloat? = nil
 
   var hasPreedit: Bool { !preedit.isEmpty || hasClientPreedit }
 
@@ -279,7 +280,7 @@ public class ViewModel: ObservableObject {
   func setBubble(
     _ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat, _ background: Color,
     _ colorScheme: ColorScheme, _ shadow: Color, _ label: String?, _ items: [BubbleItem],
-    _ index: Int, _ highlight: Int
+    _ index: Int, _ highlight: Int, _ fontSize: CGFloat?
   ) {
     bubbleX = x
     bubbleY = y
@@ -293,6 +294,7 @@ public class ViewModel: ObservableObject {
     bubbleItems = items
     bubbleIndex = index
     bubbleHighlight = highlight
+    bubbleFontSize = fontSize
   }
 
   // Sync config
@@ -364,7 +366,8 @@ public struct VirtualKeyboardView: View {
               bubbleLabel: viewModel.bubbleLabel,
               bubbleItems: viewModel.bubbleItems,
               bubbleIndex: viewModel.bubbleIndex,
-              bubbleHighlight: viewModel.bubbleHighlight
+              bubbleHighlight: viewModel.bubbleHighlight,
+              bubbleFontSize: viewModel.bubbleFontSize
             ).opacity(
               viewModel.mode == .initial || (viewModel.mode == .candidates && !viewModel.expanded)
                 ? 1 : 0)  // Don't recreate KeyboardView when mode changes.

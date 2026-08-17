@@ -278,6 +278,9 @@ struct EnterView: View {
   let highlight: Bool
 
   var body: some View {
+    let returnLabel = NSLocalizedString("return", comment: "")
+    let hasReturnLongPress = !cr && label != returnLabel
+    let returnFontSize = labelFontSize(returnLabel)
     VStack {
       if cr {
         Image(systemName: "return")
@@ -285,8 +288,7 @@ struct EnterView: View {
           .aspectRatio(contentMode: .fit)
           .frame(height: height * 0.4)
       } else {
-        Text(label).font(
-          .system(size: adjustFontSize(label, height * 0.32, (width - columnGap) * 0.95)))
+        Text(label).font(.system(size: labelFontSize(label)))
       }
     }
     .keyProperties(
@@ -306,10 +308,26 @@ struct EnterView: View {
           // it says text is empty but should be sendable.
           vm.resetLayerIfNotLocked()
           client.keyPressed("\r", "Enter")
-        }
+        },
+        // WeChat has send type (\n) but supports newline, so provide a way to input \r.
+        onLongPress: hasReturnLongPress
+          ? { _ in
+            vm.resetLayerIfNotLocked()
+            client.carriageReturn()
+          }
+          : nil
       ),
-      pressedForeground: !cr && !disable && highlight ? getNormalForeground(colorScheme) : nil
+      pressedForeground: !cr && !disable && highlight ? getNormalForeground(colorScheme) : nil,
+      longPressItems: hasReturnLongPress
+        ? [BubbleItem.text(returnLabel)]
+        : [],
+      bubbleBackground: hasReturnLongPress ? getNormalBackground(colorScheme) : nil,
+      bubbleFontSize: hasReturnLongPress ? returnFontSize : nil
     )
+  }
+
+  private func labelFontSize(_ text: String) -> CGFloat {
+    adjustFontSize(text, height * 0.32, (width - columnGap) * 0.95)
   }
 }
 

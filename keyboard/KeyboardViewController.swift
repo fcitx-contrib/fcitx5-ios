@@ -228,6 +228,10 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     updateTextIsEmpty()
   }
 
+  public func carriageReturn() {
+    commitString("\r")
+  }
+
   public func setPreedit(_ preedit: String, _ caret: Int) {
     textDocumentProxy.setMarkedText(preedit, selectedRange: NSRange(location: caret, length: 0))
   }

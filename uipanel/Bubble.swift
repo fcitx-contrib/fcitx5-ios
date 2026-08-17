@@ -162,6 +162,7 @@ struct BubbleView: View {
   let items: [BubbleItem]
   let index: Int
   let highlight: Int
+  let fontSize: CGFloat?
 
   @ViewBuilder
   private func itemView(_ item: BubbleItem, _ h: CGFloat) -> some View {
@@ -173,7 +174,7 @@ struct BubbleView: View {
           .frame(height: h * 0.25)
       }.frame(height: h * 0.3)
     } else {
-      Text(item.label ?? "").font(.system(size: h * 0.25).weight(.light))
+      Text(item.label ?? "").font(.system(size: fontSize ?? h * 0.25).weight(.light))
     }
   }
 
@@ -183,6 +184,7 @@ struct BubbleView: View {
     let position: BubblePosition =
       x - width / 2 - s < 0 ? .left : (x + width / 2 + s > keyboardWidth ? .right : .middle)
     let offsetX = position == .left ? s : (position == .middle ? 0 : -s)
+    let singleTextItem = items.count == 1 && items[0].type == nil
     if let label = label {
       BubbleShape(s: s, height: height, position: position, items: [.text(label)], index: 0)
         .fill(background)
@@ -193,6 +195,19 @@ struct BubbleView: View {
             .offset(y: -h / 4)
         )
         .position(x: x + offsetX, y: y - (h - height) / 2)
+    } else if singleTextItem, let text = items[0].label {
+      // A single text item (e.g. the "return" long-press bubble on a wide key)
+      // is a taller rounded rectangle the same width as the key, with the text
+      // centered in the upper half.
+      RoundedRectangle(cornerRadius: keyCornerRadius)
+        .fill(background)
+        .shadow(color: shadow, radius: shadowRadius)
+        .frame(width: width, height: h)
+        .overlay(
+          Text(text).font(.system(size: fontSize ?? h * 0.25).weight(.light))
+            .offset(y: -h / 4)
+        )
+        .position(x: x, y: y - (h - height) / 2)
     } else {
       let offsetCell = (CGFloat(items.count - 1) / 2 - CGFloat(index)) * cellWidth
       BubbleShape(s: s, height: height, position: position, items: items, index: index)
@@ -206,7 +221,7 @@ struct BubbleView: View {
             ForEach(Array(items.enumerated()), id: \.offset) { i, item in
               itemView(item, h)
                 .frame(width: cellWidth)
-                .condition(i == highlight) {
+                .condition(!singleTextItem && i == highlight) {
                   $0.foregroundColor(.white).background(highlightBackground)
                 }
                 .cornerRadius(keyCornerRadius)
