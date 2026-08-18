@@ -50,6 +50,29 @@ struct CandidateBarView: View {
   @Binding var expanded: Bool
   @Binding var pendingScroll: Int
   @State private var visibleRows = Set<Int>()
+  @State private var scrollMetrics = ScrollMetrics()
+
+  // iOS 18+ reads the real scroll offset; older iOS approximates via visibleRows
+  // (the first/last row has fully left the viewport).
+  private var scrollDisabledState: (up: Bool, down: Bool) {
+    let isBulk = pendingScroll >= 0
+    if #available(iOS 18.0, *) {
+      return (
+        isBulk ? scrollMetrics.offset <= 1 : !hasPrev,
+        isBulk
+          ? scrollEnd
+            && scrollMetrics.offset
+              >= scrollMetrics.contentHeight - scrollMetrics.containerHeight - 1
+          : !hasNext
+      )
+    } else {
+      return (
+        isBulk ? (visibleRows.min() ?? 0) == 0 : !hasPrev,
+        isBulk
+          ? scrollEnd && (visibleRows.max() ?? -1) >= rowItemCount.count - 1 : !hasNext
+      )
+    }
+  }
 
   private func loadMoreCandidates(_ start: Int, _ count: Int) {
     if pendingScroll < start {
@@ -60,10 +83,6 @@ struct CandidateBarView: View {
 
   var body: some View {
     let isBulk = pendingScroll >= 0
-    let upDisabled = isBulk ? (visibleRows.min() ?? 0) == 0 : !hasPrev
-    let downDisabled =
-      isBulk
-      ? scrollEnd && (visibleRows.max() ?? -1) >= rowItemCount.count - 1 : !hasNext
     let barHeight = getBarHeight(totalHeight)
     let keyboardHeight = getKeyboardHeight(totalHeight)
     let hasAuxPreedit = !auxUp.isEmpty || !preedit.isEmpty
@@ -133,6 +152,7 @@ struct CandidateBarView: View {
                 .onChange(of: batch) { _ in
                   proxy.scrollTo(0, anchor: .leading)
                 }
+                .onScrollMetricsChange { scrollMetrics = $0 }
             }
           } else {
             ScrollView(.horizontal) {
@@ -190,7 +210,7 @@ struct CandidateBarView: View {
                 x: 0, y: 0, width: keyWidth, height: keyHeight,
                 background: getFunctionBackground(colorScheme),
                 pressedBackground: getNormalBackground(colorScheme),
-                foreground: upDisabled
+                foreground: scrollDisabledState.up
                   ? disabledForeground : getNormalForeground(colorScheme),
                 shadow: getShadow(colorScheme),
                 action: GestureAction(
@@ -204,7 +224,7 @@ struct CandidateBarView: View {
                     }
                   }
                 ),
-                disable: upDisabled
+                disable: scrollDisabledState.up
               )
 
             Image(systemName: "arrow.down")
@@ -215,7 +235,7 @@ struct CandidateBarView: View {
                 x: 0, y: 0, width: keyWidth, height: keyHeight,
                 background: getFunctionBackground(colorScheme),
                 pressedBackground: getNormalBackground(colorScheme),
-                foreground: downDisabled
+                foreground: scrollDisabledState.down
                   ? disabledForeground : getNormalForeground(colorScheme),
                 shadow: getShadow(colorScheme),
                 action: GestureAction(
@@ -229,7 +249,7 @@ struct CandidateBarView: View {
                     }
                   }
                 ),
-                disable: downDisabled
+                disable: scrollDisabledState.down
               )
 
             BackspaceView(x: 0, y: 0, width: keyWidth, height: keyHeight)
