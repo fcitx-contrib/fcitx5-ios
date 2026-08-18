@@ -59,9 +59,16 @@ void UIPanel::update(UserInterfaceComponent component,
             }
             highlighted = list->cursorIndex();
         }
+        bool hasPrev = false, hasNext = false;
+        if (const auto &list = inputPanel.candidateList()) {
+            if (auto *pageable = list->toPageable()) {
+                hasPrev = pageable->hasPrev();
+                hasNext = pageable->hasNext();
+            }
+        }
         KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates,
                                        highlighted, false, hasClientPreedit,
-                                       "[]");
+                                       "[]", hasPrev, hasNext, false);
         break;
     }
     case UserInterfaceComponent::StatusArea:
@@ -125,11 +132,13 @@ static std::string serializeTabActions(TabbedCandidateList *tabbedList) {
 void UIPanel::expand(const std::string &auxUp, const std::string &preedit,
                      int caret, bool hasClientPreedit,
                      std::shared_ptr<CandidateList> list) {
-    auto candidates =
-        getBulkCandidates(instance_, 0, 72); // Vertically 2 screens.
+    bool endReached = false;
+    auto candidates = getBulkCandidates(instance_, 0, 72,
+                                        &endReached); // Vertically 2 screens.
     auto tabActions = serializeTabActions(list->toTabbed());
     KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates, 0, true,
-                                   hasClientPreedit, tabActions);
+                                   hasClientPreedit, tabActions, false, false,
+                                   endReached);
 }
 
 void UIPanel::scroll(int start, int count) {

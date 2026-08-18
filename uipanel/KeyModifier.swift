@@ -65,6 +65,7 @@ struct KeyModifier: ViewModifier {
   let pressedForeground: Color
   let shadow: Color
   let action: GestureAction
+  let disable: Bool
   let pressedView: (any View)?
   let topRight: String?
   let bubbleLabel: String?
@@ -124,6 +125,9 @@ struct KeyModifier: ViewModifier {
   }
 
   private func onTouchStart(_ location: CGPoint) {
+    if disable {
+      return
+    }
     let touchTime = Date()
     touchId = (touchId + 1) & 0xFFFF
     let currentTouchId = touchId
@@ -156,6 +160,9 @@ struct KeyModifier: ViewModifier {
   }
 
   private func onTouchMove(_ location: CGPoint) {
+    if disable {
+      return
+    }
     if processedByAnotherKeyPress() {
       return
     }
@@ -223,6 +230,10 @@ struct KeyModifier: ViewModifier {
       didMoveFarEnough = false
       slideActivated = false
       bubbleHighlight = 0
+    }
+
+    if disable {
+      return
     }
 
     if processedByAnotherKeyPress() {
@@ -320,7 +331,7 @@ extension View {
     foreground: Color, shadow: Color, action: GestureAction, pressedForeground: Color? = nil,
     pressedView: (any View)? = nil, topRight: String? = nil, bubbleLabel: String? = nil,
     swipeUpLabel: String? = nil, longPressItems: [BubbleItem]? = nil, longPressIndex: Int? = nil,
-    bubbleBackground: Color? = nil, bubbleFontSize: CGFloat? = nil
+    bubbleBackground: Color? = nil, bubbleFontSize: CGFloat? = nil, disable: Bool = false
   ) -> some View {
     self.modifier(
       KeyModifier(
@@ -329,7 +340,8 @@ extension View {
         background: background, bubbleBackground: bubbleBackground,
         bubbleFontSize: bubbleFontSize, pressedBackground: pressedBackground,
         foreground: foreground, pressedForeground: pressedForeground ?? foreground,
-        shadow: shadow, action: action, pressedView: pressedView, topRight: topRight,
+        shadow: shadow, action: action, disable: disable, pressedView: pressedView,
+        topRight: topRight,
         bubbleLabel: bubbleLabel, swipeUpLabel: swipeUpLabel,
         longPressItems: longPressItems ?? [],
         longPressIndex: longPressIndex ?? 0

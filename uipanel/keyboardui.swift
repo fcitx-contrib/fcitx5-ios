@@ -5,12 +5,13 @@ import SwiftUtil
 
 public func setCandidatesAsync(
   _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String],
-  _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool, _ tabActionsJSON: String
+  _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool, _ tabActionsJSON: String,
+  _ hasPrev: Bool, _ hasNext: Bool, _ endReached: Bool
 ) {
   DispatchQueue.main.async {
     vm.setCandidates(
       auxUp, preedit, caret, candidates, highlighted, bulk, hasClientPreedit,
-      deserialize([CandidateAction].self, tabActionsJSON))
+      deserialize([CandidateAction].self, tabActionsJSON), hasPrev, hasNext, endReached)
   }
 }
 

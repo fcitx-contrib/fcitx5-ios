@@ -42,6 +42,8 @@ struct CandidateBarView: View {
   let tabActions: [CandidateAction]
   let batch: Int
   let scrollEnd: Bool
+  let hasPrev: Bool
+  let hasNext: Bool
   let enterLabel: String
   let enterHighlight: Bool
   let hasPreedit: Bool
@@ -57,6 +59,11 @@ struct CandidateBarView: View {
   }
 
   var body: some View {
+    let isBulk = pendingScroll >= 0
+    let upDisabled = isBulk ? (visibleRows.min() ?? 0) == 0 : !hasPrev
+    let downDisabled =
+      isBulk
+      ? scrollEnd && (visibleRows.max() ?? -1) >= rowItemCount.count - 1 : !hasNext
     let barHeight = getBarHeight(totalHeight)
     let keyboardHeight = getKeyboardHeight(totalHeight)
     let hasAuxPreedit = !auxUp.isEmpty || !preedit.isEmpty
@@ -183,7 +190,8 @@ struct CandidateBarView: View {
                 x: 0, y: 0, width: keyWidth, height: keyHeight,
                 background: getFunctionBackground(colorScheme),
                 pressedBackground: getNormalBackground(colorScheme),
-                foreground: getNormalForeground(colorScheme),
+                foreground: upDisabled
+                  ? disabledForeground : getNormalForeground(colorScheme),
                 shadow: getShadow(colorScheme),
                 action: GestureAction(
                   onTap: {
@@ -195,7 +203,8 @@ struct CandidateBarView: View {
                       page(false)
                     }
                   }
-                )
+                ),
+                disable: upDisabled
               )
 
             Image(systemName: "arrow.down")
@@ -206,7 +215,8 @@ struct CandidateBarView: View {
                 x: 0, y: 0, width: keyWidth, height: keyHeight,
                 background: getFunctionBackground(colorScheme),
                 pressedBackground: getNormalBackground(colorScheme),
-                foreground: getNormalForeground(colorScheme),
+                foreground: downDisabled
+                  ? disabledForeground : getNormalForeground(colorScheme),
                 shadow: getShadow(colorScheme),
                 action: GestureAction(
                   onTap: {
@@ -218,7 +228,8 @@ struct CandidateBarView: View {
                       page(true)
                     }
                   }
-                )
+                ),
+                disable: downDisabled
               )
 
             BackspaceView(x: 0, y: 0, width: keyWidth, height: keyHeight)
