@@ -43,6 +43,7 @@ struct KeyModifier: ViewModifier {
   @State private var lastTouchTime: Date?
   @State private var isPressed = false
   @State private var isTouchAccepted = false
+  @State private var isTouchStarted = false
   @State private var startLocation: CGPoint?
   @State private var lastLocation: CGFloat?
   @State private var didTriggerLongPress = false
@@ -126,6 +127,10 @@ struct KeyModifier: ViewModifier {
   }
 
   private func onTouchStart(_ location: CGPoint) {
+    if isTouchStarted {
+      return
+    }
+    isTouchStarted = true
     if disable {
       isTouchAccepted = false
       return
@@ -229,6 +234,7 @@ struct KeyModifier: ViewModifier {
         action.onRelease?()
       }
       isTouchAccepted = false
+      isTouchStarted = false
       isPressed = false
       startLocation = nil
       lastLocation = nil
