@@ -42,6 +42,7 @@ struct KeyModifier: ViewModifier {
   @State private var touchId = 0
   @State private var lastTouchTime: Date?
   @State private var isPressed = false
+  @State private var isTouchAccepted = false
   @State private var startLocation: CGPoint?
   @State private var lastLocation: CGFloat?
   @State private var didTriggerLongPress = false
@@ -126,8 +127,10 @@ struct KeyModifier: ViewModifier {
 
   private func onTouchStart(_ location: CGPoint) {
     if disable {
+      isTouchAccepted = false
       return
     }
+    isTouchAccepted = true
     let touchTime = Date()
     touchId = (touchId + 1) & 0xFFFF
     let currentTouchId = touchId
@@ -222,7 +225,10 @@ struct KeyModifier: ViewModifier {
     clearBubble()
     defer {
       cancelOrderedKeyPress()
-      action.onRelease?()
+      if isTouchAccepted {
+        action.onRelease?()
+      }
+      isTouchAccepted = false
       isPressed = false
       startLocation = nil
       lastLocation = nil
@@ -232,7 +238,7 @@ struct KeyModifier: ViewModifier {
       bubbleHighlight = 0
     }
 
-    if disable {
+    if !isTouchAccepted {
       return
     }
 
