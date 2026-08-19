@@ -51,6 +51,8 @@ public class ViewModel: ObservableObject {
   @Published var hasClientPreedit = false
   @Published var batch = 0  // Tell candidate container to reset state
   @Published var scrollEnd = false
+  @Published var hasPrev = false
+  @Published var hasNext = false
   @Published var rowItemCount = [Int]()  // number of candidates in each row
   @Published var expanded = false
   // Have requested load more candidates starting from this index. -1 means not scrollable.
@@ -105,7 +107,8 @@ public class ViewModel: ObservableObject {
 
   func setCandidates(
     _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String],
-    _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool, _ tabActions: [CandidateAction]
+    _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool, _ tabActions: [CandidateAction],
+    _ hasPrev: Bool, _ hasNext: Bool, _ endReached: Bool
   ) {
     if !auxUp.isEmpty || !preedit.isEmpty || !candidates.isEmpty {
       setDisplayMode(.candidates)
@@ -125,7 +128,9 @@ public class ViewModel: ObservableObject {
     self.hasClientPreedit = hasClientPreedit
     self.tabActions = tabActions
     batch = (batch + 1) & 0xFFFF
-    scrollEnd = false
+    scrollEnd = endReached
+    self.hasPrev = hasPrev
+    self.hasNext = hasNext
     rowItemCount = calculateLayout(
       candidates, expandedCandidateListWidth(), maxColumns: expandedCandidateColumnCount())
     pendingScroll = bulk ? 0 : -1
@@ -337,6 +342,7 @@ public struct VirtualKeyboardView: View {
                 rowItemCount: viewModel.rowItemCount,
                 tabActions: viewModel.tabActions,
                 batch: viewModel.batch, scrollEnd: viewModel.scrollEnd,
+                hasPrev: viewModel.hasPrev, hasNext: viewModel.hasNext,
                 enterLabel: viewModel.enterLabel,
                 enterHighlight: viewModel.enterHighlight,
                 hasPreedit: viewModel.hasPreedit,
