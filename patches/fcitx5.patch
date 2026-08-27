@@ -91,3 +91,20 @@ index ab4e36f4..48001b4e 100644
      if (registry) {
          registerLoader(std::make_unique<StaticLibraryLoader>(registry));
      }
+diff --git a/src/lib/fcitx/inputmethodmanager.cpp b/src/lib/fcitx/inputmethodmanager.cpp
+index 6cc8caa1..f301ea89 100644
+--- a/src/lib/fcitx/inputmethodmanager.cpp
++++ b/src/lib/fcitx/inputmethodmanager.cpp
+@@ -425,6 +425,12 @@ void InputMethodManager::removeGroup(const std::string &name) {
+ }
+ 
+ void InputMethodManager::save() {
++    // If AppGroup is available, appex may write to shared profile, thus clears
++    // any input method that doesn't belong to current engine.
++    std::string f5iEnv = std::getenv("F5I_ENV");
++    if (f5iEnv == "keyboard") {
++        return;
++    }
+     FCITX_D();
+     InputMethodConfig config;
+     std::vector<InputMethodGroupConfig> groups;
