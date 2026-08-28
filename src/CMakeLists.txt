@@ -8,6 +8,12 @@ execute_process(COMMAND git show --no-patch --format=%ct
 )
 configure_file(meta.swift.in ${CMAKE_CURRENT_SOURCE_DIR}/meta.swift @ONLY)
 
+# The iOS toolchain's default shared-library flags use clang syntax. Some
+# engine frameworks link Swift static libraries and therefore use swiftc as
+# their linker driver, which requires the equivalent flags to be forwarded via
+# -Xlinker. The clients already provide the runtime search paths they need.
+set(CMAKE_SHARED_LINKER_FLAGS "")
+
 file(GLOB CONFIG_UI_FILES CONFIGURE_DEPENDS config/*.swift)
 
 add_executable(${BUNDLE_NAME} MACOSX_BUNDLE
@@ -32,15 +38,22 @@ set(FCITX5_MODULE_BINARY_DIR "${PROJECT_BINARY_DIR}/fcitx5/src/modules")
 
 set(KEYBOARDS)
 set(DEFAULT_INPUT_METHODS)
-set(ENGINE_TARGETS)
+set(ENGINE_FRAMEWORKS)
 
 if (CHINESE_ADDONS)
     list(APPEND KEYBOARDS Chinese)
     list(APPEND DEFAULT_INPUT_METHODS pinyin shuangpin wbx)
     generate_profile(Chinese "src/Chinese.appex" "pinyin;shuangpin;wbx")
     fcitx5_get_addon_targets(CHINESE_TARGETS "${ENGINES_SOURCE_DIR}/fcitx5-chinese-addons" "${ENGINES_SOURCE_DIR}/fcitx5-lua")
-    add_keyboard_extension(Chinese "zh-Hans" "${CHINESE_TARGETS}")
-    list(APPEND ENGINE_TARGETS ${CHINESE_TARGETS})
+    add_fcitx_engine_framework(Chinese ${CHINESE_TARGETS})
+    find_library(CoreFoundationFramework CoreFoundation)
+    find_library(SecurityFramework Security)
+    target_link_libraries(FcitxChineseEngine
+        ${CoreFoundationFramework}
+        ${SecurityFramework}
+    )
+    add_keyboard_extension(Chinese "zh-Hans")
+    list(APPEND ENGINE_FRAMEWORKS FcitxChineseEngine)
 
     set(LUA_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-lua")
     copy_to(Chinese copy "${LUA_BINARY_DIR}/src/addonloader/luaaddonloader.conf" "${ADDON_PREFIX}/luaaddonloader.conf")
@@ -97,8 +110,9 @@ if (HALLELUJAH)
     list(APPEND DEFAULT_INPUT_METHODS hallelujah)
     generate_profile(Hallelujah "src/Hallelujah.appex" "hallelujah")
     fcitx5_get_addon_targets(HALLELUJAH_TARGETS "${ENGINES_SOURCE_DIR}/fcitx5-hallelujah")
-    add_keyboard_extension(Hallelujah "en-US" "${HALLELUJAH_TARGETS}")
-    list(APPEND ENGINE_TARGETS ${HALLELUJAH_TARGETS})
+    add_fcitx_engine_framework(Hallelujah ${HALLELUJAH_TARGETS})
+    add_keyboard_extension(Hallelujah "en-US")
+    list(APPEND ENGINE_FRAMEWORKS FcitxHallelujahEngine)
 
     set(HALLELUJAH_SOURCE_DIR "${ENGINES_SOURCE_DIR}/fcitx5-hallelujah")
     set(HALLELUJAH_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-hallelujah")
@@ -119,8 +133,15 @@ if (MOZC)
     list(APPEND DEFAULT_INPUT_METHODS mozc)
     generate_profile(Mozc "src/Mozc.appex" "mozc")
     fcitx5_get_addon_targets(MOZC_TARGETS "${ENGINES_SOURCE_DIR}/fcitx5-mozc")
-    add_keyboard_extension(Mozc "ja-JP" "${MOZC_TARGETS}")
-    list(APPEND ENGINE_TARGETS ${MOZC_TARGETS})
+    add_fcitx_engine_framework(Mozc ${MOZC_TARGETS})
+    find_library(FoundationFramework Foundation)
+    find_library(CoreFoundationFramework CoreFoundation)
+    target_link_libraries(FcitxMozcEngine
+        ${FoundationFramework}
+        ${CoreFoundationFramework}
+    )
+    add_keyboard_extension(Mozc "ja-JP")
+    list(APPEND ENGINE_FRAMEWORKS FcitxMozcEngine)
 
     set(MOZC_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-mozc")
     copy_to(Mozc copy "${MOZC_BINARY_DIR}/src/unix/fcitx5/mozc-addon.conf" "${ADDON_PREFIX}/mozc.conf")
@@ -134,8 +155,9 @@ if (RIME)
     list(APPEND DEFAULT_INPUT_METHODS rime)
     generate_profile(Rime "src/Rime.appex" "rime")
     fcitx5_get_addon_targets(RIME_TARGETS "${ENGINES_SOURCE_DIR}/fcitx5-rime")
-    add_keyboard_extension(Rime "mul" "${RIME_TARGETS}")
-    list(APPEND ENGINE_TARGETS ${RIME_TARGETS})
+    add_fcitx_engine_framework(Rime ${RIME_TARGETS})
+    add_keyboard_extension(Rime "mul")
+    list(APPEND ENGINE_FRAMEWORKS FcitxRimeEngine)
 
     set(RIME_BINARY_DIR "${PROJECT_BINARY_DIR}/engines/fcitx5-rime")
     copy_to(Rime copy "${RIME_BINARY_DIR}/src/rime-addon.conf" "${ADDON_PREFIX}/rime.conf")
@@ -155,6 +177,9 @@ target_include_directories(${BUNDLE_NAME} PRIVATE
     "${PROJECT_BINARY_DIR}/deps"
 )
 
+foreach(Keyboard ${KEYBOARDS})
+    link_fcitx_engine(${BUNDLE_NAME} ${Keyboard})
+endforeach()
 target_link_libraries(${BUNDLE_NAME}
     "-Xlinker -rpath -Xlinker @executable_path/Frameworks"
     FcitxRuntime
@@ -212,7 +237,7 @@ copy_to(app copy "${PROJECT_BINARY_DIR}/profile" profile)
 
 copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/assets/SwiftTranslations/Main" "")
 
-add_dependencies(${BUNDLE_NAME} FcitxRuntime)
+add_dependencies(${BUNDLE_NAME} FcitxRuntime ${ENGINE_FRAMEWORKS})
 add_custom_command(TARGET ${BUNDLE_NAME}
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory
@@ -221,3 +246,11 @@ add_custom_command(TARGET ${BUNDLE_NAME}
         "$<TARGET_BUNDLE_DIR:FcitxRuntime>"
         "$<TARGET_BUNDLE_DIR:${BUNDLE_NAME}>/Frameworks/FcitxRuntime.framework"
 )
+foreach(EngineFramework ${ENGINE_FRAMEWORKS})
+    add_custom_command(TARGET ${BUNDLE_NAME}
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "$<TARGET_BUNDLE_DIR:${EngineFramework}>"
+            "$<TARGET_BUNDLE_DIR:${BUNDLE_NAME}>/Frameworks/${EngineFramework}.framework"
+    )
+endforeach()

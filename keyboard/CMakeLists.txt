@@ -9,7 +9,7 @@ function(generate_profile keyboard relative_path input_methods)
     add_custom_target("${keyboard}Profile" DEPENDS "${file_path}")
 endfunction()
 
-function(add_keyboard_extension keyboard language targets)
+function(add_keyboard_extension keyboard language)
     # Create a new target name RimeExtension not to be conflict with fcitx5-rime's rime target.
     # NSExtensionPrincipalClass is extension.KeyboardViewController for Ninja generator,
     # and keyboard.KeyboardViewController for Xcode generator.
@@ -59,9 +59,8 @@ function(add_keyboard_extension keyboard language targets)
     # extension is recompiled whenever a module interface changes. Otherwise the
     # extension may be linked against a stale class layout and crash at runtime
     # (e.g. a ViewModel method dispatched through a shifted vtable slot).
+    link_fcitx_engine(${extension} ${keyboard})
     target_link_libraries(${extension} KeyboardUI SwiftUtil FcitxProtocol SwiftFrontend)
-
-    set_property(GLOBAL APPEND PROPERTY FCITX_RUNTIME_ADDONS ${targets})
 
     copy_to(${keyboard} copy_directory "${PROJECT_SOURCE_DIR}/assets/SwiftTranslations/${keyboard}" "")
     copy_to(${keyboard} copy_directory "${PROJECT_SOURCE_DIR}/assets/SwiftTranslations/Keyboard" "")

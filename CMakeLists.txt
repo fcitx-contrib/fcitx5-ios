@@ -74,6 +74,16 @@ set(LIBUV_TARGET Libuv_static)
 
 add_subdirectory(fcitx5)
 
+# These static libraries are folded into FcitxRuntime, whose public symbols
+# satisfy the engine frameworks. Keep them visible so each engine framework
+# does not absorb another private copy of the fcitx core.
+foreach(RuntimeLibrary Fcitx5Utils Fcitx5Config Fcitx5Core)
+    target_compile_options(${RuntimeLibrary} PRIVATE
+        -fvisibility=default
+        -fno-visibility-inlines-hidden
+    )
+endforeach()
+
 add_subdirectory(protocol)
 add_subdirectory(iosfrontend)
 add_subdirectory(iosnotifications)
@@ -132,9 +142,8 @@ add_subdirectory(common)
 add_subdirectory(keyboard)
 add_subdirectory(src)
 
-get_property(RUNTIME_ADDONS GLOBAL PROPERTY FCITX_RUNTIME_ADDONS)
 fcitx5_import_addons(FcitxRuntime
     REGISTRY_VARNAME getStaticAddon
-    ADDONS ${COMMON_TARGETS} ${RUNTIME_ADDONS}
+    ADDONS ${COMMON_TARGETS}
 )
 set_target_properties(FcitxRuntime PROPERTIES INTERFACE_LINK_LIBRARIES "")
