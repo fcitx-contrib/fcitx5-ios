@@ -89,6 +89,10 @@ public class ViewModel: ObservableObject {
 
   var hasPreedit: Bool { !preedit.isEmpty || hasClientPreedit }
 
+  public var hasInputState: Bool {
+    !auxUp.isEmpty || hasPreedit || !candidates.isEmpty
+  }
+
   public func setDisplayMode(_ mode: DisplayMode) {
     if self.mode == .candidates && mode == .symbol {
       returnMode = .candidates
