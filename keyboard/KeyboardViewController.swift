@@ -67,6 +67,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       contextAfterInput: textDocumentProxy.documentContextAfterInput)
   }
 
+  // Poll is needed because selectionDidChange is never called even for a standard TextField.
   private func startDocumentPolling() {
     documentState = currentDocumentState()
     guard documentPollingTimer == nil else { return }
