@@ -24,12 +24,75 @@ private func syncLocale() -> String {
 
 @MainActor
 class KeyboardViewController: UIInputViewController, FcitxProtocol {
+  private struct DocumentState: Equatable {
+    // Changing focus between TextFields on the same app screen may not call keyboard's viewWillAppear.
+    // Fact not related to our use case: changing back a previously focused TextField won't preserve documentIdentifier.
+    let identifier: String?
+    let contextBeforeInput: String?
+    let selectedText: String?
+    let contextAfterInput: String?
+  }
+
+  private static let documentPollingInterval: TimeInterval = 0.2
+
   nonisolated(unsafe) var id: UInt64 = 0
   var hostingController: UIHostingController<VirtualKeyboardView>!
   var removedBySlide = ""
+  private var documentState: DocumentState?
+  private var documentPollingTimer: Timer?
   static let keyboard = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
   static private var clipboardText = ""
   static private var firstLoad = true
+
+  // UIKit may temporarily return nil while switching between text inputs, even though Swift
+  // imports documentIdentifier as a non-optional UUID. Read it through Objective-C to avoid a
+  // trap in UUID._unconditionallyBridgeFromObjectiveC during that transition.
+  private func currentDocumentIdentifier() -> String? {
+    let selector = NSSelectorFromString("documentIdentifier")
+    guard
+      let proxy = textDocumentProxy as? NSObject,
+      proxy.responds(to: selector),
+      let identifier = proxy.perform(selector)?.takeUnretainedValue() as? NSUUID
+    else {
+      return nil
+    }
+    return identifier.uuidString
+  }
+
+  private func currentDocumentState() -> DocumentState {
+    DocumentState(
+      identifier: currentDocumentIdentifier(),
+      contextBeforeInput: textDocumentProxy.documentContextBeforeInput,
+      selectedText: textDocumentProxy.selectedText,
+      contextAfterInput: textDocumentProxy.documentContextAfterInput)
+  }
+
+  private func startDocumentPolling() {
+    documentState = currentDocumentState()
+    guard documentPollingTimer == nil else { return }
+
+    let timer = Timer(timeInterval: Self.documentPollingInterval, repeats: true) {
+      [weak self] _ in
+      MainActor.assumeIsolated {
+        guard let self else { return }
+        let currentDocumentState = self.currentDocumentState()
+        defer { self.documentState = currentDocumentState }
+        // Known issue: if 2 rows are identical, changing between
+        guard vm.hasInputState, currentDocumentState != self.documentState else { return }
+        FCITX_INFO("Document state changed \(self.id)")
+        self.resetInput()
+        self.updateTextIsEmpty()
+      }
+    }
+    RunLoop.main.add(timer, forMode: .common)
+    documentPollingTimer = timer
+  }
+
+  private func stopDocumentPolling() {
+    documentPollingTimer?.invalidate()
+    documentPollingTimer = nil
+    documentState = nil
+  }
 
   private func updateTextIsEmpty() {
     let text =
@@ -115,11 +178,13 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       vm.setDisplayMode(.initial)
       focusIn()
     }
+    startDocumentPolling()
   }
 
   override func viewWillDisappear(_ animated: Bool) {
     FCITX_INFO("viewWillDisappear \(self.id)")
     super.viewWillDisappear(animated)
+    stopDocumentPolling()
     // Old viewWillDisappear may be called after new viewWillAppear (if switching apps), and viewWillDisappear may be called twice.
     // Don't call focusOut as we use a single InputContext.
     hostingController.willMove(toParent: nil)
@@ -225,6 +290,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   public func commitString(_ commit: String) {
     textDocumentProxy.insertText(commit)
+    documentState = currentDocumentState()
     updateTextIsEmpty()
   }
 
