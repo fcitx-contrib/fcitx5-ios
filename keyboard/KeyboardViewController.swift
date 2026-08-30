@@ -79,7 +79,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
         let currentDocumentState = self.currentDocumentState()
         defer { self.documentState = currentDocumentState }
         // Known issue: if 2 rows are identical, changing between
-        guard vm.hasInputState, currentDocumentState != self.documentState else { return }
+        guard currentDocumentState != self.documentState else { return }
         FCITX_INFO("Document state changed \(self.id)")
         self.resetInput()
         self.updateTextIsEmpty()
