@@ -39,6 +39,11 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     let anchor: UInt32
   }
 
+  private struct SurroundingTextPosition {
+    let utf16Offset: Int
+    let characterOffset: Int
+  }
+
   private static let documentPollingInterval: TimeInterval = 0.2
 
   nonisolated(unsafe) var id: UInt64 = 0
@@ -92,6 +97,33 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
         anchor: anchor),
       shouldReset
     )
+  }
+
+  private func position(in text: String, atUnicodeScalarOffset target: Int)
+    -> SurroundingTextPosition?
+  {
+    guard target >= 0 else { return nil }
+    if target == 0 {
+      return SurroundingTextPosition(utf16Offset: 0, characterOffset: 0)
+    }
+
+    var unicodeScalarOffset = 0
+    var utf16Offset = 0
+    var characterOffset = 0
+    for character in text {
+      let character = String(character)
+      unicodeScalarOffset += character.unicodeScalars.count
+      utf16Offset += character.utf16.count
+      characterOffset += 1
+      if unicodeScalarOffset == target {
+        return SurroundingTextPosition(
+          utf16Offset: utf16Offset, characterOffset: characterOffset)
+      }
+      if unicodeScalarOffset > target {
+        return nil
+      }
+    }
+    return nil
   }
 
   // Poll is needed because selectionDidChange is never called even for a standard TextField.
@@ -238,10 +270,11 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     updateTextIsEmpty()
   }
 
-  public func keyPressed(_ key: String, _ code: String) {
+  public func keyPressed(_ key: String, _ code: String, _ modifiers: UInt32 = 0) {
     let (surroundingText, shouldReset) = surroundingTextForInputEvent()
-    processKey(
-      key, code, surroundingText.text, surroundingText.cursor, surroundingText.anchor, shouldReset)
+    Fcitx.processKey(
+      key, code, modifiers, surroundingText.text, surroundingText.cursor, surroundingText.anchor,
+      shouldReset)
   }
 
   public func forwardKey(_ key: String, _ code: String) {
@@ -320,6 +353,49 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   public func commitString(_ commit: String) {
     textDocumentProxy.insertText(commit)
+    documentState = currentDocumentState()
+    updateTextIsEmpty()
+  }
+
+  public func deleteSurroundingText(_ offset: Int, _ size: Int) {
+    guard size > 0 else { return }
+
+    let state = currentDocumentState()
+    let before = state.contextBeforeInput ?? ""
+    let selected = state.selectedText ?? ""
+    let text = before + selected + (state.contextAfterInput ?? "")
+    let anchor = before.unicodeScalars.count
+    let cursor = anchor + selected.unicodeScalars.count
+    let start = cursor + offset
+    let end = start + size
+    guard
+      start >= 0,
+      end > start,
+      let startPosition = position(in: text, atUnicodeScalarOffset: start),
+      let endPosition = position(in: text, atUnicodeScalarOffset: end),
+      let cursorPosition = position(in: text, atUnicodeScalarOffset: cursor),
+      let anchorPosition = position(in: text, atUnicodeScalarOffset: anchor)
+    else {
+      return
+    }
+
+    var deletionCount = endPosition.characterOffset - startPosition.characterOffset
+    if selected.isEmpty {
+      textDocumentProxy.adjustTextPosition(
+        byCharacterOffset: endPosition.utf16Offset - cursorPosition.utf16Offset)
+    } else {
+      // UITextDocumentProxy can't set an arbitrary selection. We can still delete a range that
+      // contains the current selection by deleting the selection first, then its two sides.
+      guard start <= anchor, end >= cursor else { return }
+      textDocumentProxy.deleteBackward()
+      deletionCount -= cursorPosition.characterOffset - anchorPosition.characterOffset
+      textDocumentProxy.adjustTextPosition(
+        byCharacterOffset: endPosition.utf16Offset - cursorPosition.utf16Offset)
+    }
+
+    for _ in 0..<deletionCount {
+      textDocumentProxy.deleteBackward()
+    }
     documentState = currentDocumentState()
     updateTextIsEmpty()
   }

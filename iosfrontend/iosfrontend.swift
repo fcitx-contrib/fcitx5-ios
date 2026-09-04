@@ -15,6 +15,12 @@ public func commitStringAsync(_ commit: String) {
   }
 }
 
+public func deleteSurroundingTextAsync(_ offset: Int, _ size: Int) {
+  DispatchQueue.main.async {
+    client.deleteSurroundingText(offset, size)
+  }
+}
+
 public func setPreeditAsync(_ preedit: String, _ cursor: Int) {
   DispatchQueue.main.async {
     client.setPreedit(preedit, cursor)

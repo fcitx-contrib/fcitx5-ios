@@ -45,6 +45,10 @@ IosInputContext::IosInputContext(IosFrontend *frontend,
 
 IosInputContext::~IosInputContext() { destroy(); }
 
+void IosInputContext::deleteSurroundingTextImpl(int offset, unsigned int size) {
+    SwiftFrontend::deleteSurroundingTextAsync(offset, size);
+}
+
 void IosInputContext::commitStringImpl(const std::string &text) {
     SwiftFrontend::commitStringAsync(text);
 }

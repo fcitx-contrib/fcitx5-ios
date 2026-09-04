@@ -51,7 +51,7 @@ class IosInputContext : public InputContext {
 
     const char *frontend() const override { return "ios"; }
     void commitStringImpl(const std::string &text) override;
-    void deleteSurroundingTextImpl(int offset, unsigned int size) override {}
+    void deleteSurroundingTextImpl(int offset, unsigned int size) override;
     void forwardKeyImpl(const ForwardKeyEvent &key) override {}
     void updatePreeditImpl() override;
     void setSurroundingText(const std::string &text, unsigned int cursor,
