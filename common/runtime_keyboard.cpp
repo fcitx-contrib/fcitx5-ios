@@ -40,15 +40,16 @@ void focusOut() {
     dispatcher->schedule([] { frontend->focusOut(); });
 }
 
-void processKey(const char *k, const char *c, const char *text,
-                unsigned int cursor, unsigned int anchor, bool reset) {
+void processKey(const char *k, const char *c, unsigned int modifiers,
+                const char *text, unsigned int cursor, unsigned int anchor,
+                bool reset) {
     std::string key = k, code = c, surroundingText = text;
     dispatcher->schedule([=] {
         updateSurroundingText(surroundingText, cursor, anchor, reset);
-        bool accepted =
-            frontend->keyEvent(fcitx::js_key_to_fcitx_key(
-                                   key, code, 1 << 29 /* KeyState::Virtual */),
-                               false);
+        bool accepted = frontend->keyEvent(
+            fcitx::js_key_to_fcitx_key(
+                key, code, modifiers | 1U << 29 /* KeyState::Virtual */),
+            false);
         if (!accepted) {
             frontend->forwardKey(key, code);
         }
