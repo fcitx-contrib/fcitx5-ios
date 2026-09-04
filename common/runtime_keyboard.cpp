@@ -11,7 +11,15 @@
 
 namespace {
 fcitx::IosFrontend *frontend;
+
+void updateSurroundingText(const std::string &text, unsigned int cursor,
+                           unsigned int anchor, bool reset) {
+    if (reset) {
+        frontend->resetInput();
+    }
+    frontend->setSurroundingText(text, cursor, anchor);
 }
+} // namespace
 
 void startKeyboardFcitx(const char *appBundlePath, const char *xdgDataDirs,
                         const char *appGroupPath) {
@@ -32,9 +40,11 @@ void focusOut() {
     dispatcher->schedule([] { frontend->focusOut(); });
 }
 
-void processKey(const char *k, const char *c) {
-    std::string key = k, code = c;
+void processKey(const char *k, const char *c, const char *text,
+                unsigned int cursor, unsigned int anchor, bool reset) {
+    std::string key = k, code = c, surroundingText = text;
     dispatcher->schedule([=] {
+        updateSurroundingText(surroundingText, cursor, anchor, reset);
         bool accepted =
             frontend->keyEvent(fcitx::js_key_to_fcitx_key(
                                    key, code, 1 << 29 /* KeyState::Virtual */),

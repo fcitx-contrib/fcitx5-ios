@@ -29,10 +29,16 @@ void IosFrontend::focusOut() { ic_->focusOut(); }
 
 void IosFrontend::resetInput() { ic_->reset(); }
 
+void IosFrontend::setSurroundingText(const std::string &text,
+                                     unsigned int cursor, unsigned int anchor) {
+    ic_->setSurroundingText(text, cursor, anchor);
+}
+
 IosInputContext::IosInputContext(IosFrontend *frontend,
                                  InputContextManager &inputContextManager)
     : InputContext(inputContextManager, ""), frontend_(frontend) {
     CapabilityFlags flags = CapabilityFlag::Preedit;
+    flags |= CapabilityFlag::SurroundingText;
     setCapabilityFlags(flags);
     created();
 }
@@ -47,6 +53,13 @@ void IosInputContext::updatePreeditImpl() {
     auto preedit =
         frontend_->instance()->outputFilter(this, inputPanel().clientPreedit());
     SwiftFrontend::setPreeditAsync(preedit.toString(), preedit.cursor());
+}
+
+void IosInputContext::setSurroundingText(const std::string &text,
+                                         unsigned int cursor,
+                                         unsigned int anchor) {
+    surroundingText().setText(text, cursor, anchor);
+    updateSurroundingText();
 }
 } // namespace fcitx
 
