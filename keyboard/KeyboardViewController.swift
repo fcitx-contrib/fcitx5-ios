@@ -33,6 +33,12 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     let contextAfterInput: String?
   }
 
+  private struct SurroundingText {
+    let text: String
+    let cursor: UInt32
+    let anchor: UInt32
+  }
+
   private static let documentPollingInterval: TimeInterval = 0.2
 
   nonisolated(unsafe) var id: UInt64 = 0
@@ -65,6 +71,27 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       contextBeforeInput: textDocumentProxy.documentContextBeforeInput,
       selectedText: textDocumentProxy.selectedText,
       contextAfterInput: textDocumentProxy.documentContextAfterInput)
+  }
+
+  private func surroundingTextForInputEvent() -> (SurroundingText, Bool) {
+    let currentDocumentState = currentDocumentState()
+    let shouldReset = currentDocumentState != documentState
+    documentState = currentDocumentState
+    if shouldReset {
+      FCITX_INFO("Document state changed \(self.id)")
+      updateTextIsEmpty()
+    }
+
+    let before = currentDocumentState.contextBeforeInput ?? ""
+    let selected = currentDocumentState.selectedText ?? ""
+    let anchor = UInt32(before.unicodeScalars.count)
+    return (
+      SurroundingText(
+        text: before + selected + (currentDocumentState.contextAfterInput ?? ""),
+        cursor: anchor + UInt32(selected.unicodeScalars.count),
+        anchor: anchor),
+      shouldReset
+    )
   }
 
   // Poll is needed because selectionDidChange is never called even for a standard TextField.
@@ -212,7 +239,9 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   public func keyPressed(_ key: String, _ code: String) {
-    processKey(key, code)
+    let (surroundingText, shouldReset) = surroundingTextForInputEvent()
+    processKey(
+      key, code, surroundingText.text, surroundingText.cursor, surroundingText.anchor, shouldReset)
   }
 
   public func forwardKey(_ key: String, _ code: String) {

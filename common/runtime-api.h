@@ -10,7 +10,8 @@ void setLocale(const char *locale);
 
 void focusIn();
 void focusOut();
-void processKey(const char *key, const char *code);
+void processKey(const char *key, const char *code, const char *surroundingText,
+                unsigned int cursor, unsigned int anchor, bool reset);
 void resetInput();
 void triggerUnicode();
 void triggerQuickPhrase();

@@ -27,6 +27,8 @@ class IosFrontend : public AddonInstance {
     void focusIn();
     void focusOut();
     void resetInput();
+    void setSurroundingText(const std::string &text, unsigned int cursor,
+                            unsigned int anchor);
 
   private:
     Instance *instance_;
@@ -52,6 +54,8 @@ class IosInputContext : public InputContext {
     void deleteSurroundingTextImpl(int offset, unsigned int size) override {}
     void forwardKeyImpl(const ForwardKeyEvent &key) override {}
     void updatePreeditImpl() override;
+    void setSurroundingText(const std::string &text, unsigned int cursor,
+                            unsigned int anchor);
 
   private:
     IosFrontend *frontend_;
