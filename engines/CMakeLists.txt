@@ -44,7 +44,7 @@ if (MOZC)
         "${PROJECT_SOURCE_DIR}/include"
     )
     target_compile_definitions(mozc PRIVATE -DMOZC_DISABLE_SESSION_WATCHDOG)
-    target_compile_options(mozc PRIVATE -Wno-sign-compare -Wno-unused-parameter -Wno-nullability-completeness -Wno-ignored-attributes)
+    target_compile_options(mozc PRIVATE -Wno-sign-compare -Wno-unused-parameter -Wno-nullability-completeness -Wno-ignored-attributes -Wno-deprecated-declarations)
 endif()
 
 if (RIME)

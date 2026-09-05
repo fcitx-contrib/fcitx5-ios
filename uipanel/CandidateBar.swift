@@ -82,7 +82,6 @@ struct CandidateBarView: View {
   }
 
   var body: some View {
-    let isBulk = pendingScroll >= 0
     let barHeight = getBarHeight(totalHeight)
     let keyboardHeight = getKeyboardHeight(totalHeight)
     let hasAuxPreedit = !auxUp.isEmpty || !preedit.isEmpty

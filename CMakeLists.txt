@@ -17,6 +17,14 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# VSCode's Swift extension only searches build/compile_commands.json to start sourcekit-lsp.
+execute_process(
+    COMMAND "${CMAKE_COMMAND}" -E create_symlink
+        "${PLATFORM}/compile_commands.json"
+        "${PROJECT_BINARY_DIR}/../compile_commands.json"
+    COMMAND_ERROR_IS_FATAL ANY
+)
+
 set(BUNDLE_IDENTIFIER "org.fcitx.Fcitx5")
 set(BUNDLE_NAME "Fcitx5")
 
