@@ -20,13 +20,23 @@ UIPanel::UIPanel(Instance *instance) : instance_(instance) {
     eventHandler_ = instance_->watchEvent(
         EventType::InputContextInputMethodActivated, EventWatcherPhase::Default,
         [this](Event &event) {
+            auto &icEvent = static_cast<InputContextEvent &>(event);
+            auto *ic = dynamic_cast<IosInputContext *>(icEvent.inputContext());
+            if (!ic) {
+                return;
+            }
             auto im = instance_->currentInputMethod();
-            KeyboardUI::setCurrentInputMethodAsync(im.c_str());
+            KeyboardUI::setCurrentInputMethodAsync(
+                ic->program(), ic->documentIdentifier(), im);
         });
 }
 
 void UIPanel::update(UserInterfaceComponent component,
                      InputContext *inputContext) {
+    auto *ic = dynamic_cast<IosInputContext *>(inputContext);
+    if (!ic) {
+        return;
+    }
     switch (component) {
     case UserInterfaceComponent::InputPanel: {
         const InputPanel &inputPanel = inputContext->inputPanel();
@@ -48,7 +58,8 @@ void UIPanel::update(UserInterfaceComponent component,
         if (const auto &list = inputPanel.candidateList()) {
             const auto &bulk = list->toBulk();
             if (bulk) {
-                return expand(auxUp, preedit, caret, hasClientPreedit, list);
+                return expand(*ic, auxUp, preedit, caret, hasClientPreedit,
+                              list);
             }
             size = list->size();
             for (int i = 0; i < size; i++) {
@@ -66,23 +77,24 @@ void UIPanel::update(UserInterfaceComponent component,
                 hasNext = pageable->hasNext();
             }
         }
-        KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates,
+        KeyboardUI::setCandidatesAsync(ic->program(), ic->documentIdentifier(),
+                                       auxUp, preedit, caret, candidates,
                                        highlighted, false, hasClientPreedit,
                                        "[]", hasPrev, hasNext, false);
         break;
     }
     case UserInterfaceComponent::StatusArea:
-        updateStatusArea(inputContext);
+        updateStatusArea(*ic);
         break;
     }
 }
 
-swift::Array<swift::String> getBulkCandidates(Instance *instance, int start,
+swift::Array<swift::String> getBulkCandidates(Instance *instance,
+                                              IosInputContext &ic, int start,
                                               int count,
                                               bool *pEndReached = nullptr) {
     auto candidates = swift::Array<swift::String>::init();
-    auto ic = instance->mostRecentInputContext();
-    const auto &list = ic->inputPanel().candidateList();
+    const auto &list = ic.inputPanel().candidateList();
     if (!list) {
         return candidates;
     }
@@ -98,7 +110,7 @@ swift::Array<swift::String> getBulkCandidates(Instance *instance, int start,
         try {
             auto &candidate = bulk->candidateFromAll(i);
             candidates.append(
-                instance->outputFilter(ic, candidate.text()).toString());
+                instance->outputFilter(&ic, candidate.text()).toString());
         } catch (const std::invalid_argument &e) {
             // size == -1 but actual limit is reached
             endReached = true;
@@ -129,22 +141,31 @@ static std::string serializeTabActions(TabbedCandidateList *tabbedList) {
     return j.dump();
 }
 
-void UIPanel::expand(const std::string &auxUp, const std::string &preedit,
-                     int caret, bool hasClientPreedit,
+void UIPanel::expand(IosInputContext &ic, const std::string &auxUp,
+                     const std::string &preedit, int caret,
+                     bool hasClientPreedit,
                      std::shared_ptr<CandidateList> list) {
     bool endReached = false;
-    auto candidates = getBulkCandidates(instance_, 0, 72,
+    auto candidates = getBulkCandidates(instance_, ic, 0, 72,
                                         &endReached); // Vertically 2 screens.
     auto tabActions = serializeTabActions(list->toTabbed());
-    KeyboardUI::setCandidatesAsync(auxUp, preedit, caret, candidates, 0, true,
+    KeyboardUI::setCandidatesAsync(ic.program(), ic.documentIdentifier(), auxUp,
+                                   preedit, caret, candidates, 0, true,
                                    hasClientPreedit, tabActions, false, false,
                                    endReached);
 }
 
 void UIPanel::scroll(int start, int count) {
+    auto *ic =
+        dynamic_cast<IosInputContext *>(instance_->mostRecentInputContext());
+    if (!ic) {
+        return;
+    }
     bool endReached = false;
-    auto candidates = getBulkCandidates(instance_, start, count, &endReached);
-    KeyboardUI::scrollAsync(candidates, endReached);
+    auto candidates =
+        getBulkCandidates(instance_, *ic, start, count, &endReached);
+    KeyboardUI::scrollAsync(ic->program(), ic->documentIdentifier(), candidates,
+                            endReached);
 }
 
 void UIPanel::page(bool next) {
@@ -172,17 +193,18 @@ KeyboardUI::StatusAreaAction convertAction(Action *action, InputContext *ic) {
         action->isChecked(ic), action->isSeparator(), children);
 }
 
-void UIPanel::updateStatusArea(InputContext *ic) {
+void UIPanel::updateStatusArea(IosInputContext &ic) {
     auto actions = swift::Array<KeyboardUI::StatusAreaAction>::init();
-    auto &statusArea = ic->statusArea();
+    auto &statusArea = ic.statusArea();
     for (auto *action : statusArea.allActions()) {
         if (!action->id()) {
             // Not registered with UI manager.
             continue;
         }
-        actions.append(convertAction(action, ic));
+        actions.append(convertAction(action, &ic));
     }
-    KeyboardUI::setStatusAreaAsync(actions);
+    KeyboardUI::setStatusAreaAsync(ic.program(), ic.documentIdentifier(),
+                                   actions);
 }
 
 } // namespace fcitx

@@ -14,7 +14,7 @@ public enum DisplayMode {
 }
 
 @MainActor
-var client: FcitxProtocol!
+weak var client: FcitxProtocol!
 
 @MainActor
 public func setClient(_ cli: FcitxProtocol) {

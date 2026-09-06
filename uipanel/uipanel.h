@@ -8,6 +8,8 @@
 
 namespace fcitx {
 
+class IosInputContext;
+
 class UIPanel final : public VirtualKeyboardUserInterface {
   public:
     UIPanel(Instance *);
@@ -36,9 +38,10 @@ class UIPanel final : public VirtualKeyboardUserInterface {
     Instance *instance_;
     std::unique_ptr<HandlerTableEntry<EventHandler>> eventHandler_;
 
-    void updateStatusArea(InputContext *ic);
-    void expand(const std::string &auxUp, const std::string &preedit, int caret,
-                bool hasClientPreedit, std::shared_ptr<CandidateList> list);
+    void updateStatusArea(IosInputContext &ic);
+    void expand(IosInputContext &ic, const std::string &auxUp,
+                const std::string &preedit, int caret, bool hasClientPreedit,
+                std::shared_ptr<CandidateList> list);
 };
 
 class UIPanelFactory : public AddonFactory {
