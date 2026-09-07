@@ -164,15 +164,22 @@ target_link_libraries(${BUNDLE_NAME}
     ZIPFoundation
 )
 
-list(TRANSFORM KEYBOARDS APPEND "Extension" OUTPUT_VARIABLE EXTENSIONS)
-# Make main app the last target so that keyboard can be copied into it.
-add_dependencies(${BUNDLE_NAME} ${EXTENSIONS})
-
 foreach(Keyboard ${KEYBOARDS})
     # Ninja generator wrongly creates .app instead of .appex so symlink for now.
     execute_process(COMMAND ln -sfh "${Keyboard}.app" "${CMAKE_CURRENT_BINARY_DIR}/${Keyboard}.appex")
-    # Embed keyboard.appex in app.
-    copy_to(app copy_directory "${CMAKE_CURRENT_BINARY_DIR}/${Keyboard}.appex" "PlugIns/${Keyboard}.appex")
+    set(embedded_appex "$<TARGET_BUNDLE_DIR:${BUNDLE_NAME}>/PlugIns/${Keyboard}.appex")
+    set(embedded_binary "${CMAKE_CURRENT_BINARY_DIR}/${BUNDLE_NAME}.app/PlugIns/${Keyboard}.appex/${Keyboard}")
+    add_custom_command(OUTPUT "${embedded_binary}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_BUNDLE_DIR:${BUNDLE_NAME}>/PlugIns"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_BINARY_DIR}/${Keyboard}.appex"
+            "${embedded_appex}"
+        DEPENDS ${Keyboard}Extension
+        COMMENT "Embedding ${Keyboard}.appex"
+    )
+    add_custom_target(${Keyboard}EmbeddedExtension DEPENDS "${embedded_binary}")
+    add_dependencies(${BUNDLE_NAME} ${Keyboard}EmbeddedExtension)
 endforeach()
 
 # Settings bundle
