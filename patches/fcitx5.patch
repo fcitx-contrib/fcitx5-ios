@@ -1,3 +1,16 @@
+diff --git a/src/lib/fcitx-utils/Fcitx5Macros.cmake b/src/lib/fcitx-utils/Fcitx5Macros.cmake
+index 9c94dee1..d4175f43 100644
+--- a/src/lib/fcitx-utils/Fcitx5Macros.cmake
++++ b/src/lib/fcitx-utils/Fcitx5Macros.cmake
+@@ -22,7 +22,7 @@ function(fcitx5_import_addons target)
+ 
+   foreach(addon IN LISTS FCITX5_IMPORT_ADDONS)
+       set(filename "${CMAKE_CURRENT_BINARY_DIR}/${target}-${addon}-import-addon.cpp")
+-      file(WRITE "${filename}" "
++      file(CONFIGURE OUTPUT "${filename}" CONTENT "
+ #include <fcitx/addonloader.h>
+ extern fcitx::StaticAddonRegistry &${FCITX5_IMPORT_REGISTRY_VARNAME}();
+ FCITX_IMPORT_ADDON_FACTORY(${FCITX5_IMPORT_REGISTRY_VARNAME}, ${addon});
 diff --git a/src/lib/fcitx-utils/log.cpp b/src/lib/fcitx-utils/log.cpp
 index 56fb7f62..98fa2ae6 100644
 --- a/src/lib/fcitx-utils/log.cpp

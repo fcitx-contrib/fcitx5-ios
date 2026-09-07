@@ -19,3 +19,4 @@ apply_patch deps/ZIPFoundation patches/ZIPFoundation.patch
 apply_patch engines/libime/src/libime/core/kenlm patches/kenlm.patch
 apply_patch engines/fcitx5-hallelujah patches/hallelujah.patch
 apply_patch engines/fcitx5-rime patches/rime.patch
+apply_patch ios-cmake patches/ios-cmake.patch

@@ -171,8 +171,14 @@ add_dependencies(${BUNDLE_NAME} ${EXTENSIONS})
 foreach(Keyboard ${KEYBOARDS})
     # Ninja generator wrongly creates .app instead of .appex so symlink for now.
     execute_process(COMMAND ln -sfh "${Keyboard}.app" "${CMAKE_CURRENT_BINARY_DIR}/${Keyboard}.appex")
-    # Embed keyboard.appex in app.
-    copy_to(app copy_directory "${CMAKE_CURRENT_BINARY_DIR}/${Keyboard}.appex" "PlugIns/${Keyboard}.appex")
+    # Embed keyboard.appex in app whenever the extension itself is linked.
+    add_custom_command(TARGET ${Keyboard}Extension POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory
+            "$<TARGET_BUNDLE_DIR:${BUNDLE_NAME}>/PlugIns"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_BINARY_DIR}/${Keyboard}.appex"
+            "$<TARGET_BUNDLE_DIR:${BUNDLE_NAME}>/PlugIns/${Keyboard}.appex"
+    )
 endforeach()
 
 # Settings bundle

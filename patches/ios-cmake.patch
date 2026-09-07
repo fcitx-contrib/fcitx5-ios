@@ -1,0 +1,30 @@
+diff --git a/ios.toolchain.cmake b/ios.toolchain.cmake
+index 3d008f8..a9f54fb 100644
+--- a/ios.toolchain.cmake
++++ b/ios.toolchain.cmake
+@@ -980,7 +980,7 @@ endif()
+ #Check if Xcode generator is used since that will handle these flags automagically
+ if(CMAKE_GENERATOR MATCHES "Xcode")
+   message(STATUS "Not setting any manual command-line buildflags, since Xcode is selected as the generator. Modifying the Xcode build-settings directly instead.")
+-else()
++elseif(NOT IOS_CMAKE_MANUAL_FLAGS_INITIALIZED)
+   set(CMAKE_C_FLAGS "${C_TARGET_FLAGS} ${APPLE_TARGET_TRIPLE_FLAG} ${SDK_NAME_VERSION_FLAGS} ${OBJC_LEGACY_VARS} ${BITCODE} ${VISIBILITY} ${CMAKE_C_FLAGS}" CACHE INTERNAL
+      "Flags used by the compiler during all C build types.")
+   set(CMAKE_C_FLAGS_DEBUG "-O0 -g ${CMAKE_C_FLAGS_DEBUG}")
+@@ -1019,6 +1019,8 @@ else()
+   endif()
+   set(CMAKE_ASM_FLAGS "${CMAKE_C_FLAGS} -x assembler-with-cpp" CACHE INTERNAL
+      "Flags used by the compiler for all ASM build types.")
++  set(IOS_CMAKE_MANUAL_FLAGS_INITIALIZED TRUE CACHE INTERNAL
++     "Whether ios-cmake's manual command-line build flags were initialized.")
+ endif()
+ 
+ ## Print status messages to inform of the current state
+@@ -1103,6 +1105,7 @@ set(CMAKE_TRY_COMPILE_PLATFORM_VARIABLES
+         CMAKE_C_LINK_FLAGS
+         CMAKE_CXX_LINK_FLAGS
+         CMAKE_ASM_FLAGS
++        IOS_CMAKE_MANUAL_FLAGS_INITIALIZED
+ )
+ 
+ if(NAMED_LANGUAGE_SUPPORT_INT)
