@@ -27,17 +27,27 @@ IosInputContext &
 IosFrontend::ensureInputContext(const std::string &program,
                                 const std::string &documentIdentifier) {
     auto iter = inputContexts_.find(program);
+    IosInputContext *oldIC = nullptr;
     if (iter != inputContexts_.end()) {
         if (iter->second->documentIdentifier() == documentIdentifier) {
             return *iter->second;
         }
-        destroyInputContext(iter->second);
+        oldIC = iter->second;
+        if (oldIC->hasFocus()) {
+            oldIC->focusOut();
+            focusGroup_.setFocusedInputContext(nullptr);
+        }
     }
 
     auto *ic = new IosInputContext(this, instance_->inputContextManager(),
                                    program, documentIdentifier);
     ic->setFocusGroup(&focusGroup_);
     inputContexts_[program] = ic;
+    if (oldIC) {
+        // Keep the old context alive until the new one is registered so fcitx
+        // can propagate per-program input state to the new context.
+        destroyInputContext(oldIC);
+    }
     return *ic;
 }
 
@@ -46,7 +56,10 @@ void IosFrontend::destroyInputContext(IosInputContext *ic) {
         ic->focusOut();
         focusGroup_.setFocusedInputContext(nullptr);
     }
-    inputContexts_.erase(ic->program());
+    auto iter = inputContexts_.find(ic->program());
+    if (iter != inputContexts_.end() && iter->second == ic) {
+        inputContexts_.erase(iter);
+    }
     delete ic;
 }
 
