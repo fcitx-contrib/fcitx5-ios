@@ -12,7 +12,8 @@ public func setCandidatesAsync(
   DispatchQueue.main.async {
     guard let client, client.isCurrentDocument(program, documentIdentifier) else { return }
     vm.setCandidates(
-      auxUp, preedit, caret, candidates, highlighted, bulk, hasClientPreedit,
+      program, documentIdentifier, auxUp, preedit, caret, candidates, highlighted, bulk,
+      hasClientPreedit,
       deserialize([CandidateAction].self, tabActionsJSON), hasPrev, hasNext, endReached)
   }
 }

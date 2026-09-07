@@ -31,7 +31,8 @@ class UIPanel final : public VirtualKeyboardUserInterface {
     bool isVirtualKeyboardVisible() const override { return true; }
     void showVirtualKeyboard() override {}
     void hideVirtualKeyboard() override {}
-    void scroll(int start, int count);
+    void scroll(const std::string &program,
+                const std::string &documentIdentifier, int start, int count);
     void page(bool next);
 
   private:

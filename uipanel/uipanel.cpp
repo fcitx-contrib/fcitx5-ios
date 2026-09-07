@@ -155,9 +155,16 @@ void UIPanel::expand(IosInputContext &ic, const std::string &auxUp,
                                    endReached);
 }
 
-void UIPanel::scroll(int start, int count) {
-    auto *ic =
-        dynamic_cast<IosInputContext *>(instance_->mostRecentInputContext());
+void UIPanel::scroll(const std::string &program,
+                     const std::string &documentIdentifier, int start,
+                     int count) {
+    auto *frontend = dynamic_cast<IosFrontend *>(
+        instance_->addonManager().addon("iosfrontend"));
+    if (!frontend) {
+        return;
+    }
+    auto *ic = dynamic_cast<IosInputContext *>(
+        frontend->inputContext(program, documentIdentifier));
     if (!ic) {
         return;
     }
@@ -211,8 +218,10 @@ void UIPanel::updateStatusArea(IosInputContext &ic) {
 
 FCITX_ADDON_FACTORY_V2(uipanel, fcitx::UIPanelFactory);
 
-void scroll(int start, int count) {
-    dispatcher->schedule([start, count] { fcitx::ui->scroll(start, count); });
+void scroll(const char *p, const char *d, int start, int count) {
+    std::string program = p, documentIdentifier = d;
+    dispatcher->schedule(
+        [=] { fcitx::ui->scroll(program, documentIdentifier, start, count); });
 }
 
 void page(bool next) {
