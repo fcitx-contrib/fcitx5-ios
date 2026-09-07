@@ -26,8 +26,8 @@ private func syncLocale() -> String {
 class KeyboardViewController: UIInputViewController, FcitxProtocol {
   private struct DocumentState: Equatable {
     // Changing focus between TextFields on the same app screen may not call keyboard's viewWillAppear.
-    // Fact not related to our use case: changing back a previously focused TextField won't preserve documentIdentifier.
-    let identifier: String?
+    // iOS issues a new documentIdentifier even when focus returns to a previously focused TextField.
+    let identifier: String
     let contextBeforeInput: String?
     let selectedText: String?
     let contextAfterInput: String?
@@ -45,27 +45,42 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   private static let documentPollingInterval: TimeInterval = 0.2
+  nonisolated(unsafe) private static var liveControllerCount = 0
 
   nonisolated(unsafe) var id: UInt64 = 0
+  nonisolated(unsafe) private var countedAsLive = false
   var hostingController: UIHostingController<VirtualKeyboardView>!
   var removedBySlide = ""
+  // Reject queued C++ callbacks after the controller stops accepting input. Its program and
+  // documentIdentifier may remain unchanged between viewWillDisappear and deinit. This also stays
+  // false for the config-sync document, where Fcitx must not modify the proxy.
+  private var acceptsFcitxCommands = false
   private var documentState: DocumentState?
   private var documentPollingTimer: Timer?
   static let keyboard = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
   static private var clipboardText = ""
   static private var firstLoad = true
 
+  private var program: String {
+    String(id)
+  }
+
+  public func isCurrentDocument(_ program: String, _ documentIdentifier: String) -> Bool {
+    acceptsFcitxCommands && self.program == program
+      && currentDocumentIdentifier() == documentIdentifier
+  }
+
   // UIKit may temporarily return nil while switching between text inputs, even though Swift
   // imports documentIdentifier as a non-optional UUID. Read it through Objective-C to avoid a
   // trap in UUID._unconditionallyBridgeFromObjectiveC during that transition.
-  private func currentDocumentIdentifier() -> String? {
+  private func currentDocumentIdentifier() -> String {
     let selector = NSSelectorFromString("documentIdentifier")
     guard
       let proxy = textDocumentProxy as? NSObject,
       proxy.responds(to: selector),
       let identifier = proxy.perform(selector)?.takeUnretainedValue() as? NSUUID
     else {
-      return nil
+      return ""
     }
     return identifier.uuidString
   }
@@ -78,12 +93,17 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       contextAfterInput: textDocumentProxy.documentContextAfterInput)
   }
 
-  private func surroundingTextForInputEvent() -> (SurroundingText, Bool) {
+  private func surroundingTextForInputEvent() -> (SurroundingText, String, Bool) {
     let currentDocumentState = currentDocumentState()
     let shouldReset = currentDocumentState != documentState
+    let documentChanged = currentDocumentState.identifier != documentState?.identifier
     documentState = currentDocumentState
-    if shouldReset {
+    if documentChanged {
+      vm.clearInputPanel()
+    } else if shouldReset {
       FCITX_INFO("Document state changed \(self.id)")
+    }
+    if shouldReset {
       updateTextIsEmpty()
     }
 
@@ -95,6 +115,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
         text: before + selected + (currentDocumentState.contextAfterInput ?? ""),
         cursor: anchor + UInt32(selected.unicodeScalars.count),
         anchor: anchor),
+      currentDocumentState.identifier,
       shouldReset
     )
   }
@@ -137,10 +158,15 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
         guard let self else { return }
         let currentDocumentState = self.currentDocumentState()
         defer { self.documentState = currentDocumentState }
-        // Known issue: if 2 rows are identical, changing between
+        // Known issue: if 2 rows are identical, changing between with caret at same position won't call reset.
         guard currentDocumentState != self.documentState else { return }
-        FCITX_INFO("Document state changed \(self.id)")
-        self.resetInput()
+        if currentDocumentState.identifier != self.documentState?.identifier {
+          vm.clearInputPanel()
+          Fcitx.focusIn(self.program, currentDocumentState.identifier)
+        } else {
+          FCITX_INFO("Document state changed \(self.id)")
+          self.resetInput()
+        }
         self.updateTextIsEmpty()
       }
     }
@@ -170,7 +196,9 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   override func viewDidLoad() {
     id = UInt64(Int(bitPattern: Unmanaged.passUnretained(self).toOpaque()))
-    FCITX_INFO("viewDidLoad \(self.id)")
+    countedAsLive = true
+    Self.liveControllerCount += 1
+    FCITX_INFO("viewDidLoad \(self.id) liveControllers=\(Self.liveControllerCount)")
     super.viewDidLoad()
     if KeyboardViewController.firstLoad {
       KeyboardViewController.firstLoad = false
@@ -195,6 +223,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   override func viewWillAppear(_ animated: Bool) {
     FCITX_INFO("viewWillAppear \(self.id)")
+    acceptsFcitxCommands = false
     SwiftFrontend.setClient(self)
     KeyboardUI.setClient(self)
 
@@ -219,14 +248,15 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
         reload()
       }
     }
-    self.resetInput()  // Avoid old context carried over.
-
     if !appGroupAvailable,
       let textBefore = textDocumentProxy.documentContextBeforeInput,
       textBefore.hasPrefix(syncConfigMagicText)
     {
       // In sync config context.
-      focusOut()  // Avoid reload() to set .initial display mode.
+      // Focusing this document makes FocusGroup drop any previously active context; focusing it
+      // out below then leaves the group without an active context during config sync.
+      Fcitx.focusIn(program, currentDocumentIdentifier())
+      Fcitx.focusOut(program, currentDocumentIdentifier())
       textDocumentProxy.insertText(hasFullAccess ? syncConfigFullAccess : syncConfigNoFullAccess)
       if hasFullAccess {
         vm.keyboardDisplayName = getKeyboardDisplayName(Bundle.main.bundleURL)
@@ -235,8 +265,11 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
         vm.setDisplayMode(.syncPending)
       }
     } else {
+      acceptsFcitxCommands = true
       vm.setDisplayMode(.initial)
-      focusIn()
+      vm.clearInputPanel()
+      Fcitx.focusIn(program, currentDocumentIdentifier())
+      self.resetInput()  // Avoid old context carried over.
     }
     startDocumentPolling()
   }
@@ -244,16 +277,20 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   override func viewWillDisappear(_ animated: Bool) {
     FCITX_INFO("viewWillDisappear \(self.id)")
     super.viewWillDisappear(animated)
+    acceptsFcitxCommands = false
+    Fcitx.focusOut(program, currentDocumentIdentifier())
     stopDocumentPolling()
-    // Old viewWillDisappear may be called after new viewWillAppear (if switching apps), and viewWillDisappear may be called twice.
-    // Don't call focusOut as we use a single InputContext.
     hostingController.willMove(toParent: nil)
     hostingController.view.removeFromSuperview()
     hostingController.removeFromParent()
   }
 
   deinit {
-    FCITX_INFO("deinit \(self.id)")
+    if countedAsLive {
+      Fcitx.destroyInputContext(String(id))
+      Self.liveControllerCount -= 1
+      FCITX_INFO("deinit \(self.id) liveControllers=\(Self.liveControllerCount)")
+    }
   }
 
   override func viewWillLayoutSubviews() {
@@ -271,13 +308,15 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   public func keyPressed(_ key: String, _ code: String, _ modifiers: UInt32 = 0) {
-    let (surroundingText, shouldReset) = surroundingTextForInputEvent()
+    let (surroundingText, documentIdentifier, shouldReset) = surroundingTextForInputEvent()
     Fcitx.processKey(
-      key, code, modifiers, surroundingText.text, surroundingText.cursor, surroundingText.anchor,
-      shouldReset)
+      program, documentIdentifier, key, code, modifiers, surroundingText.text,
+      surroundingText.cursor,
+      surroundingText.anchor, shouldReset)
   }
 
   public func forwardKey(_ key: String, _ code: String) {
+    let documentIdentifier = currentDocumentIdentifier()
     // documentContextBeforeInput could be all text or text in current line before cursor.
     // In the latter case, it will be '\n' if caret is at the beginning of a non-first line.
     switch code {
@@ -286,10 +325,12 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       let step = firstLine(textDocumentProxy.documentContextAfterInput ?? "").utf16.count
       textDocumentProxy.adjustTextPosition(byCharacterOffset: step)
       DispatchQueue.main.async {
+        guard self.currentDocumentIdentifier() == documentIdentifier else { return }
         // Move to the start of next line if exists.
         self.textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
         // Must have a delay, otherwise nextLineLength is always 0.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+          guard self.currentDocumentIdentifier() == documentIdentifier else { return }
           let textAfter = self.textDocumentProxy.documentContextAfterInput ?? ""
           let column = min(offset, firstLine(textAfter).count)
           self.textDocumentProxy.adjustTextPosition(
@@ -309,10 +350,12 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       let offset = textBefore.count
       textDocumentProxy.adjustTextPosition(byCharacterOffset: -textBefore.utf16.count)
       DispatchQueue.main.async {
+        guard self.currentDocumentIdentifier() == documentIdentifier else { return }
         // Move to the end of previous line if exists.
         self.textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
         // Must have a delay, otherwise previousLineLength may always be 0.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+          guard self.currentDocumentIdentifier() == documentIdentifier else { return }
           let textBefore = lastLine(self.textDocumentProxy.documentContextBeforeInput ?? "")
           if textBefore.count > offset {
             self.textDocumentProxy.adjustTextPosition(
@@ -340,15 +383,15 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   public func resetInput() {
-    Fcitx.resetInput()
+    Fcitx.resetInput(program, currentDocumentIdentifier())
   }
 
   public func triggerUnicode() {
-    Fcitx.triggerUnicode()
+    Fcitx.triggerUnicode(program, currentDocumentIdentifier())
   }
 
   public func triggerQuickPhrase() {
-    Fcitx.triggerQuickPhrase()
+    Fcitx.triggerQuickPhrase(program, currentDocumentIdentifier())
   }
 
   public func commitString(_ commit: String) {

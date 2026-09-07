@@ -7,6 +7,9 @@
 #include <fcitx/focusgroup.h>
 #include <fcitx/instance.h>
 
+#include <string>
+#include <unordered_map>
+
 namespace fcitx {
 
 class IosInputContext;
@@ -21,19 +24,34 @@ class IosFrontend : public AddonInstance {
     const Configuration *getConfig() const override { return nullptr; }
     void setConfig(const RawConfig &config) override {}
 
-    void createInputContext();
-    bool keyEvent(const Key &key, bool isRelease);
-    void forwardKey(const std::string &key, const std::string &code);
-    void focusIn();
-    void focusOut();
-    void resetInput();
-    void setSurroundingText(const std::string &text, unsigned int cursor,
-                            unsigned int anchor);
+    bool keyEvent(const std::string &program,
+                  const std::string &documentIdentifier, const Key &key,
+                  bool isRelease, const std::string &text, unsigned int cursor,
+                  unsigned int anchor, bool reset);
+    void forwardKey(const std::string &program,
+                    const std::string &documentIdentifier,
+                    const std::string &key, const std::string &code);
+    void focusIn(const std::string &program,
+                 const std::string &documentIdentifier);
+    void focusOut(const std::string &program,
+                  const std::string &documentIdentifier);
+    void destroyInputContext(const std::string &program);
+    void resetInput(const std::string &program,
+                    const std::string &documentIdentifier);
+    InputContext *inputContext(const std::string &program,
+                               const std::string &documentIdentifier);
 
   private:
     Instance *instance_;
     FocusGroup focusGroup_;
-    IosInputContext *ic_;
+    std::unordered_map<std::string, IosInputContext *> inputContexts_;
+
+    IosInputContext *
+    findInputContext(const std::string &program,
+                     const std::string &documentIdentifier) const;
+    IosInputContext &ensureInputContext(const std::string &program,
+                                        const std::string &documentIdentifier);
+    void destroyInputContext(IosInputContext *ic);
 };
 
 class IosFrontendFactory : public AddonFactory {
@@ -46,7 +64,9 @@ class IosFrontendFactory : public AddonFactory {
 class IosInputContext : public InputContext {
   public:
     IosInputContext(IosFrontend *frontend,
-                    InputContextManager &inputContextManager);
+                    InputContextManager &inputContextManager,
+                    const std::string &program,
+                    const std::string &documentIdentifier);
     ~IosInputContext();
 
     const char *frontend() const override { return "ios"; }
@@ -56,8 +76,12 @@ class IosInputContext : public InputContext {
     void updatePreeditImpl() override;
     void setSurroundingText(const std::string &text, unsigned int cursor,
                             unsigned int anchor);
+    const std::string &documentIdentifier() const {
+        return documentIdentifier_;
+    }
 
   private:
     IosFrontend *frontend_;
+    std::string documentIdentifier_;
 };
 } // namespace fcitx

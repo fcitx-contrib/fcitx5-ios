@@ -14,7 +14,7 @@ public enum DisplayMode {
 }
 
 @MainActor
-var client: FcitxProtocol!
+weak var client: FcitxProtocol!
 
 @MainActor
 public func setClient(_ cli: FcitxProtocol) {
@@ -58,6 +58,8 @@ public class ViewModel: ObservableObject {
   // Have requested load more candidates starting from this index. -1 means not scrollable.
   @Published var pendingScroll = 0
   @Published var tabActions = [CandidateAction]()
+  @Published var inputContextProgram = ""
+  @Published var inputContextDocumentIdentifier = ""
 
   @Published var actions = [StatusAreaAction]()
   @Published var inputMethods = [InputMethod]()
@@ -106,7 +108,8 @@ public class ViewModel: ObservableObject {
   }
 
   func setCandidates(
-    _ auxUp: String, _ preedit: String, _ caret: Int32, _ candidates: [String],
+    _ program: String, _ documentIdentifier: String, _ auxUp: String, _ preedit: String,
+    _ caret: Int32, _ candidates: [String],
     _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool, _ tabActions: [CandidateAction],
     _ hasPrev: Bool, _ hasNext: Bool, _ endReached: Bool
   ) {
@@ -127,6 +130,8 @@ public class ViewModel: ObservableObject {
     self.highlighted = Int(highlighted)
     self.hasClientPreedit = hasClientPreedit
     self.tabActions = tabActions
+    inputContextProgram = program
+    inputContextDocumentIdentifier = documentIdentifier
     batch = (batch + 1) & 0xFFFF
     scrollEnd = endReached
     self.hasPrev = hasPrev
@@ -134,6 +139,10 @@ public class ViewModel: ObservableObject {
     rowItemCount = calculateLayout(
       candidates, expandedCandidateListWidth(), maxColumns: expandedCandidateColumnCount())
     pendingScroll = bulk ? 0 : -1
+  }
+
+  public func clearInputPanel() {
+    setCandidates("", "", "", "", 0, [], -1, false, false, [], false, false, false)
   }
 
   func scroll(_ candidates: [String], _ end: Bool) {
@@ -338,6 +347,8 @@ public struct VirtualKeyboardView: View {
               CandidateBarView(
                 width: width, auxUp: viewModel.auxUp, preedit: viewModel.preedit,
                 caret: viewModel.caret, candidates: viewModel.candidates,
+                program: viewModel.inputContextProgram,
+                documentIdentifier: viewModel.inputContextDocumentIdentifier,
                 highlighted: viewModel.highlighted,
                 rowItemCount: viewModel.rowItemCount,
                 tabActions: viewModel.tabActions,

@@ -8,14 +8,16 @@ void startKeyboardFcitx(const char *appBundlePath, const char *xdgDataDirs,
                         const char *appGroupPath);
 void setLocale(const char *locale);
 
-void focusIn();
-void focusOut();
-void processKey(const char *key, const char *code, unsigned int modifiers,
+void focusIn(const char *program, const char *documentIdentifier);
+void focusOut(const char *program, const char *documentIdentifier);
+void destroyInputContext(const char *program);
+void processKey(const char *program, const char *documentIdentifier,
+                const char *key, const char *code, unsigned int modifiers,
                 const char *surroundingText, unsigned int cursor,
                 unsigned int anchor, bool reset);
-void resetInput();
-void triggerUnicode();
-void triggerQuickPhrase();
+void resetInput(const char *program, const char *documentIdentifier);
+void triggerUnicode(const char *program, const char *documentIdentifier);
+void triggerQuickPhrase(const char *program, const char *documentIdentifier);
 void reload();
 void toggle();
 

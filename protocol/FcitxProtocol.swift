@@ -1,5 +1,6 @@
 @MainActor
-public protocol FcitxProtocol {
+public protocol FcitxProtocol: AnyObject {
+  func isCurrentDocument(_ program: String, _ documentIdentifier: String) -> Bool
   func keyPressed(_ key: String, _ code: String, _ modifiers: UInt32)
   func forwardKey(_ key: String, _ code: String)
   func carriageReturn()

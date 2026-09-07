@@ -37,6 +37,8 @@ struct CandidateBarView: View {
   let preedit: String
   let caret: Int
   let candidates: [String]
+  let program: String
+  let documentIdentifier: String
   let highlighted: Int
   let rowItemCount: [Int]
   let tabActions: [CandidateAction]
@@ -77,7 +79,7 @@ struct CandidateBarView: View {
   private func loadMoreCandidates(_ start: Int, _ count: Int) {
     if pendingScroll < start {
       pendingScroll = start
-      scroll(Int32(start), Int32(count))
+      scroll(program, documentIdentifier, Int32(start), Int32(count))
     }
   }
 

@@ -11,14 +11,6 @@
 
 namespace {
 fcitx::IosFrontend *frontend;
-
-void updateSurroundingText(const std::string &text, unsigned int cursor,
-                           unsigned int anchor, bool reset) {
-    if (reset) {
-        frontend->resetInput();
-    }
-    frontend->setSurroundingText(text, cursor, anchor);
-}
 } // namespace
 
 void startKeyboardFcitx(const char *appBundlePath, const char *xdgDataDirs,
@@ -32,41 +24,54 @@ void startKeyboardFcitx(const char *appBundlePath, const char *xdgDataDirs,
         dynamic_cast<fcitx::IosFrontend *>(addonMgr.addon("iosfrontend"));
 }
 
-void focusIn() {
-    dispatcher->schedule([] { frontend->focusIn(); });
+void focusIn(const char *p, const char *d) {
+    std::string program = p, documentIdentifier = d;
+    dispatcher->schedule(
+        [=] { frontend->focusIn(program, documentIdentifier); });
 }
 
-void focusOut() {
-    dispatcher->schedule([] { frontend->focusOut(); });
+void focusOut(const char *p, const char *d) {
+    std::string program = p, documentIdentifier = d;
+    dispatcher->schedule(
+        [=] { frontend->focusOut(program, documentIdentifier); });
 }
 
-void processKey(const char *k, const char *c, unsigned int modifiers,
-                const char *text, unsigned int cursor, unsigned int anchor,
-                bool reset) {
-    std::string key = k, code = c, surroundingText = text;
+void destroyInputContext(const char *p) {
+    std::string program = p;
+    dispatcher->schedule([=] { frontend->destroyInputContext(program); });
+}
+
+void processKey(const char *p, const char *d, const char *k, const char *c,
+                unsigned int modifiers, const char *text, unsigned int cursor,
+                unsigned int anchor, bool reset) {
+    std::string program = p, documentIdentifier = d, key = k, code = c,
+                surroundingText = text;
     dispatcher->schedule([=] {
-        updateSurroundingText(surroundingText, cursor, anchor, reset);
         bool accepted = frontend->keyEvent(
+            program, documentIdentifier,
             fcitx::js_key_to_fcitx_key(
                 key, code, modifiers | 1U << 29 /* KeyState::Virtual */),
-            false);
+            false, surroundingText, cursor, anchor, reset);
         if (!accepted) {
-            frontend->forwardKey(key, code);
+            frontend->forwardKey(program, documentIdentifier, key, code);
         }
     });
 }
 
-void resetInput() {
-    dispatcher->schedule([] { frontend->resetInput(); });
+void resetInput(const char *p, const char *d) {
+    std::string program = p, documentIdentifier = d;
+    dispatcher->schedule(
+        [=] { frontend->resetInput(program, documentIdentifier); });
 }
 
-void triggerUnicode() {
-    dispatcher->schedule([] {
+void triggerUnicode(const char *p, const char *d) {
+    std::string program = p, documentIdentifier = d;
+    dispatcher->schedule([=] {
         auto *unicode = instance->addonManager().addon("unicode");
         if (!unicode) {
             return;
         }
-        auto *ic = instance->mostRecentInputContext();
+        auto *ic = frontend->inputContext(program, documentIdentifier);
         if (!ic) {
             return;
         }
@@ -74,13 +79,14 @@ void triggerUnicode() {
     });
 }
 
-void triggerQuickPhrase() {
-    dispatcher->schedule([] {
+void triggerQuickPhrase(const char *p, const char *d) {
+    std::string program = p, documentIdentifier = d;
+    dispatcher->schedule([=] {
         auto *quickphrase = instance->addonManager().addon("quickphrase");
         if (!quickphrase) {
             return;
         }
-        auto *ic = instance->mostRecentInputContext();
+        auto *ic = frontend->inputContext(program, documentIdentifier);
         if (!ic) {
             return;
         }
