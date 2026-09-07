@@ -96,9 +96,14 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   private func surroundingTextForInputEvent() -> (SurroundingText, String, Bool) {
     let currentDocumentState = currentDocumentState()
     let shouldReset = currentDocumentState != documentState
+    let documentChanged = currentDocumentState.identifier != documentState?.identifier
     documentState = currentDocumentState
-    if shouldReset {
+    if documentChanged {
+      vm.clearInputPanel()
+    } else if shouldReset {
       FCITX_INFO("Document state changed \(self.id)")
+    }
+    if shouldReset {
       updateTextIsEmpty()
     }
 
@@ -156,6 +161,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
         // Known issue: if 2 rows are identical, changing between with caret at same position won't call reset.
         guard currentDocumentState != self.documentState else { return }
         if currentDocumentState.identifier != self.documentState?.identifier {
+          vm.clearInputPanel()
           Fcitx.focusIn(self.program, currentDocumentState.identifier)
         } else {
           FCITX_INFO("Document state changed \(self.id)")
@@ -261,6 +267,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     } else {
       acceptsFcitxCommands = true
       vm.setDisplayMode(.initial)
+      vm.clearInputPanel()
       Fcitx.focusIn(program, currentDocumentIdentifier())
       self.resetInput()  // Avoid old context carried over.
     }

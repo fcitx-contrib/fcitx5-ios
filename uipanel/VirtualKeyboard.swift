@@ -136,6 +136,10 @@ public class ViewModel: ObservableObject {
     pendingScroll = bulk ? 0 : -1
   }
 
+  public func clearInputPanel() {
+    setCandidates("", "", 0, [], -1, false, false, [], false, false, false)
+  }
+
   func scroll(_ candidates: [String], _ end: Bool) {
     self.candidates.append(contentsOf: candidates)
     rowItemCount = calculateLayout(
