@@ -131,6 +131,7 @@ function(install_cxx_translations po)
 endfunction()
 
 set(Fcitx5Utils_DIR "${PROJECT_SOURCE_DIR}/cmake")
+find_package(Fcitx5Utils REQUIRED CONFIG)
 add_subdirectory(engines)
 
 fcitx5_get_addon_targets(COMMON_TARGETS iosnotifications fcitx5 iosfrontend uipanel)

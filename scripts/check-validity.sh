@@ -6,6 +6,7 @@ has_dl=0
 
 executables=(
   build/$1/src/Fcitx5.app/Fcitx5
+  build/$1/src/Fcitx5.app/Frameworks/FcitxRuntime.framework/FcitxRuntime
   build/$1/src/Fcitx5.app/PlugIns/Chinese.appex/Chinese
   build/$1/src/Fcitx5.app/PlugIns/Hallelujah.appex/Hallelujah
   build/$1/src/Fcitx5.app/PlugIns/Mozc.appex/Mozc
