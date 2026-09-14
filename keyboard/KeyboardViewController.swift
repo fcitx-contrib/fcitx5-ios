@@ -33,6 +33,11 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     let contextAfterInput: String?
   }
 
+  private struct InputTraitsState: Equatable {
+    let documentIdentifier: String
+    let keyboardType: UIKeyboardType?
+  }
+
   private struct SurroundingText {
     let text: String
     let cursor: UInt32
@@ -56,6 +61,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   // false for the config-sync document, where Fcitx must not modify the proxy.
   private var acceptsFcitxCommands = false
   private var documentState: DocumentState?
+  private var inputTraitsState: InputTraitsState?
   private var documentPollingTimer: Timer?
   static let keyboard = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
   static private var clipboardText = ""
@@ -162,6 +168,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
         guard currentDocumentState != self.documentState else { return }
         if currentDocumentState.identifier != self.documentState?.identifier {
           vm.clearInputPanel()
+          self.updateDisplayModeForInputTraits()
           Fcitx.focusIn(self.program, currentDocumentState.identifier)
         } else {
           FCITX_INFO("Document state changed \(self.id)")
@@ -186,6 +193,18 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       + (textDocumentProxy.selectedText ?? "")
       + (textDocumentProxy.documentContextAfterInput ?? "")
     vm.setTextIsEmpty(text.isEmpty)
+  }
+
+  private func updateDisplayModeForInputTraits() {
+    guard acceptsFcitxCommands else { return }
+    let state = InputTraitsState(
+      documentIdentifier: currentDocumentIdentifier(),
+      keyboardType: textDocumentProxy.keyboardType)
+    guard state != inputTraitsState else { return }
+    inputTraitsState = state
+    // System forces builtin numpad for .numberPad, .decimalPad, .asciiCapableNumberPad.
+    vm.setDisplayMode(
+      state.keyboardType == .numbersAndPunctuation ? .numpad : .initial, resetReturnMode: true)
   }
 
   override func updateViewConstraints() {
@@ -266,8 +285,8 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       }
     } else {
       acceptsFcitxCommands = true
-      vm.setDisplayMode(.initial)
       vm.clearInputPanel()
+      updateDisplayModeForInputTraits()
       Fcitx.focusIn(program, currentDocumentIdentifier())
       self.resetInput()  // Avoid old context carried over.
     }
@@ -278,6 +297,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     FCITX_INFO("viewWillDisappear \(self.id)")
     super.viewWillDisappear(animated)
     acceptsFcitxCommands = false
+    inputTraitsState = nil
     Fcitx.focusOut(program, currentDocumentIdentifier())
     stopDocumentPolling()
     hostingController.willMove(toParent: nil)
