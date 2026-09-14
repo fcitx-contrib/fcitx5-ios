@@ -117,10 +117,12 @@ struct KeyboardView: View {
               let longPress = key["longPress"] as? [String: Any]
               KeyView(
                 x: x, y: y, width: keyWidth, height: height,
-                label: label, key: k, subLabel: subLabel, swipeUp: swipeUp, longPress: longPress)
+                label: label, key: k, code: "", forward: false, subLabel: subLabel,
+                swipeUp: swipeUp, longPress: longPress)
             }
           case "space":
-            SpaceView(x: x, y: y, width: keyWidth, height: height, label: spaceLabel)
+            SpaceView(
+              x: x, y: y, width: keyWidth, height: height, label: spaceLabel, forward: false)
           case "backspace":
             BackspaceView(x: x, y: y, width: keyWidth, height: height)
           case "globe":
