@@ -92,8 +92,10 @@ public class ViewModel: ObservableObject {
 
   var hasPreedit: Bool { !preedit.isEmpty || hasClientPreedit }
 
-  public func setDisplayMode(_ mode: DisplayMode) {
-    if self.mode == .candidates && (mode == .symbol || mode == .numpad) {
+  public func setDisplayMode(_ mode: DisplayMode, resetReturnMode: Bool = false) {
+    if resetReturnMode {
+      returnMode = .initial
+    } else if self.mode == .candidates && (mode == .symbol || mode == .numpad) {
       returnMode = .candidates
     }
     self.mode = mode

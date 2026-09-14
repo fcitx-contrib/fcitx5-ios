@@ -44,6 +44,7 @@ struct IntegerView: OptionViewProtocol {
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityIdentifier(option + "_label")
       TextField("", value: $number, formatter: numberFormatter)
+        .keyboardType(.numbersAndPunctuation)  // Use our own numpad.
         .submitLabel(.done)
         .multilineTextAlignment(.trailing)
         .focused($isFocused)
