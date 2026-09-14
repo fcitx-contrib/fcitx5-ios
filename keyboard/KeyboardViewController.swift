@@ -203,7 +203,8 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     guard state != inputTraitsState else { return }
     inputTraitsState = state
     // System forces builtin numpad for .numberPad, .decimalPad, .asciiCapableNumberPad.
-    vm.setDisplayMode(state.keyboardType == .numbersAndPunctuation ? .numpad : .initial, resetReturnMode: true)
+    vm.setDisplayMode(
+      state.keyboardType == .numbersAndPunctuation ? .numpad : .initial, resetReturnMode: true)
   }
 
   override func updateViewConstraints() {
