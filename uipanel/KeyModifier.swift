@@ -72,6 +72,7 @@ struct KeyModifier: ViewModifier {
   let topRight: String?
   let bubbleLabel: String?
   let swipeUpLabel: String?
+  let swipeUpItem: BubbleItem?
   let longPressItems: [BubbleItem]
   let longPressIndex: Int
   var bubbleX: CGFloat { x + width / 2 }
@@ -187,7 +188,8 @@ struct KeyModifier: ViewModifier {
         if getSwipeDirection(dx, dy) == .up {
           vm.setBubble(
             bubbleX, bubbleY, bubbleWidth, bubbleHeight, bubbleBackground ?? background,
-            colorScheme, shadow, swipeUpLabel, [], 0, 0, bubbleFontSize)
+            colorScheme, shadow, swipeUpLabel,
+            [swipeUpItem].compactMap { $0 }, 0, 0, bubbleFontSize)
         } else {
           clearBubble()
         }
@@ -342,7 +344,8 @@ extension View {
     radius: CGFloat = keyCornerRadius, background: Color, pressedBackground: Color,
     foreground: Color, shadow: Color, action: GestureAction, pressedForeground: Color? = nil,
     pressedView: (any View)? = nil, topRight: String? = nil, bubbleLabel: String? = nil,
-    swipeUpLabel: String? = nil, longPressItems: [BubbleItem]? = nil, longPressIndex: Int? = nil,
+    swipeUpLabel: String? = nil, swipeUpItem: BubbleItem? = nil,
+    longPressItems: [BubbleItem]? = nil, longPressIndex: Int? = nil,
     bubbleBackground: Color? = nil, bubbleFontSize: CGFloat? = nil, disable: Bool = false
   ) -> some View {
     self.modifier(
@@ -355,6 +358,7 @@ extension View {
         shadow: shadow, action: action, disable: disable, pressedView: pressedView,
         topRight: topRight,
         bubbleLabel: bubbleLabel, swipeUpLabel: swipeUpLabel,
+        swipeUpItem: swipeUpItem,
         longPressItems: longPressItems ?? [],
         longPressIndex: longPressIndex ?? 0
       )

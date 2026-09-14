@@ -8,6 +8,7 @@ public enum DisplayMode {
   case edit
   case statusArea
   case symbol
+  case numpad
   case syncPending
   case syncRunning
   case syncDone
@@ -92,7 +93,7 @@ public class ViewModel: ObservableObject {
   var hasPreedit: Bool { !preedit.isEmpty || hasClientPreedit }
 
   public func setDisplayMode(_ mode: DisplayMode) {
-    if self.mode == .candidates && mode == .symbol {
+    if self.mode == .candidates && (mode == .symbol || mode == .numpad) {
       returnMode = .candidates
     }
     self.mode = mode
@@ -366,6 +367,8 @@ public struct VirtualKeyboardView: View {
               EditView(totalWidth: width)
             } else if viewModel.mode == .symbol {
               SymbolView(width: width)
+            } else if viewModel.mode == .numpad {
+              NumpadView(width: width)
             }
             KeyboardView(
               width: width, layer: viewModel.layer, lock: viewModel.lock,

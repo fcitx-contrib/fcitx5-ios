@@ -17,6 +17,7 @@ add_library(KeyboardUI STATIC
     StatusArea.swift
     Edit.swift
     Symbol.swift
+    Numpad.swift
     ReturnBar.swift
     Sync.swift
     ui.swift

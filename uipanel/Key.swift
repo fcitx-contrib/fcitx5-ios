@@ -71,6 +71,8 @@ struct KeyView: View {
 
   let label: String
   let key: String
+  let code: String
+  let forward: Bool
   let subLabel: [String: String]?
   let swipeUp: [String: Any]?
   let longPress: [String: Any]?
@@ -89,7 +91,12 @@ struct KeyView: View {
           onOrderedKeyPress: {
             return {
               vm.resetLayerIfNotLocked()
-              client.keyPressed(key, "")
+              if forward {
+                client.resetInput()
+                client.forwardKey(key, code)
+              } else {
+                client.keyPressed(key, code)
+              }
             }
           },
           onLongPress: { highlight in
@@ -122,6 +129,7 @@ struct SpaceView: View {
   let height: CGFloat
 
   let label: String
+  let forward: Bool
 
   var body: some View {
     Text(label)
@@ -135,7 +143,12 @@ struct SpaceView: View {
         action: GestureAction(
           onTap: {
             vm.resetLayerIfNotLocked()
-            client.keyPressed(" ", "")
+            if forward {
+              client.resetInput()
+              client.forwardKey(" ", "")
+            } else {
+              client.keyPressed(" ", "")
+            }
           },
           onSlide: { step in
             if step > 0 {
@@ -386,7 +399,10 @@ struct SymbolKeyView: View {
   let width: CGFloat
   let height: CGFloat
 
+  private let numpadLabel = "123"
+
   var body: some View {
+    let numpadItem = BubbleItem.text(numpadLabel)
     Text("#+=")
       .keyProperties(
         x: x, y: y, width: width, height: height,
@@ -397,8 +413,20 @@ struct SymbolKeyView: View {
         action: GestureAction(
           onTap: {
             vm.setDisplayMode(.symbol)
+          },
+          onLongPress: { _ in
+            vm.setDisplayMode(.numpad)
+          },
+          onSwipe: { direction in
+            if direction == .up {
+              vm.setDisplayMode(.numpad)
+            }
           }
-        )
+        ),
+        topRight: numpadLabel,
+        swipeUpItem: numpadItem,
+        longPressItems: [numpadItem],
+        bubbleBackground: getNormalBackground(colorScheme)
       )
   }
 }
