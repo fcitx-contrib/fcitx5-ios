@@ -364,7 +364,7 @@ public struct VirtualKeyboardView: View {
                 pendingScroll: $viewModel.pendingScroll)
             }
             if viewModel.mode == .statusArea {
-              StatusAreaView(actions: $viewModel.actions)
+              StatusAreaView(width: width, actions: $viewModel.actions)
             } else if viewModel.mode == .edit {
               EditView(totalWidth: width)
             } else if viewModel.mode == .symbol {

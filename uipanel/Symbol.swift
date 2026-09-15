@@ -73,7 +73,7 @@ struct SymbolView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      ReturnBarView()
+      ReturnBarView(width: width, showsBackspace: true)
       HStack(spacing: 0) {
         ScrollView {
           VStack(spacing: 0) {
