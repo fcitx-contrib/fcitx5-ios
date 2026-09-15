@@ -14,7 +14,7 @@ struct EditView: View {
     let width = totalWidth / 4
 
     VStack(spacing: 0) {
-      ReturnBarView()
+      ReturnBarView(width: totalWidth)
 
       ZStack {
         button(

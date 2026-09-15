@@ -47,6 +47,7 @@ private func getActionView(_ icon: String, _ desc: String) -> some View {
 
 struct StatusAreaView: View {
   @Environment(\.totalHeight) var totalHeight
+  let width: CGFloat
   @Binding var actions: [StatusAreaAction]
 
   private let columns = [
@@ -55,7 +56,7 @@ struct StatusAreaView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      ReturnBarView()
+      ReturnBarView(width: width)
       ScrollView {
         LazyVGrid(columns: columns) {
           ForEach(actions) { action in
