@@ -67,13 +67,14 @@ struct SymbolButton: View {
 struct SymbolView: View {
   @Environment(\.colorScheme) var colorScheme
   @Environment(\.totalHeight) var totalHeight
+  @ObservedObject private var viewModel = vm
   let width: CGFloat
 
   @State private var selectedKey = builtinCategories.first!.key
 
   var body: some View {
     VStack(spacing: 0) {
-      ReturnBarView(width: width, showsBackspace: true)
+      ReturnBarView(width: width, showsBackspace: true, isLocked: $viewModel.symbolLocked)
       HStack(spacing: 0) {
         ScrollView {
           VStack(spacing: 0) {
@@ -103,7 +104,9 @@ struct SymbolView: View {
                     SymbolButton(symbol: symbol) {
                       client.resetInput()
                       client.commitString(symbol)
-                      vm.popDisplayMode()
+                      if !viewModel.symbolLocked {
+                        vm.popDisplayMode()
+                      }
                     }
                   }
                 }
