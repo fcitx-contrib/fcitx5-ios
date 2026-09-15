@@ -43,6 +43,7 @@ public class ViewModel: ObservableObject {
 
   @Published var mode: DisplayMode = .initial
   @Published var returnMode: DisplayMode = .initial  // or .candidates
+  @Published var symbolLocked = false
 
   @Published var auxUp = ""
   @Published var preedit = ""
