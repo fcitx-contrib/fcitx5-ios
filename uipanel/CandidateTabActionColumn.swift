@@ -3,6 +3,7 @@ import UIPanel
 
 struct CandidateTabActionItemView: View {
   @Environment(\.colorScheme) var colorScheme
+  let inputContext: String
   let action: CandidateAction
   let width: CGFloat
   let actionHeight: CGFloat
@@ -32,7 +33,7 @@ struct CandidateTabActionItemView: View {
       .frame(width: width, height: actionHeight)
       .contentShape(Rectangle())
       .onTapGesture {
-        activateCandidateTabAction(action.id)
+        activateCandidateTabAction(inputContext, action.id)
       }
       .onLongPressGesture(
         minimumDuration: .infinity,
@@ -50,6 +51,7 @@ struct CandidateTabActionItemView: View {
 struct CandidateTabActionColumnView: View {
   @Environment(\.colorScheme) var colorScheme
 
+  let inputContext: String
   let actions: [CandidateAction]
   let width: CGFloat
   let actionHeight: CGFloat
@@ -73,7 +75,8 @@ struct CandidateTabActionColumnView: View {
         LazyVStack(spacing: 0) {
           ForEach(scrollableActions) { action in
             CandidateTabActionItemView(
-              action: action, width: width, actionHeight: actionHeight,
+              inputContext: inputContext, action: action, width: width,
+              actionHeight: actionHeight,
               paddingBottom: paddingBottom)
           }
         }
@@ -82,7 +85,7 @@ struct CandidateTabActionColumnView: View {
       VStack(spacing: 0) {
         ForEach(pinnedActions) { action in
           CandidateTabActionItemView(
-            action: action, width: width, actionHeight: actionHeight,
+            inputContext: inputContext, action: action, width: width, actionHeight: actionHeight,
             paddingBottom: paddingBottom)
         }
       }

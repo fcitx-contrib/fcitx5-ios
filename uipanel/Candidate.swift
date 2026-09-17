@@ -17,6 +17,7 @@ func getHighlightBackground(_ colorScheme: ColorScheme) -> Color {
 struct CandidateView: View {
   @Environment(\.colorScheme) var colorScheme
   let text: String
+  let inputContext: String
   let index: Int
   let highlighted: Int
   @State private var isPressed = false
@@ -28,17 +29,18 @@ struct CandidateView: View {
       .background(index == highlighted || isPressed ? getHighlightBackground(colorScheme) : .clear)
       .cornerRadius(keyCornerRadius)
       .onTapGesture {
-        selectCandidate(Int32(index))
+        selectCandidate(inputContext, Int32(index))
       }.onContextMenu(
         onPressingChanged: { pressing in
           isPressed = pressing
         },
         {
           let actions = deserialize(
-            [CandidateAction].self, String(getCandidateActions(Int32(index))))
+            [CandidateAction].self, String(getCandidateActions(inputContext, Int32(index))))
           return actions.map { action in
             MenuItem(
-              text: action.text, action: { activateCandidateAction(Int32(index), action.id) })
+              text: action.text,
+              action: { activateCandidateAction(inputContext, Int32(index), action.id) })
           }
         })
   }

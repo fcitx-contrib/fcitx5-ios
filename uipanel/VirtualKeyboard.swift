@@ -60,8 +60,7 @@ public class ViewModel: ObservableObject {
   // Have requested load more candidates starting from this index. -1 means not scrollable.
   @Published var pendingScroll = 0
   @Published var tabActions = [CandidateAction]()
-  @Published var inputContextProgram = ""
-  @Published var inputContextDocumentIdentifier = ""
+  @Published var inputContext = ""
 
   @Published var actions = [StatusAreaAction]()
   @Published var inputMethods = [InputMethod]()
@@ -110,8 +109,8 @@ public class ViewModel: ObservableObject {
   }
 
   func setCandidates(
-    _ program: String, _ documentIdentifier: String, _ auxUp: String, _ preedit: String,
-    _ caret: Int32, _ candidates: [String],
+    _ inputContext: String, _ auxUp: String, _ preedit: String, _ caret: Int32,
+    _ candidates: [String],
     _ highlighted: Int32, _ bulk: Bool, _ hasClientPreedit: Bool, _ tabActions: [CandidateAction],
     _ hasPrev: Bool, _ hasNext: Bool, _ endReached: Bool
   ) {
@@ -132,8 +131,7 @@ public class ViewModel: ObservableObject {
     self.highlighted = Int(highlighted)
     self.hasClientPreedit = hasClientPreedit
     self.tabActions = tabActions
-    inputContextProgram = program
-    inputContextDocumentIdentifier = documentIdentifier
+    self.inputContext = inputContext
     batch = (batch + 1) & 0xFFFF
     scrollEnd = endReached
     self.hasPrev = hasPrev
@@ -144,7 +142,7 @@ public class ViewModel: ObservableObject {
   }
 
   public func clearInputPanel() {
-    setCandidates("", "", "", "", 0, [], -1, false, false, [], false, false, false)
+    setCandidates("", "", "", 0, [], -1, false, false, [], false, false, false)
   }
 
   func scroll(_ candidates: [String], _ end: Bool) {
@@ -164,7 +162,8 @@ public class ViewModel: ObservableObject {
     return tabActions.isEmpty ? expandedListWidth : expandedListWidth * 5 / 6
   }
 
-  func setStatusArea(_ actions: [StatusAreaAction]) {
+  func setStatusArea(_ inputContext: String, _ actions: [StatusAreaAction]) {
+    self.inputContext = inputContext
     self.actions = actions
   }
 
@@ -349,8 +348,7 @@ public struct VirtualKeyboardView: View {
               CandidateBarView(
                 width: width, auxUp: viewModel.auxUp, preedit: viewModel.preedit,
                 caret: viewModel.caret, candidates: viewModel.candidates,
-                program: viewModel.inputContextProgram,
-                documentIdentifier: viewModel.inputContextDocumentIdentifier,
+                inputContext: viewModel.inputContext,
                 highlighted: viewModel.highlighted,
                 rowItemCount: viewModel.rowItemCount,
                 tabActions: viewModel.tabActions,
@@ -363,7 +361,8 @@ public struct VirtualKeyboardView: View {
                 pendingScroll: $viewModel.pendingScroll)
             }
             if viewModel.mode == .statusArea {
-              StatusAreaView(width: width, actions: $viewModel.actions)
+              StatusAreaView(
+                width: width, inputContext: viewModel.inputContext, actions: $viewModel.actions)
             } else if viewModel.mode == .edit {
               EditView(totalWidth: width)
             } else if viewModel.mode == .symbol {

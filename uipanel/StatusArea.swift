@@ -48,6 +48,7 @@ private func getActionView(_ icon: String, _ desc: String) -> some View {
 struct StatusAreaView: View {
   @Environment(\.totalHeight) var totalHeight
   let width: CGFloat
+  let inputContext: String
   @Binding var actions: [StatusAreaAction]
 
   private let columns = [
@@ -62,7 +63,7 @@ struct StatusAreaView: View {
           ForEach(actions) { action in
             if action.children.isEmpty {
               Button {
-                activateStatusAreaAction(action.id)
+                activateStatusAreaAction(inputContext, action.id)
               } label: {
                 VStack {
                   ZStack {
@@ -80,7 +81,7 @@ struct StatusAreaView: View {
                     Divider()
                   } else {
                     Button {
-                      activateStatusAreaAction(child.id)
+                      activateStatusAreaAction(inputContext, child.id)
                     } label: {
                       Text(child.desc)
                     }

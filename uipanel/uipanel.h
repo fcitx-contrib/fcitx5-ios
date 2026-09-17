@@ -8,8 +8,6 @@
 
 namespace fcitx {
 
-class IosInputContext;
-
 class UIPanel final : public VirtualKeyboardUserInterface {
   public:
     UIPanel(Instance *);
@@ -31,16 +29,15 @@ class UIPanel final : public VirtualKeyboardUserInterface {
     bool isVirtualKeyboardVisible() const override { return true; }
     void showVirtualKeyboard() override {}
     void hideVirtualKeyboard() override {}
-    void scroll(const std::string &program,
-                const std::string &documentIdentifier, int start, int count);
-    void page(bool next);
+    void scroll(const std::string &inputContext, int start, int count);
+    void page(const std::string &inputContext, bool next);
 
   private:
     Instance *instance_;
     std::unique_ptr<HandlerTableEntry<EventHandler>> eventHandler_;
 
-    void updateStatusArea(IosInputContext &ic);
-    void expand(IosInputContext &ic, const std::string &auxUp,
+    void updateStatusArea(InputContext &ic);
+    void expand(InputContext &ic, const std::string &auxUp,
                 const std::string &preedit, int caret, bool hasClientPreedit,
                 std::shared_ptr<CandidateList> list);
 };

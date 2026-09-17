@@ -52,7 +52,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   private static let documentPollingInterval: TimeInterval = 0.2
   nonisolated(unsafe) private static var liveControllerCount = 0
 
-  nonisolated(unsafe) var id: UInt64 = 0
+  nonisolated let uuid = UUID().uuidString
   nonisolated(unsafe) private var countedAsLive = false
   var hostingController: UIHostingController<VirtualKeyboardView>!
   var removedBySlide = ""
@@ -68,12 +68,15 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   static private var firstLoad = true
 
   private var program: String {
-    String(id)
+    uuid
   }
 
   public func isCurrentDocument(_ program: String, _ documentIdentifier: String) -> Bool {
+    isCurrentProgram(program) && currentDocumentIdentifier() == documentIdentifier
+  }
+
+  public func isCurrentProgram(_ program: String) -> Bool {
     acceptsFcitxCommands && self.program == program
-      && currentDocumentIdentifier() == documentIdentifier
   }
 
   // UIKit may temporarily return nil while switching between text inputs, even though Swift
@@ -107,7 +110,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     if documentChanged {
       vm.clearInputPanel()
     } else if shouldReset {
-      FCITX_INFO("Document state changed \(self.id)")
+      FCITX_INFO("Document state changed \(self.uuid)")
     }
     if shouldReset {
       updateTextIsEmpty()
@@ -171,7 +174,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
           self.updateDisplayModeForInputTraits()
           Fcitx.focusIn(self.program, currentDocumentState.identifier)
         } else {
-          FCITX_INFO("Document state changed \(self.id)")
+          FCITX_INFO("Document state changed \(self.uuid)")
           self.resetInput()
         }
         self.updateTextIsEmpty()
@@ -214,10 +217,9 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   override func viewDidLoad() {
-    id = UInt64(Int(bitPattern: Unmanaged.passUnretained(self).toOpaque()))
     countedAsLive = true
     Self.liveControllerCount += 1
-    FCITX_INFO("viewDidLoad \(self.id) liveControllers=\(Self.liveControllerCount)")
+    FCITX_INFO("viewDidLoad \(self.uuid) liveControllers=\(Self.liveControllerCount)")
     super.viewDidLoad()
     if KeyboardViewController.firstLoad {
       KeyboardViewController.firstLoad = false
@@ -241,7 +243,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   override func viewWillAppear(_ animated: Bool) {
-    FCITX_INFO("viewWillAppear \(self.id)")
+    FCITX_INFO("viewWillAppear \(self.uuid)")
     acceptsFcitxCommands = false
     SwiftFrontend.setClient(self)
     KeyboardUI.setClient(self)
@@ -294,7 +296,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   override func viewWillDisappear(_ animated: Bool) {
-    FCITX_INFO("viewWillDisappear \(self.id)")
+    FCITX_INFO("viewWillDisappear \(self.uuid)")
     super.viewWillDisappear(animated)
     acceptsFcitxCommands = false
     inputTraitsState = nil
@@ -307,14 +309,14 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   deinit {
     if countedAsLive {
-      Fcitx.destroyInputContext(String(id))
+      Fcitx.destroyInputContext(uuid)
       Self.liveControllerCount -= 1
-      FCITX_INFO("deinit \(self.id) liveControllers=\(Self.liveControllerCount)")
+      FCITX_INFO("deinit \(self.uuid) liveControllers=\(Self.liveControllerCount)")
     }
   }
 
   override func viewWillLayoutSubviews() {
-    FCITX_INFO("viewWillLayoutSubviews \(self.id)")
+    FCITX_INFO("viewWillLayoutSubviews \(self.uuid)")
     super.viewWillLayoutSubviews()
   }
 
