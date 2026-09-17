@@ -37,8 +37,7 @@ struct CandidateBarView: View {
   let preedit: String
   let caret: Int
   let candidates: [String]
-  let program: String
-  let documentIdentifier: String
+  let inputContext: String
   let highlighted: Int
   let rowItemCount: [Int]
   let tabActions: [CandidateAction]
@@ -79,7 +78,7 @@ struct CandidateBarView: View {
   private func loadMoreCandidates(_ start: Int, _ count: Int) {
     if pendingScroll < start {
       pendingScroll = start
-      scroll(program, documentIdentifier, Int32(start), Int32(count))
+      scroll(inputContext, Int32(start), Int32(count))
     }
   }
 
@@ -115,7 +114,7 @@ struct CandidateBarView: View {
             HStack(spacing: 0) {
               if !tabActions.isEmpty {
                 CandidateTabActionColumnView(
-                  actions: tabActions, width: tabActionColumnWidth,
+                  inputContext: inputContext, actions: tabActions, width: tabActionColumnWidth,
                   actionHeight: expandedCandidateHeight,
                   paddingBottom: paddingBottom,
                   height: expandedListHeight)
@@ -128,7 +127,8 @@ struct CandidateBarView: View {
                         let index = rowItemCount.prefix(row).reduce(0, +) + col
                         if index < candidates.count {
                           CandidateView(
-                            text: candidates[index], index: index, highlighted: highlighted
+                            text: candidates[index], inputContext: inputContext, index: index,
+                            highlighted: highlighted
                           )
                           .frame(minWidth: width / 8).frame(
                             height: expandedCandidateHeight
@@ -161,7 +161,8 @@ struct CandidateBarView: View {
               LazyHStack(spacing: candidateGap) {
                 ForEach(Array(candidates.enumerated()), id: \.offset) { index, candidate in
                   CandidateView(
-                    text: candidate, index: index, highlighted: highlighted
+                    text: candidate, inputContext: inputContext, index: index,
+                    highlighted: highlighted
                   ).onAppear {
                     if pendingScroll >= 0 && !scrollEnd
                       && index == candidates.count - candidateCountInRow
@@ -221,7 +222,7 @@ struct CandidateBarView: View {
                         proxy.scrollTo(((visibleRows.min() ?? 0) - 1) / 5 * 5, anchor: .top)
                       }
                     } else {
-                      page(false)
+                      page(inputContext, false)
                     }
                   }
                 ),
@@ -246,7 +247,7 @@ struct CandidateBarView: View {
                         proxy.scrollTo(((visibleRows.min() ?? 0) + 1) / 5 * 5 + 5, anchor: .top)
                       }
                     } else {
-                      page(true)
+                      page(inputContext, true)
                     }
                   }
                 ),
