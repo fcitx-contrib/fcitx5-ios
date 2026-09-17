@@ -30,25 +30,31 @@ struct StatusAreaButton: View {
   }
 }
 
-struct ToolbarButtons: View {
+struct DismissKeyboardButton: View {
   @Environment(\.colorScheme) var colorScheme
   @Environment(\.totalHeight) var totalHeight
 
+  var body: some View {
+    let barHeight = getBarHeight(totalHeight)
+    Button {
+      client.dismissKeyboard()
+    } label: {
+      Image(systemName: "chevron.down").resizable()
+        .foregroundColor(getNormalForeground(colorScheme))
+        .aspectRatio(contentMode: .fit).frame(width: barHeight * expandIconRatio)
+        .frame(width: barHeight * expandButtonRatio, height: barHeight)
+    }
+  }
+}
+
+struct ToolbarButtons: View {
   let width: CGFloat
 
   var body: some View {
-    let barHeight = getBarHeight(totalHeight)
     HStack(spacing: width / 6) {
       EditorButton()
       StatusAreaButton()
-      Button {
-        client.dismissKeyboard()
-      } label: {
-        Image(systemName: "chevron.down").resizable()
-          .foregroundColor(getNormalForeground(colorScheme))
-          .aspectRatio(contentMode: .fit).frame(width: barHeight * expandIconRatio)
-          .frame(width: barHeight * expandButtonRatio, height: barHeight)
-      }
+      DismissKeyboardButton()
     }
   }
 }

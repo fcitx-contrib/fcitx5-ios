@@ -116,8 +116,8 @@ public class ViewModel: ObservableObject {
   ) {
     if !auxUp.isEmpty || !preedit.isEmpty || !candidates.isEmpty {
       setDisplayMode(.candidates)
-      if preedit.isEmpty && !hasClientPreedit {
-        // For prediction candidates, collapse to single bar so that user can ignore them and type keyboard.
+      if candidates.isEmpty || (preedit.isEmpty && !hasClientPreedit) {
+        // Empty candidate lists cannot be expanded; collapse predictions so users can keep typing.
         expanded = false
       }
     } else if self.mode == .candidates {

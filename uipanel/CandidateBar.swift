@@ -264,7 +264,11 @@ struct CandidateBarView: View {
         } else {
           Rectangle().frame(width: 1, height: barHeight * expandDividerRatio).foregroundColor(
             expandDividerColor)
-          expandButton
+          if candidates.isEmpty {
+            DismissKeyboardButton()
+          } else {
+            expandButton
+          }
         }
       }
     }
