@@ -37,7 +37,7 @@ struct NumpadView: View {
     let columnXs = columnWidths.partialSums()
 
     VStack(spacing: 0) {
-      ReturnBarView(width: width)
+      ReturnBarView(width: width, showsToolbarButtons: true)
       ZStack {
         ForEach(Array(numpadRows.joined().enumerated()), id: \.offset) { index, key in
           let column = index % 5

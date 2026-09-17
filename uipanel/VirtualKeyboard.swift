@@ -96,6 +96,8 @@ public class ViewModel: ObservableObject {
   public func setDisplayMode(_ mode: DisplayMode, resetReturnMode: Bool = false) {
     if resetReturnMode {
       returnMode = .initial
+    } else if self.mode == .numpad && (mode == .edit || mode == .statusArea) {
+      returnMode = .numpad
     } else if self.mode == .candidates && (mode == .symbol || mode == .numpad) {
       returnMode = .candidates
     }
@@ -103,12 +105,8 @@ public class ViewModel: ObservableObject {
   }
 
   func popDisplayMode() {
-    if returnMode == .candidates {
-      self.mode = .candidates
-      returnMode = .initial
-    } else {
-      self.mode = .initial
-    }
+    self.mode = returnMode
+    returnMode = .initial
   }
 
   func setCandidates(
