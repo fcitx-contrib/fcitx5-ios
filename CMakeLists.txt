@@ -148,3 +148,6 @@ fcitx5_import_addons(FcitxRuntime
     ADDONS ${COMMON_TARGETS} ${RUNTIME_ADDONS}
 )
 set_target_properties(FcitxRuntime PROPERTIES INTERFACE_LINK_LIBRARIES "")
+
+enable_testing()
+add_subdirectory(tests)

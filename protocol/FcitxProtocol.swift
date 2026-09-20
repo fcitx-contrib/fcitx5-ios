@@ -14,6 +14,8 @@ public protocol FcitxProtocol: AnyObject {
   func cut()
   func copy()
   func paste()
+  func undo()
+  func redo()
   func globe()
   func setCurrentInputMethod(_ inputMethod: String)
   func dismissKeyboard()

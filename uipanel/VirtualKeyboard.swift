@@ -68,6 +68,8 @@ public class ViewModel: ObservableObject {
   @Published var enterLabel = ""
   @Published var enterHighlight = false
   @Published var textIsEmpty = false
+  @Published var canUndo = false
+  @Published var canRedo = false
   @Published var layer = "default"
   @Published var lock = false
 
@@ -183,6 +185,11 @@ public class ViewModel: ObservableObject {
 
   public func setTextIsEmpty(_ isEmpty: Bool) {
     textIsEmpty = isEmpty
+  }
+
+  public func setUndoRedo(_ canUndo: Bool, _ canRedo: Bool) {
+    self.canUndo = canUndo
+    self.canRedo = canRedo
   }
 
   public func setReturnKeyType(_ type: UIReturnKeyType?) {
