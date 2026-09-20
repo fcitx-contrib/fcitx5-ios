@@ -93,14 +93,18 @@ public class ViewModel: ObservableObject {
   var hasPreedit: Bool { !preedit.isEmpty || hasClientPreedit }
 
   public func setDisplayMode(_ mode: DisplayMode, resetReturnMode: Bool = false) {
-    if resetReturnMode {
+    let shouldResetInput = self.mode == .candidates && mode == .numpad
+    if resetReturnMode || mode == .numpad {
       returnMode = .initial
     } else if self.mode == .numpad && (mode == .edit || mode == .statusArea) {
       returnMode = .numpad
-    } else if self.mode == .candidates && (mode == .symbol || mode == .numpad) {
+    } else if self.mode == .candidates && mode == .symbol {
       returnMode = .candidates
     }
     self.mode = mode
+    if shouldResetInput {
+      client.resetInput()
+    }
   }
 
   func popDisplayMode() {
