@@ -4,7 +4,6 @@ struct ReturnBarView: View {
   @Environment(\.colorScheme) var colorScheme
   @Environment(\.totalHeight) var totalHeight
   let width: CGFloat
-  var showsToolbarButtons = false
   var showsBackspace = false
   var isLocked: Binding<Bool>? = nil
 
@@ -28,9 +27,6 @@ struct ReturnBarView: View {
         }
       }
       Spacer()
-      if showsToolbarButtons {
-        ToolbarButtons(width: width)
-      }
       if showsBackspace {
         let backspaceWidth = width * 0.15
         BackspaceView(x: 0, y: 0, width: backspaceWidth, height: barHeight)

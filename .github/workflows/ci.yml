@@ -88,6 +88,10 @@ jobs:
         run: |
           ./scripts/check-validity.sh ${{ matrix.platform }}
 
+      - name: Test
+        if: ${{ matrix.platform == 'OS64' }}
+        run: ctest --test-dir build/OS64 --output-on-failure
+
       - name: Install
         if: ${{ matrix.platform == 'SIMULATORARM64' }}
         run: |

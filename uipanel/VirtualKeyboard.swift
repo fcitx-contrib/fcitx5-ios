@@ -68,6 +68,8 @@ public class ViewModel: ObservableObject {
   @Published var enterLabel = ""
   @Published var enterHighlight = false
   @Published var textIsEmpty = false
+  @Published var canUndo = false
+  @Published var canRedo = false
   @Published var layer = "default"
   @Published var lock = false
 
@@ -185,6 +187,11 @@ public class ViewModel: ObservableObject {
     textIsEmpty = isEmpty
   }
 
+  public func setUndoRedo(_ canUndo: Bool, _ canRedo: Bool) {
+    self.canUndo = canUndo
+    self.canRedo = canRedo
+  }
+
   public func setReturnKeyType(_ type: UIReturnKeyType?) {
     enterHighlight = true
     switch type {
@@ -290,6 +297,7 @@ public class ViewModel: ObservableObject {
     if hasPreedit || !candidates.isEmpty {
       if step == 0 {
         client.resetInput()
+        client.slideBackspace(step)
       }
       return
     }

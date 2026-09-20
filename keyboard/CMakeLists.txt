@@ -16,6 +16,7 @@ function(add_keyboard_extension keyboard language targets)
     set(extension "${keyboard}Extension")
     add_executable(${extension} MACOSX_BUNDLE
         "${PROJECT_SOURCE_DIR}/keyboard/KeyboardViewController.swift"
+        "${PROJECT_SOURCE_DIR}/keyboard/UndoRedo.swift"
         "${PROJECT_SOURCE_DIR}/keyboard/util.swift"
         "${PROJECT_SOURCE_DIR}/keyboard/SyncConfig.swift"
     )

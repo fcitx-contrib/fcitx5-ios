@@ -24,15 +24,6 @@ private func syncLocale() -> String {
 
 @MainActor
 class KeyboardViewController: UIInputViewController, FcitxProtocol {
-  private struct DocumentState: Equatable {
-    // Changing focus between TextFields on the same app screen may not call keyboard's viewWillAppear.
-    // iOS issues a new documentIdentifier even when focus returns to a previously focused TextField.
-    let identifier: String
-    let contextBeforeInput: String?
-    let selectedText: String?
-    let contextAfterInput: String?
-  }
-
   private struct InputTraitsState: Equatable {
     let documentIdentifier: String
     let keyboardType: UIKeyboardType?
@@ -60,9 +51,13 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   // documentIdentifier may remain unchanged between viewWillDisappear and deinit. This also stays
   // false for the config-sync document, where Fcitx must not modify the proxy.
   private var acceptsFcitxCommands = false
-  private var documentState: DocumentState?
+  private var documentState: UndoRedoDocumentState?
   private var inputTraitsState: InputTraitsState?
   private var documentPollingTimer: Timer?
+  private let undoRedoManager = UndoRedoManager()
+  private var isChangingLines = false
+  private var isSlidingBackspace = false
+  private var hasMarkedText = false
   static let keyboard = Bundle.main.bundleURL.deletingPathExtension().lastPathComponent
   static private var clipboardText = ""
   static private var firstLoad = true
@@ -94,19 +89,49 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     return identifier.uuidString
   }
 
-  private func currentDocumentState() -> DocumentState {
-    DocumentState(
+  private func currentDocumentState() -> UndoRedoDocumentState {
+    UndoRedoDocumentState(
       identifier: currentDocumentIdentifier(),
       contextBeforeInput: textDocumentProxy.documentContextBeforeInput,
       selectedText: textDocumentProxy.selectedText,
       contextAfterInput: textDocumentProxy.documentContextAfterInput)
   }
 
+  private func updateUndoRedoAvailability() {
+    vm.setUndoRedo(undoRedoManager.canUndo, undoRedoManager.canRedo)
+  }
+
+  private func observeDocumentState(_ state: UndoRedoDocumentState) {
+    undoRedoManager.update(to: state)
+    documentState = state
+    updateUndoRedoAvailability()
+  }
+
+  private func observeCurrentDocumentState() {
+    observeDocumentState(currentDocumentState())
+  }
+
+  private func resetUndoRedoForCurrentDocument() {
+    let state = currentDocumentState()
+    undoRedoManager.reset(to: state)
+    documentState = state
+    updateUndoRedoAvailability()
+  }
+
   private func surroundingTextForInputEvent() -> (SurroundingText, String, Bool) {
     let currentDocumentState = currentDocumentState()
     let shouldReset = currentDocumentState != documentState
     let documentChanged = currentDocumentState.identifier != documentState?.identifier
-    documentState = currentDocumentState
+    if documentChanged {
+      hasMarkedText = false
+      undoRedoManager.reset(to: currentDocumentState)
+      documentState = currentDocumentState
+      updateUndoRedoAvailability()
+    } else if hasMarkedText {
+      documentState = currentDocumentState
+    } else {
+      observeDocumentState(currentDocumentState)
+    }
     if documentChanged {
       vm.clearInputPanel()
     } else if shouldReset {
@@ -159,6 +184,8 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   // Poll is needed because selectionDidChange is never called even for a standard TextField.
   private func startDocumentPolling() {
     documentState = currentDocumentState()
+    undoRedoManager.reset(to: documentState)
+    updateUndoRedoAvailability()
     guard documentPollingTimer == nil else { return }
 
     let timer = Timer(timeInterval: Self.documentPollingInterval, repeats: true) {
@@ -166,17 +193,41 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       MainActor.assumeIsolated {
         guard let self else { return }
         let currentDocumentState = self.currentDocumentState()
-        defer { self.documentState = currentDocumentState }
-        // Known issue: if 2 rows are identical, changing between with caret at same position won't call reset.
-        guard currentDocumentState != self.documentState else { return }
         if currentDocumentState.identifier != self.documentState?.identifier {
+          self.isChangingLines = false
+          self.isSlidingBackspace = false
+          self.hasMarkedText = false
+          self.undoRedoManager.reset(to: currentDocumentState)
+          self.documentState = currentDocumentState
+          self.updateUndoRedoAvailability()
           vm.clearInputPanel()
           self.updateDisplayModeForInputTraits()
           Fcitx.focusIn(self.program, currentDocumentState.identifier)
-        } else {
-          FCITX_INFO("Document state changed \(self.uuid)")
-          self.resetInput()
+          self.updateTextIsEmpty()
+          return
         }
+        if self.isChangingLines {
+          self.undoRedoManager.reset(to: currentDocumentState)
+          self.documentState = currentDocumentState
+          self.updateUndoRedoAvailability()
+          self.updateTextIsEmpty()
+          return
+        }
+        if self.isSlidingBackspace {
+          self.documentState = currentDocumentState
+          self.updateTextIsEmpty()
+          return
+        }
+        if self.hasMarkedText {
+          self.documentState = currentDocumentState
+          self.updateTextIsEmpty()
+          return
+        }
+        defer { self.observeDocumentState(currentDocumentState) }
+        // Known issue: if 2 rows are identical, changing between with caret at same position won't call reset.
+        guard currentDocumentState != self.documentState else { return }
+        FCITX_INFO("Document state changed \(self.uuid)")
+        self.resetInput()
         self.updateTextIsEmpty()
       }
     }
@@ -188,6 +239,11 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     documentPollingTimer?.invalidate()
     documentPollingTimer = nil
     documentState = nil
+    undoRedoManager.reset()
+    isChangingLines = false
+    isSlidingBackspace = false
+    hasMarkedText = false
+    updateUndoRedoAvailability()
   }
 
   private func updateTextIsEmpty() {
@@ -343,51 +399,89 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     // In the latter case, it will be '\n' if caret is at the beginning of a non-first line.
     switch code {
     case "ArrowDown":
+      let contextAfterInput = textDocumentProxy.documentContextAfterInput ?? ""
+      guard contextAfterInput.contains("\n") else { return }
+      isChangingLines = true
+      resetUndoRedoForCurrentDocument()
       let offset = lastLine(textDocumentProxy.documentContextBeforeInput ?? "").count
-      let step = firstLine(textDocumentProxy.documentContextAfterInput ?? "").utf16.count
+      let step = firstLine(contextAfterInput).utf16.count
       textDocumentProxy.adjustTextPosition(byCharacterOffset: step)
       DispatchQueue.main.async {
-        guard self.currentDocumentIdentifier() == documentIdentifier else { return }
+        guard self.currentDocumentIdentifier() == documentIdentifier else {
+          self.isChangingLines = false
+          self.resetUndoRedoForCurrentDocument()
+          return
+        }
         // Move to the start of next line if exists.
         self.textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
         // Must have a delay, otherwise nextLineLength is always 0.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-          guard self.currentDocumentIdentifier() == documentIdentifier else { return }
+          guard self.currentDocumentIdentifier() == documentIdentifier else {
+            self.isChangingLines = false
+            self.resetUndoRedoForCurrentDocument()
+            return
+          }
           let textAfter = self.textDocumentProxy.documentContextAfterInput ?? ""
           let column = min(offset, firstLine(textAfter).count)
           self.textDocumentProxy.adjustTextPosition(
             byCharacterOffset: textAfter.prefix(column).utf16.count)
+          self.isChangingLines = false
+          self.resetUndoRedoForCurrentDocument()
         }
       }
     case "ArrowLeft":
       let textBefore = textDocumentProxy.documentContextBeforeInput ?? ""
+      let changesLine = textBefore.hasSuffix("\n")
       textDocumentProxy.adjustTextPosition(
         byCharacterOffset: -max(1, textBefore.suffix(1).utf16.count))
+      if changesLine {
+        resetUndoRedoForCurrentDocument()
+      }
     case "ArrowRight":
       let textAfter = textDocumentProxy.documentContextAfterInput ?? ""
+      let changesLine = textAfter.hasPrefix("\n")
       textDocumentProxy.adjustTextPosition(
         byCharacterOffset: max(1, textAfter.prefix(1).utf16.count))
+      if changesLine {
+        resetUndoRedoForCurrentDocument()
+      }
     case "ArrowUp":
-      let textBefore = lastLine(textDocumentProxy.documentContextBeforeInput ?? "")
+      let contextBeforeInput = textDocumentProxy.documentContextBeforeInput ?? ""
+      guard contextBeforeInput.contains("\n") else { return }
+      isChangingLines = true
+      resetUndoRedoForCurrentDocument()
+      let textBefore = lastLine(contextBeforeInput)
       let offset = textBefore.count
       textDocumentProxy.adjustTextPosition(byCharacterOffset: -textBefore.utf16.count)
       DispatchQueue.main.async {
-        guard self.currentDocumentIdentifier() == documentIdentifier else { return }
+        guard self.currentDocumentIdentifier() == documentIdentifier else {
+          self.isChangingLines = false
+          self.resetUndoRedoForCurrentDocument()
+          return
+        }
         // Move to the end of previous line if exists.
         self.textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
         // Must have a delay, otherwise previousLineLength may always be 0.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-          guard self.currentDocumentIdentifier() == documentIdentifier else { return }
+          guard self.currentDocumentIdentifier() == documentIdentifier else {
+            self.isChangingLines = false
+            self.resetUndoRedoForCurrentDocument()
+            return
+          }
           let textBefore = lastLine(self.textDocumentProxy.documentContextBeforeInput ?? "")
           if textBefore.count > offset {
             self.textDocumentProxy.adjustTextPosition(
               byCharacterOffset:
                 -textBefore.suffix(textBefore.count - offset).utf16.count)
           }
+          self.isChangingLines = false
+          self.resetUndoRedoForCurrentDocument()
         }
       }
     case "Backspace":
+      observeCurrentDocumentState()
       textDocumentProxy.deleteBackward()
+      observeCurrentDocumentState()
       updateTextIsEmpty()
     case "End":
       let textAfter = textDocumentProxy.documentContextAfterInput ?? ""
@@ -417,14 +511,21 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   public func commitString(_ commit: String) {
+    if !hasMarkedText {
+      observeCurrentDocumentState()
+    }
     textDocumentProxy.insertText(commit)
-    documentState = currentDocumentState()
+    hasMarkedText = false
+    observeCurrentDocumentState()
     updateTextIsEmpty()
   }
 
   public func deleteSurroundingText(_ offset: Int, _ size: Int) {
     guard size > 0 else { return }
 
+    if !hasMarkedText {
+      observeCurrentDocumentState()
+    }
     let state = currentDocumentState()
     let before = state.contextBeforeInput ?? ""
     let selected = state.selectedText ?? ""
@@ -461,7 +562,11 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     for _ in 0..<deletionCount {
       textDocumentProxy.deleteBackward()
     }
-    documentState = currentDocumentState()
+    if hasMarkedText {
+      documentState = currentDocumentState()
+    } else {
+      observeCurrentDocumentState()
+    }
     updateTextIsEmpty()
   }
 
@@ -470,7 +575,16 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   public func setPreedit(_ preedit: String, _ caret: Int) {
+    if !preedit.isEmpty && !hasMarkedText {
+      observeCurrentDocumentState()
+      hasMarkedText = true
+    }
     textDocumentProxy.setMarkedText(preedit, selectedRange: NSRange(location: caret, length: 0))
+    documentState = currentDocumentState()
+    if preedit.isEmpty {
+      hasMarkedText = false
+      observeCurrentDocumentState()
+    }
   }
 
   private func writeToClipboard(_ text: String) {
@@ -483,8 +597,10 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   public func cut() {
     if let text = textDocumentProxy.selectedText {
+      observeCurrentDocumentState()
       writeToClipboard(text)
       textDocumentProxy.deleteBackward()
+      observeCurrentDocumentState()
       updateTextIsEmpty()
     }
   }
@@ -504,6 +620,91 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     }
   }
 
+  private func applyUndoRedoReplacement(_ replacement: UndoRedoReplacement)
+    -> UndoRedoDocumentState?
+  {
+    let state = currentDocumentState()
+    guard let line = state.lineForUndoRedo,
+      replacement.range.lowerBound >= 0,
+      replacement.range.upperBound <= line.text.count,
+      replacement.finalCaret >= 0,
+      replacement.finalCaret <= replacement.expectedText.count
+    else {
+      return nil
+    }
+
+    let selectedRange = line.selectionStart..<line.selectionEnd
+    if !line.selectedText.isEmpty {
+      if selectedRange == replacement.range {
+        if replacement.text.isEmpty {
+          textDocumentProxy.deleteBackward()
+        } else {
+          textDocumentProxy.insertText(replacement.text)
+        }
+      } else {
+        // Collapse an unrelated selection at its end without changing the document text, then
+        // apply the undo/redo operation at its recorded range.
+        textDocumentProxy.insertText(line.selectedText)
+        textDocumentProxy.adjustTextPosition(
+          byCharacterOffset: utf16Offset(
+            in: line.text, from: line.selectionEnd, to: replacement.range.upperBound))
+        for _ in replacement.range {
+          textDocumentProxy.deleteBackward()
+        }
+        if !replacement.text.isEmpty {
+          textDocumentProxy.insertText(replacement.text)
+        }
+      }
+    } else {
+      let targetEnd = replacement.range.upperBound
+      textDocumentProxy.adjustTextPosition(
+        byCharacterOffset: utf16Offset(in: line.text, from: line.selectionStart, to: targetEnd))
+      for _ in replacement.range {
+        textDocumentProxy.deleteBackward()
+      }
+      if !replacement.text.isEmpty {
+        textDocumentProxy.insertText(replacement.text)
+      }
+    }
+
+    let naturalCaret = replacement.range.lowerBound + replacement.text.count
+    textDocumentProxy.adjustTextPosition(
+      byCharacterOffset: utf16Offset(
+        in: replacement.expectedText, from: naturalCaret, to: replacement.finalCaret))
+    return currentDocumentState()
+  }
+
+  private func utf16Offset(in text: String, from start: Int, to end: Int) -> Int {
+    let startIndex = text.index(text.startIndex, offsetBy: start)
+    let endIndex = text.index(text.startIndex, offsetBy: end)
+    if start <= end {
+      return text[startIndex..<endIndex].utf16.count
+    }
+    return -text[endIndex..<startIndex].utf16.count
+  }
+
+  public func undo() {
+    resetInput()
+    let state = currentDocumentState()
+    undoRedoManager.undo(from: state) { replacement in
+      self.applyUndoRedoReplacement(replacement)
+    }
+    documentState = currentDocumentState()
+    updateUndoRedoAvailability()
+    updateTextIsEmpty()
+  }
+
+  public func redo() {
+    resetInput()
+    let state = currentDocumentState()
+    undoRedoManager.redo(from: state) { replacement in
+      self.applyUndoRedoReplacement(replacement)
+    }
+    documentState = currentDocumentState()
+    updateUndoRedoAvailability()
+    updateTextIsEmpty()
+  }
+
   public func globe() {
     Fcitx.toggle()
   }
@@ -515,20 +716,36 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   public func slideBackspace(_ step: Int) {
     if step == 0 {
       removedBySlide = ""
+      if isSlidingBackspace {
+        isSlidingBackspace = false
+        observeCurrentDocumentState()
+        updateTextIsEmpty()
+      }
     } else if step < 0 {
+      if !isSlidingBackspace {
+        observeCurrentDocumentState()
+        isSlidingBackspace = true
+      }
       let textBefore = textDocumentProxy.documentContextBeforeInput ?? ""
       let newRemoval = String(textBefore.suffix(-step))
       removedBySlide = newRemoval + removedBySlide
       for _ in 0..<newRemoval.count {
         textDocumentProxy.deleteBackward()
       }
+      documentState = currentDocumentState()
       updateTextIsEmpty()
     } else {
+      if !isSlidingBackspace {
+        observeCurrentDocumentState()
+        isSlidingBackspace = true
+      }
       let refillCount = min(step, removedBySlide.count)
       let index = removedBySlide.index(removedBySlide.startIndex, offsetBy: refillCount)
       let refill = String(removedBySlide[..<index])
       removedBySlide = String(removedBySlide[index...])
-      commitString(refill)
+      textDocumentProxy.insertText(refill)
+      documentState = currentDocumentState()
+      updateTextIsEmpty()
     }
   }
 
