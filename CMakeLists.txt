@@ -63,6 +63,7 @@ option(ENABLE_XDGAUTOSTART "" OFF)
 option(ENABLE_EMOJI "" OFF)
 option(ENABLE_LIBUUID "" OFF)
 option(BUILD_SPELL_DICT "" OFF)
+option(ENABLE_DL "" OFF)
 
 find_host_package(PkgConfig)
 find_host_package(Gettext)
