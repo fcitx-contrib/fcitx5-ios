@@ -635,11 +635,25 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
     let selectedRange = line.selectionStart..<line.selectionEnd
     if !line.selectedText.isEmpty {
-      guard selectedRange == replacement.range else { return nil }
-      if replacement.text.isEmpty {
-        textDocumentProxy.deleteBackward()
+      if selectedRange == replacement.range {
+        if replacement.text.isEmpty {
+          textDocumentProxy.deleteBackward()
+        } else {
+          textDocumentProxy.insertText(replacement.text)
+        }
       } else {
-        textDocumentProxy.insertText(replacement.text)
+        // Collapse an unrelated selection at its end without changing the document text, then
+        // apply the undo/redo operation at its recorded range.
+        textDocumentProxy.insertText(line.selectedText)
+        textDocumentProxy.adjustTextPosition(
+          byCharacterOffset: utf16Offset(
+            in: line.text, from: line.selectionEnd, to: replacement.range.upperBound))
+        for _ in replacement.range {
+          textDocumentProxy.deleteBackward()
+        }
+        if !replacement.text.isEmpty {
+          textDocumentProxy.insertText(replacement.text)
+        }
       }
     } else {
       let targetEnd = replacement.range.upperBound

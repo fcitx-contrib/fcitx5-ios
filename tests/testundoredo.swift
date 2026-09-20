@@ -171,6 +171,31 @@ private func testCaretMoveWithinLine(_ test: TestContext) {
 }
 
 @MainActor
+private func testUndoAfterSelectionChange(_ test: TestContext) {
+  let manager = UndoRedoManager(now: { 0 })
+  var text = ""
+  var currentState = state(text, 0)
+  manager.reset(to: currentState)
+
+  text = "a"
+  currentState = state(text, 1)
+  manager.update(to: currentState)
+  text = "ab"
+  currentState = state(text, 2)
+  manager.update(to: currentState)
+
+  currentState = state(text, 1, selected: 1..<2)
+  manager.update(to: currentState)
+  test.expect(manager.canUndo, "same-line selection changes should preserve undo history")
+  test.expect(
+    manager.undo(from: currentState) {
+      replace($0, text: &text, currentState: &currentState)
+    }, "undo should work after selecting text on the same line")
+  test.expect(text.isEmpty, "undo should remove the merged insertion despite the selection")
+  test.expect(manager.canRedo, "undo after a selection change should enable redo")
+}
+
+@MainActor
 private func testHistoryInvalidation(_ test: TestContext) {
   let manager = UndoRedoManager(now: { 0 })
   manager.reset(to: state("abc", 3, afterSuffix: "\nab"))
@@ -198,6 +223,7 @@ struct UndoRedoTest {
     testSelectionReplacementWithRepeatedText(test)
     testCutFromHostEditMenu(test)
     testCaretMoveWithinLine(test)
+    testUndoAfterSelectionChange(test)
     testHistoryInvalidation(test)
     if test.failures > 0 {
       fatalError("\(test.failures) undo/redo tests failed")
