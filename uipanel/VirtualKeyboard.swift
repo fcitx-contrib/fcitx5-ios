@@ -297,6 +297,7 @@ public class ViewModel: ObservableObject {
     if hasPreedit || !candidates.isEmpty {
       if step == 0 {
         client.resetInput()
+        client.slideBackspace(step)
       }
       return
     }
