@@ -206,8 +206,9 @@ copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/quickphrase
 copy_to(app copy "${FCITX5_MODULE_BINARY_DIR}/unicode/unicode.conf" "${ADDON_PREFIX}/unicode.conf")
 copy_to(app copy "${PROJECT_SOURCE_DIR}/fcitx5/src/modules/unicode/charselectdata" "share/fcitx5/unicode/charselectdata")
 
-# Copy layouts, icons, profile and Swift translations.
+# Copy layouts, symbols, icons, profile and Swift translations.
 copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/fcitx5-keyboard-layouts/layout" "share/layout")
+copy_to(app copy_directory "${PROJECT_SOURCE_DIR}/fcitx5-keyboard-layouts/symbol" "share/symbol")
 
 add_dependencies(${BUNDLE_NAME} generate_icons)
 set(ICON_FILES "AppIcon60x60@2x.png" "AppIcon76x76@2x~ipad.png" "Assets.car")

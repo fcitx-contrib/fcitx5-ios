@@ -14,7 +14,7 @@ private func getActionView(_ icon: String, _ desc: String) -> some View {
   case "fcitx-chttrans-inactive":
     text = "简"
   case "fcitx-fullwidth-active":
-    symbol = "moonphase.new.moon"
+    symbol = "moonphase.full.moon"
   case "fcitx-fullwidth-inactive":
     symbol = "moon.fill"
   case "fcitx-punc-active":
