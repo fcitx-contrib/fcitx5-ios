@@ -1,42 +1,92 @@
+import Foundation
 import SwiftUI
+import SwiftUtil
 
 struct SymbolCategory: Identifiable {
   var id: String { key }
   let key: String
+  let name: String
   let symbols: [String]
+  let symbolWidths: [String: SymbolWidth]
 }
 
-let builtinCategories: [SymbolCategory] = [
-  SymbolCategory(
-    key: "pinyin",
-    symbols: [
-      "ā", "á", "ǎ", "à",
-      "ō", "ó", "ǒ", "ò",
-      "ē", "é", "ě", "è",
-      "ī", "í", "ǐ", "ì",
-      "ū", "ú", "ǔ", "ù",
-      "ü", "ǖ", "ǘ", "ǚ", "ǜ",
-      "ń", "ň",
-    ]),
-  SymbolCategory(
-    key: "greek",
-    symbols: [
-      "α", "β", "γ", "δ", "ε", "ζ", "η", "θ", "ι", "κ", "λ", "μ",
-      "ν", "ξ", "ο", "π", "ρ", "σ", "τ", "υ", "φ", "χ", "ψ", "ω",
-      "Α", "Β", "Γ", "Δ", "Ε", "Ζ", "Η", "Θ", "Ι", "Κ", "Λ", "Μ",
-      "Ν", "Ξ", "Ο", "Π", "Ρ", "Σ", "Τ", "Υ", "Φ", "Χ", "Ψ", "Ω",
-    ]),
+enum SymbolWidth {
+  case halfWidth
+  case fullWidth
+
+  var badgeImageName: String {
+    switch self {
+    case .halfWidth:
+      return "moon.fill"
+    case .fullWidth:
+      return "moonphase.full.moon"
+    }
+  }
+}
+
+private struct SymbolCategoryFile: Decodable {
+  let name: [String: String]
+  let symbols: [String]
+  let halfWidth: [String]?
+  let fullWidth: [String]?
+}
+
+let builtinCategoryKeys = [
+  "chinese_punctuation",
+  "english_punctuation",
+  "common",
+  "math",
+  "unit",
+  "currency",
+  "sequence",
+  "superscript_subscript",
+  "arrow",
+  "shape",
+  "special",
+  "radical",
+  "pinyin",
+  "bopomofo",
+  "phonetic",
+  "greek",
+  "latin",
+  "cyrillic",
+  "hiragana",
+  "katakana",
 ]
+
+let builtinCategories: [SymbolCategory] = {
+  let locale = getLocale()
+  let language = locale.split(whereSeparator: { $0 == "_" || $0 == "-" }).first.map(String.init)
+  return builtinCategoryKeys.compactMap { key in
+    let url = appBundleUrl.appendingPathComponent("share/symbol/\(key).json")
+    do {
+      let file = try JSONDecoder().decode(SymbolCategoryFile.self, from: Data(contentsOf: url))
+      let name = file.name[locale] ?? language.flatMap { file.name[$0] } ?? file.name["en"] ?? key
+      var symbolWidths: [String: SymbolWidth] = [:]
+      for symbol in file.halfWidth ?? [] {
+        symbolWidths[symbol] = .halfWidth
+      }
+      for symbol in file.fullWidth ?? [] {
+        symbolWidths[symbol] = .fullWidth
+      }
+      return SymbolCategory(
+        key: key, name: name, symbols: file.symbols, symbolWidths: symbolWidths)
+    } catch {
+      FCITX_ERROR("Failed to load symbol category \(key): \(error)")
+      return nil
+    }
+  }
+}()
 
 struct SymbolButton: View {
   @Environment(\.colorScheme) var colorScheme
   @Environment(\.totalHeight) var totalHeight
 
   let symbol: String
+  let symbolWidth: SymbolWidth?
   let action: () -> Void
 
-  @GestureState private var isPressed = false
-  @State private var dragExceededThreshold = false
+  @State private var isPressed = false
 
   var body: some View {
     Text(symbol)
@@ -44,23 +94,24 @@ struct SymbolButton: View {
       .frame(height: getKeyboardHeight(totalHeight) / 5)
       .frame(maxWidth: .infinity)
       .background(isPressed ? getFunctionBackground(colorScheme) : Color.clear)
-      // Use simultaneousGesture so that scrolling behavior is preserved.
-      .simultaneousGesture(
-        DragGesture(minimumDistance: 0)
-          .updating($isPressed) { _, state, _ in
-            state = true
-          }
-          .onChanged { value in
-            let distance = hypot(value.translation.width, value.translation.height)
-            dragExceededThreshold = dragExceededThreshold || distance > 10
-          }
-          .onEnded { _ in
-            if !dragExceededThreshold {
-              action()
-            }
-            dragExceededThreshold = false
-          }
-      )
+      .overlay(alignment: .topTrailing) {
+        if let symbolWidth {
+          Image(systemName: symbolWidth.badgeImageName)
+            .font(.system(size: 7))
+            .foregroundStyle(.secondary)
+            .padding(4)
+            .accessibilityHidden(true)
+        }
+      }
+      .contentShape(Rectangle())
+      .onTapGesture {
+        action()
+      }
+      .onLongPressGesture(
+        minimumDuration: .infinity,
+        pressing: { pressing in
+          isPressed = pressing
+        }, perform: {})
   }
 }
 
@@ -70,7 +121,7 @@ struct SymbolView: View {
   @ObservedObject private var viewModel = vm
   let width: CGFloat
 
-  @State private var selectedKey = builtinCategories.first!.key
+  @State private var selectedKey = builtinCategories.first?.key ?? ""
 
   var body: some View {
     VStack(spacing: 0) {
@@ -79,9 +130,11 @@ struct SymbolView: View {
         ScrollView {
           VStack(spacing: 0) {
             ForEach(builtinCategories) { category in
-              Text(category.key)
-                .font(.system(size: 24))
-                .frame(height: totalHeight / 5)
+              Text(category.name)
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
+                .padding(.horizontal, 2)
+                .frame(height: getKeyboardHeight(totalHeight) / 5)
                 .frame(maxWidth: .infinity)
                 .background(
                   selectedKey == category.key ? getFunctionBackground(colorScheme) : Color.clear
@@ -92,6 +145,7 @@ struct SymbolView: View {
             }
           }
         }.frame(width: width / 5)
+        Divider().frame(width: 1)
         if let category = builtinCategories.first(where: { $0.key == selectedKey }) {
           ScrollViewReader { proxy in
             ScrollView {
@@ -101,7 +155,7 @@ struct SymbolView: View {
                   columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 5), spacing: 0
                 ) {
                   ForEach(category.symbols, id: \.self) { symbol in
-                    SymbolButton(symbol: symbol) {
+                    SymbolButton(symbol: symbol, symbolWidth: category.symbolWidths[symbol]) {
                       client.resetInput()
                       client.commitString(symbol)
                       if !viewModel.symbolLocked {
@@ -113,7 +167,7 @@ struct SymbolView: View {
               }.onChange(of: selectedKey) { _ in
                 proxy.scrollTo("top", anchor: .top)
               }
-            }.frame(width: width * 4 / 5)
+            }.frame(width: width * 4 / 5 - 1)
           }
         }
       }.frame(height: getKeyboardHeight(totalHeight))
