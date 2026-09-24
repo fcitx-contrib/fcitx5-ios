@@ -3,6 +3,8 @@
 ## Memory limit
 Simulator doesn't have the 77MB memory limit for keyboard extension.
 
+See [Keyboard extension memory profiling](memory.md) for the simulator measurement procedure and guidance on interpreting physical footprint, live heap, and allocator high-water behavior.
+
 ## Clipboard
 To access system clipboard, full access is needed on real device but not on simulator.
 

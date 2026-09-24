@@ -188,8 +188,12 @@ public class ViewModel: ObservableObject {
   }
 
   public func setUndoRedo(_ canUndo: Bool, _ canRedo: Bool) {
-    self.canUndo = canUndo
-    self.canRedo = canRedo
+    if self.canUndo != canUndo {
+      self.canUndo = canUndo
+    }
+    if self.canRedo != canRedo {
+      self.canRedo = canRedo
+    }
   }
 
   public func setReturnKeyType(_ type: UIReturnKeyType?) {
