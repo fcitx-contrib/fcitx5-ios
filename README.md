@@ -86,6 +86,8 @@ keyboard[14871] Corpse allowed 1 of 5
 1817600.392 memorystatus: killing_specific_process pid 14871 [keyboard] (per-process-limit 100 16s rf:-) 78848KB - memorystatus_available_pages: 121472
 ```
 
+See [Keyboard extension memory profiling](docs/memory.md) for a repeatable investigation procedure and [the September 2026 Chinese keyboard investigation](docs/memory-investigations/chinese-2026-09.md) for a worked example.
+
 ### Memory monitor
 Use `/Applications/Xcode.app/Contents/Applications/Instruments.app`'s `Activity Monitor`.
 

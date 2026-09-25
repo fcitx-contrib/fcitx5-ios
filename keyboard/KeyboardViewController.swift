@@ -223,12 +223,12 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
           self.updateTextIsEmpty()
           return
         }
-        defer { self.observeDocumentState(currentDocumentState) }
         // Known issue: if 2 rows are identical, changing between with caret at same position won't call reset.
         guard currentDocumentState != self.documentState else { return }
         FCITX_INFO("Document state changed \(self.uuid)")
         self.resetInput()
         self.updateTextIsEmpty()
+        self.observeDocumentState(currentDocumentState)
       }
     }
     RunLoop.main.add(timer, forMode: .common)
