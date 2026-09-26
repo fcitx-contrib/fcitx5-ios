@@ -47,7 +47,7 @@ file=Fcitx5-arm64.tar.bz2
 tar xf cache/$file -C $SPELL_DICT_DIR --strip-components=5 Fcitx5.app/Contents/share/fcitx5/spell/en_dict.fscd
 
 files=(
-  chinese-addons-slim.tar.bz2
+  chinese-addons-any.tar.bz2
   rime-any.tar.bz2
 )
 
