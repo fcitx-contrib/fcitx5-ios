@@ -101,6 +101,19 @@ struct StatusAreaView: View {
               }
             }
           }
+          Button(role: .destructive) {
+            client.terminateExtension()
+          } label: {
+            VStack {
+              ZStack {
+                Circle().fill(Color.red).frame(
+                  width: circleDiameter, height: circleDiameter)
+                Image(systemName: "power").resizable().scaledToFit().frame(width: 24)
+                  .foregroundColor(.white)
+              }
+              Text("Terminate").foregroundColor(.primary)
+            }
+          }.accessibilityIdentifier("Terminate extension")
         }
       }.frame(height: getKeyboardHeight(totalHeight))
     }

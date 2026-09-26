@@ -19,6 +19,7 @@ public protocol FcitxProtocol: AnyObject {
   func globe()
   func setCurrentInputMethod(_ inputMethod: String)
   func dismissKeyboard()
+  func terminateExtension()
   func slideBackspace(_ step: Int)
   func syncConfig()
 }
