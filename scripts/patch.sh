@@ -16,6 +16,7 @@ apply_patch() {
 apply_patch fcitx5 patches/fcitx5.patch
 apply_patch deps/swifter patches/swifter.patch
 apply_patch deps/ZIPFoundation patches/ZIPFoundation.patch
+apply_patch engines/libime patches/libime.patch
 apply_patch engines/libime/src/libime/core/kenlm patches/kenlm.patch
 apply_patch engines/fcitx5-hallelujah patches/hallelujah.patch
 apply_patch engines/fcitx5-rime patches/rime.patch
