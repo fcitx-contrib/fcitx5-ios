@@ -4,7 +4,7 @@ This note preserves the controlled observations from an investigation of Chinese
 
 ## Environment
 
-- Date: September 23–24, 2026.
+- Date: September 23–26, 2026.
 - Host: macOS 26.5.1 on Apple Silicon.
 - Simulator: iPhone 17, iOS 26.5.
 - Build: `SIMULATORARM64`, Debug.
@@ -26,6 +26,62 @@ The main model did not appear as a file-backed path in `vmmap`. The live heap co
 Together these anonymous allocations accounted for approximately 15.8 MiB. At the time of the investigation, KenLM's default `Config::load_method` was `POPULATE_OR_READ`, and the libime language-model construction did not override it. This is consistent with reading the model into anonymous memory, but an allocation stack was not captured for the three regions.
 
 A freshly preloaded extension used approximately 50.3 MiB physical footprint. Showing the keyboard for the first time raised it to approximately 70.5–74 MiB. The main model allocations were already present before the first user input.
+
+## Lazy mmap change
+
+On Apple platforms, `StaticLanguageModelFile` now sets KenLM's `load_method` to `util::LAZY`. Other platforms retain KenLM's existing default. This keeps the main binary model file-backed on Darwin without changing its format, lookup structures, or scoring code.
+
+The same simulator, application, document, keyboard, and input sequence were sampled immediately before and after the change:
+
+| Checkpoint | Previous loader | Lazy mmap | Difference |
+|---|---:|---:|---:|
+| Visible keyboard physical footprint | 74.6 MiB | 66.7 MiB | -7.9 MiB |
+| Visible keyboard live heap | 38,478,339 bytes | 30,230,195 bytes | -8,248,144 bytes |
+| `MALLOC_LARGE` regions | 15.8 MiB in 3 regions | 8 MiB in 2 regions | One 8,016 KiB region removed |
+| After first `nihao` candidate generation, physical footprint | 87.4 MiB | 77.5 MiB | -9.9 MiB |
+| After first `nihao` candidate generation, live heap | 50,909,674 bytes | 39,868,288 bytes | -11,041,386 bytes |
+
+Before the change, `vmmap` showed an anonymous 8,016 KiB `MALLOC_LARGE` region and no path for `zh_CN.lm`. After the change, that allocation was replaced by an 8,016 KiB read-only mapping backed by `zh_CN.lm`; the first cold sample reported only 48 KiB resident in that mapping. The two pre-existing 4,096 KiB anonymous regions remained and are outside the part improved by this change.
+
+The mapped runtime region is smaller than the complete model file because KenLM does not map the trailing vocabulary strings when vocabulary enumeration is not requested.
+
+Functional validation produced the same first candidate, `你好`, for `nihao`. With existing context, entering `zhongguo` produced and successfully committed `你好中国`. This exercises model loading, lookup, context scoring, candidate generation, prediction initialization, and continued access to the file-backed model.
+
+The model mapping remained valid for the extension lifetime and was removed when the test process terminated. KenLM's `scoped_memory` owns the mapping and calls `munmap` when the model is destroyed.
+
+## Full model comparison
+
+Commit `779dd3c` changed the packaged Chinese addon data from `chinese-addons-any.tar.bz2` to `chinese-addons-slim.tar.bz2` to reduce OOM frequency. After enabling lazy mmap, the same simulator workflow was repeated with the full model to determine whether the slim model was still needed for runtime memory.
+
+The prediction file was identical in both archives. Only the main KenLM model changed:
+
+| Asset | Slim archive | Full archive | Difference |
+|---|---:|---:|---:|
+| `zh_CN.lm` | 10,483,356 bytes | 34,736,327 bytes | +24,252,971 bytes |
+| `zh_CN.lm.predict` | 2,576,105 bytes | 2,576,105 bytes | 0 |
+
+The full model was tested with the same lazy mmap code, simulator, Messages document, visible keyboard state, and first `nihao` candidate-generation sequence:
+
+| Checkpoint | Slim model with lazy mmap | Full model with lazy mmap | Difference |
+|---|---:|---:|---:|
+| Visible keyboard physical footprint | 66.7 MiB | 66.5 MiB | -0.2 MiB |
+| Visible keyboard live heap | 30,230,195 bytes | 30,289,301 bytes | +59,106 bytes |
+| Visible keyboard live nodes | 122,348 | 122,454 | +106 |
+| After first `nihao` candidate generation, physical footprint | 77.5 MiB | 76 MiB | -1.5 MiB |
+| After first `nihao` candidate generation, live heap | 39,868,288 bytes | 39,811,637 bytes | -56,651 bytes |
+| After first `nihao` candidate generation, live nodes | 231,707 | 231,693 | -14 |
+
+These small positive and negative differences are run-to-run noise rather than evidence that the full model uses less memory. The important result is that the additional 24,252,971 file bytes did not become an equivalent anonymous allocation or live-heap increase.
+
+For the full model, `vmmap` showed a 31 MiB read-only file-backed runtime mapping. The cold sample reported no resident pages in that mapping; after generating the first `nihao` candidates, 8,592 KiB was resident. The first candidate remained `你好`. This behavior confirms that lazy mmap faults in the model pages needed by the query rather than making the full model resident at load time.
+
+The full model therefore has approximately the same measured simulator runtime memory as the slim model for cold startup and the first candidate query. Its remaining cost is application and download size: `zh_CN.lm` grows by approximately 23.1 MiB uncompressed, and the downloaded Chinese addon archive grows from approximately 25 MiB to 46 MiB. A real-device OS64 Release run remains necessary to validate memory-pressure behavior before treating the simulator result as a device-memory guarantee.
+
+## Remaining prediction trie risk
+
+The lazy mmap change applies only to the main KenLM binary model. The 2,576,105-byte `zh_CN.lm.predict` file is still loaded by `DATrie<float>::load` into several heap arrays on first prediction and retained by `StaticLanguageModelFile` for the rest of its lifetime. The large first-input increase therefore remains a separate optimization target.
+
+The current lazy initialization uses mutable `predictionLoaded_` and `prediction_` fields without synchronization. The iOS input path currently serializes engine work, but the libime object itself does not make concurrent first prediction safe. Any future change that unloads and reloads the prediction trie on memory warnings must first add explicit synchronization or otherwise guarantee single-thread access.
 
 ## Periodic growth reproduction
 
@@ -112,7 +168,9 @@ Switching away from the Chinese keyboard released approximately 3.35 MiB of live
 - The direct cause was publishing unchanged undo/redo state from the document poll.
 - Equality guards on high-frequency `@Published` state eliminated the linear 64-byte allocation slope.
 - Skipping the unchanged document-state update remains worthwhile because it avoids unnecessary polling work.
-- First input has a separate approximately 10 MiB one-time cost that still requires allocation-stack attribution.
+- Lazy mmap removed the main model's 8,016 KiB anonymous allocation and reduced the visible-keyboard simulator footprint by 7.9 MiB in the controlled cold comparison.
+- With lazy mmap enabled, restoring the full model did not materially change cold or first-query simulator live heap and footprint compared with the slim model.
+- First input still has a separate large one-time cost that requires allocation-stack attribution.
 - Repeated input raised allocator high-water footprint, but the short controlled test approached a plateau instead of showing the previous time-based linear live-heap growth.
 - Simulator footprint exceeded the approximate device keyboard-extension limit during the stress test, so model-loading improvements and real-device Release validation remain necessary.
 
@@ -120,8 +178,8 @@ Switching away from the Chinese keyboard released approximately 3.35 MiB of live
 
 - Repeat the first-input test with prediction disabled to determine whether the prediction model accounts for the one-time increase.
 - Launch with malloc stack logging and capture the 16-byte, 48-byte, and large first-use allocation stacks.
-- Compare KenLM's current read/populate behavior with a lazy file-backed mapping and verify dirty and resident pages using `vmmap`.
 - Repeat the cold-start, first-input, sustained-input, and switch-away sequence on an OS64 Release build and a real device.
+- Compare candidate quality and application-size impact of the full and slim models so the packaging decision accounts for more than runtime memory.
 - Add a longer idle regression test so future changes can detect a small live-heap slope before it becomes an OOM issue.
 
 The temporary one-minute autosave configuration was restored to the default, the test processes were terminated, and the unsent Messages draft was deleted after the measurements.
