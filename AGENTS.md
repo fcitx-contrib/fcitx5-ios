@@ -31,6 +31,16 @@ cmake -B build/OS64 -G Ninja -DCMAKE_BUILD_TYPE=Release -DPLATFORM=OS64
 cmake --build build/OS64
 ```
 
+## IPA Packaging
+
+When producing an IPA, use the `Pack` task defined in `.vscode/tasks.json` after completing the OS64 build. Treat that task as the source of truth and run its command from `build/OS64/src`; do not substitute a different packaging procedure:
+
+```sh
+rm -rf Payload Fcitx5.ipa && mkdir Payload && cp -r Fcitx5.app Payload && zip -r Fcitx5.ipa Payload
+```
+
+The resulting `build/OS64/src/Fcitx5.ipa` is unsigned. Transfer it to the device with LocalSend and install it with SideStore, which performs the required signing. Do not try to install the unsigned build directly with `devicectl`.
+
 ## Lint
 
 Run the same lint/format checks as CI after changing code:
