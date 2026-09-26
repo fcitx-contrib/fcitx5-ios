@@ -46,7 +46,8 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   nonisolated let uuid = UUID().uuidString
   nonisolated(unsafe) private var countedAsLive = false
-  var hostingController: UIHostingController<VirtualKeyboardView>!
+  private var hostingController: UIHostingController<VirtualKeyboardView>?
+  private var hostingConstraints = [NSLayoutConstraint]()
   var removedBySlide = ""
   // Reject queued C++ callbacks after the controller stops accepting input. Its program and
   // documentIdentifier may remain unchanged between viewWillDisappear and deinit. This also stays
@@ -290,13 +291,41 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       startKeyboardFcitx(appBundlePath, "\(Bundle.main.bundlePath)/share", appGroup.path)
     }
 
-    // Must recreate SwiftUI view, otherwise rotating may have old height which can't be updated.
-    hostingController = UIHostingController(rootView: VirtualKeyboardView())
-    hostingController.view.translatesAutoresizingMaskIntoConstraints = false
-
     // Spotlight shows that system keyboard has transparent background.
-    hostingController.view.backgroundColor = .clear
     view.backgroundColor = .clear
+  }
+
+  private func installHostingController() {
+    guard hostingController == nil else { return }
+
+    // UIKit may retain this KeyboardViewController after its host app stops using the keyboard.
+    // Create the SwiftUI tree only while it is visible so inactive hosts do not retain one each.
+    let hostingController = UIHostingController(rootView: VirtualKeyboardView())
+    hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+    hostingController.view.backgroundColor = .clear
+    self.hostingController = hostingController
+
+    addChild(hostingController)
+    view.addSubview(hostingController.view)
+    hostingConstraints = [
+      hostingController.view.topAnchor.constraint(equalTo: view.topAnchor),
+      hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+      hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+    ]
+    NSLayoutConstraint.activate(hostingConstraints)
+    hostingController.didMove(toParent: self)
+  }
+
+  private func uninstallHostingController() {
+    guard let hostingController else { return }
+
+    hostingController.willMove(toParent: nil)
+    NSLayoutConstraint.deactivate(hostingConstraints)
+    hostingConstraints.removeAll()
+    hostingController.view.removeFromSuperview()
+    hostingController.removeFromParent()
+    self.hostingController = nil
   }
 
   override func viewWillAppear(_ animated: Bool) {
@@ -305,18 +334,8 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     SwiftFrontend.setClient(self)
     KeyboardUI.setClient(self)
 
-    // If setting view in viewDidLoad instead, it will cause huge layout shift.
-    addChild(hostingController)
-    view.addSubview(hostingController.view)
-
-    NSLayoutConstraint.activate([
-      hostingController.view.topAnchor.constraint(equalTo: view.topAnchor),
-      hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-      hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-    ])
-
-    hostingController.didMove(toParent: self)
+    // If setting the hosted view in viewDidLoad instead, it causes a large layout shift.
+    installHostingController()
 
     vm.setReturnKeyType(textDocumentProxy.returnKeyType)
     super.viewWillAppear(animated)
@@ -359,9 +378,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     inputTraitsState = nil
     Fcitx.focusOut(program, currentDocumentIdentifier())
     stopDocumentPolling()
-    hostingController.willMove(toParent: nil)
-    hostingController.view.removeFromSuperview()
-    hostingController.removeFromParent()
+    uninstallHostingController()
   }
 
   deinit {
