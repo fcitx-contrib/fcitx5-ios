@@ -26,6 +26,35 @@ No single number explains memory behavior.
 
 Treat `footprint` as the primary OOM signal and `heap` as the primary live-allocation signal. A rising footprint with a stable live heap usually indicates allocator high-water behavior, fragmentation, or newly dirtied pages rather than a classic leak.
 
+## Real-device Instruments setup
+
+Connect the device over USB, unlock it, enable Developer Mode, and let Xcode finish preparing developer support before starting a recording. Confirm that Instruments can see the device from the command line:
+
+```sh
+xcrun xctrace list devices
+```
+
+CoreDevice and Instruments can disagree about device availability. In the observed failure mode, `devicectl` reported the phone as available and paired while `xctrace` listed the same phone under `Devices Offline`, so the Instruments target picker did not show it as usable. The USB connection, pairing, Developer Mode, lock state, and CoreDevice tunnel were all healthy; Developer Disk Image services had not yet been enabled on that Mac.
+
+Compare the two device lists and inspect the device details:
+
+```sh
+xcrun devicectl list devices
+xcrun devicectl device info details --device <coredevice-identifier>
+xcrun xctrace list devices
+```
+
+Healthy details include `developerModeStatus: enabled`, `pairingState: paired`, `transportType: wired`, `tunnelState: connected`, and `ddiServicesAvailable: true`. If those are healthy but `xctrace` still reports the device offline, prepare and enable the compatible Developer Disk Image services explicitly:
+
+```sh
+xcrun devicectl device info ddiServices --device <coredevice-identifier>
+xcrun xctrace list devices
+```
+
+The DDI command should report `contentIsCompatible: true` and `isUsable: true`. Once the device moves from `Devices Offline` to `Devices`, close and reopen Instruments so its target picker refreshes. Reconnect the USB cable if the already-open Instruments process still shows stale state.
+
+This initialization is local to the Mac and Xcode installation. Another Mac may already have prepared developer support for the same phone, and upgrading Xcode can require the setup again. If the DDI content is not compatible or usable, install an Xcode version that supports the device OS before changing pairing or reinstalling the application.
+
 ## Standard simulator procedure
 
 Build, sign, and install the exact build under test. Terminate the existing extension before each cold-start run so that process-lifetime state is not carried into the next sample.

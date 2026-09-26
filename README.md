@@ -89,7 +89,7 @@ keyboard[14871] Corpse allowed 1 of 5
 See [Keyboard extension memory profiling](docs/memory.md) for a repeatable investigation procedure and [the September 2026 Chinese keyboard investigation](docs/memory-investigations/chinese-2026-09.md) for a worked example.
 
 ### Memory monitor
-Use `/Applications/Xcode.app/Contents/Applications/Instruments.app`'s `Activity Monitor`.
+Use `/Applications/Xcode.app/Contents/Applications/Instruments.app`'s `Activity Monitor`. If Instruments cannot see a connected phone, follow the [real-device Instruments setup and DDI troubleshooting procedure](docs/memory.md#real-device-instruments-setup).
 
 ### Crash
 Crash reports are available in `Settings` -> `Privacy & Security` -> `Analytics & Improvements` -> `Analytics Data`.

@@ -1,3 +1,4 @@
+import Darwin
 import Fcitx
 import FcitxProtocol
 import KeyboardUI
@@ -508,6 +509,14 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   public func triggerQuickPhrase() {
     Fcitx.triggerQuickPhrase(program, currentDocumentIdentifier())
+  }
+
+  public func terminateExtension() {
+    FCITX_INFO("Terminate keyboard extension \(self.uuid)")
+    fflush(nil)
+    // POSIX _exit terminates immediately without running Swift/C++ teardown, which makes
+    // the next keyboard activation a deterministic cold start for memory measurements.
+    _exit(EXIT_SUCCESS)
   }
 
   public func commitString(_ commit: String) {
