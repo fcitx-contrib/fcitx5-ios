@@ -1,12 +1,12 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index a42666b..cea4e89 100644
+index d8fd713..fd12c94 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -1,4 +1,4 @@
 -cmake_minimum_required(VERSION 3.6.0)
 +cmake_minimum_required(VERSION 3.13)
  
- project(fcitx5-rime VERSION 5.1.16)
+ project(fcitx5-rime VERSION 5.1.17)
  
 diff --git a/src/rimeengine.cpp b/src/rimeengine.cpp
 index c762aa1..5403a55 100644
