@@ -1,0 +1,24 @@
+diff --git a/src/libime/core/languagemodel.cpp b/src/libime/core/languagemodel.cpp
+index feb3865..959f7a7 100644
+--- a/src/libime/core/languagemodel.cpp
++++ b/src/libime/core/languagemodel.cpp
+@@ -20,6 +20,7 @@
+ #include <vector>
+ #include <fcitx-utils/fs.h>
+ #include <fcitx-utils/macros.h>
++#include <fcitx-utils/misc.h>
+ #include <fcitx-utils/stringutils.h>
+ #include "config.h"
+ #include "constants.h"
+@@ -50,6 +51,11 @@ public:
+ StaticLanguageModelFile::StaticLanguageModelFile(const char *file) {
+     lm::ngram::Config config;
+     config.sentence_marker_missing = lm::SILENT;
++    if constexpr (fcitx::isApple()) {
++        // POPULATE_OR_READ falls back to malloc and read without MAP_POPULATE.
++        // Keep the binary model file-backed so clean pages can be reclaimed.
++        config.load_method = util::LAZY;
++    }
+     d_ptr = std::make_unique<StaticLanguageModelFilePrivate>(file, config);
+ }
+ 
