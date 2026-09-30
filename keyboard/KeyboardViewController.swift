@@ -6,6 +6,7 @@ import SwiftFrontend
 import SwiftUI
 import SwiftUtil
 import UIKit
+import os
 
 private func redirectStderr() {
   let file = fopen("\(appGroup.path)/log.txt", "w")
@@ -21,6 +22,18 @@ private func syncLocale() -> String {
     return locale
   }
   return getLocale()
+}
+
+private func currentProcessStartTime() -> Date? {
+  var mib = [CTL_KERN, KERN_PROC, KERN_PROC_PID, getpid()]
+  var processInfo = kinfo_proc()
+  var size = MemoryLayout<kinfo_proc>.stride
+  guard sysctl(&mib, u_int(mib.count), &processInfo, &size, nil, 0) == 0 else { return nil }
+
+  let startTime = processInfo.kp_proc.p_starttime
+  return Date(
+    timeIntervalSince1970: TimeInterval(startTime.tv_sec)
+      + TimeInterval(startTime.tv_usec) / 1_000_000)
 }
 
 @MainActor
@@ -42,12 +55,9 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   private static let documentPollingInterval: TimeInterval = 0.2
-  private static let initializedAt = Date()
   nonisolated(unsafe) private static var liveControllerCount = 0
 
   nonisolated let uuid = UUID().uuidString
-  // Force the lazy static timestamp to initialize with the first controller, not when Info opens.
-  private let processStartTime = KeyboardViewController.initializedAt
   nonisolated(unsafe) private var countedAsLive = false
   private var hostingController: UIHostingController<VirtualKeyboardView>?
   private var hostingConstraints = [NSLayoutConstraint]()
@@ -534,13 +544,29 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   public func currentDocumentInfo() -> DocumentInfo {
     let documentIdentifier = currentDocumentIdentifier()
     return DocumentInfo(
-      processStartTime: processStartTime,
+      processStartTime: currentProcessStartTime(),
       capturedAt: Date(),
+      processIdentifier: ProcessInfo.processInfo.processIdentifier,
+      memoryFootprint: currentMemoryFootprint(),
+      availableMemory: UInt64(os_proc_available_memory()),
       currentDocumentIdentifier: documentIdentifier.isEmpty ? nil : documentIdentifier,
       keyboardType: keyboardTypeDescription(textDocumentProxy.keyboardType),
       documentContextBeforeInput: textDocumentProxy.documentContextBeforeInput,
       selectedText: textDocumentProxy.selectedText,
       documentContextAfterInput: textDocumentProxy.documentContextAfterInput)
+  }
+
+  private func currentMemoryFootprint() -> UInt64? {
+    var info = task_vm_info_data_t()
+    var count = mach_msg_type_number_t(
+      MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+    let result = withUnsafeMutablePointer(to: &info) {
+      $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+        task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+      }
+    }
+    guard result == KERN_SUCCESS else { return nil }
+    return info.phys_footprint
   }
 
   private func keyboardTypeDescription(_ keyboardType: UIKeyboardType?) -> String {

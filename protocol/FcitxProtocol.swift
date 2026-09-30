@@ -1,8 +1,11 @@
 import Foundation
 
 public struct DocumentInfo: Sendable {
-  public let processStartTime: Date
+  public let processStartTime: Date?
   public let capturedAt: Date
+  public let processIdentifier: Int32
+  public let memoryFootprint: UInt64?
+  public let availableMemory: UInt64
   public let currentDocumentIdentifier: String?
   public let keyboardType: String
   public let documentContextBeforeInput: String?
@@ -10,12 +13,16 @@ public struct DocumentInfo: Sendable {
   public let documentContextAfterInput: String?
 
   public init(
-    processStartTime: Date, capturedAt: Date, currentDocumentIdentifier: String?,
+    processStartTime: Date?, capturedAt: Date, processIdentifier: Int32,
+    memoryFootprint: UInt64?, availableMemory: UInt64, currentDocumentIdentifier: String?,
     keyboardType: String,
     documentContextBeforeInput: String?, selectedText: String?, documentContextAfterInput: String?
   ) {
     self.processStartTime = processStartTime
     self.capturedAt = capturedAt
+    self.processIdentifier = processIdentifier
+    self.memoryFootprint = memoryFootprint
+    self.availableMemory = availableMemory
     self.currentDocumentIdentifier = currentDocumentIdentifier
     self.keyboardType = keyboardType
     self.documentContextBeforeInput = documentContextBeforeInput

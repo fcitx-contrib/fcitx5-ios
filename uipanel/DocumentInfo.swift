@@ -62,7 +62,9 @@ private func dumpScalars(_ text: String?) -> String {
   return lines.joined(separator: "\n")
 }
 
-private func processStartDescription(_ startTime: Date, capturedAt: Date) -> String {
+private func processStartDescription(_ startTime: Date?, capturedAt: Date) -> String {
+  guard let startTime else { return "nil" }
+
   let formatter = DateFormatter()
   formatter.locale = Locale(identifier: "en_US_POSIX")
   formatter.timeZone = .current
@@ -81,6 +83,17 @@ private func processStartDescription(_ startTime: Date, capturedAt: Date) -> Str
   durationFormatter.zeroFormattingBehavior = .dropLeading
   let duration = durationFormatter.string(from: TimeInterval(totalMinutes * 60)) ?? ""
   return "\(formatter.string(from: startTime)) (\(duration))"
+}
+
+private func byteCountDescription(_ bytes: UInt64?) -> String {
+  guard let bytes else { return "nil" }
+  return ByteCountFormatter.string(
+    fromByteCount: Int64(clamping: bytes), countStyle: .memory)
+}
+
+private func availableMemoryDescription(_ bytes: UInt64) -> String {
+  guard bytes > 0 else { return "N/A" }
+  return byteCountDescription(bytes)
 }
 
 private struct DocumentInfoField: View {
@@ -114,6 +127,15 @@ struct DocumentInfoView: View {
                 name: "processStartTime",
                 value: processStartDescription(
                   info.processStartTime, capturedAt: info.capturedAt))
+              DocumentInfoField(
+                name: "processIdentifier",
+                value: String(info.processIdentifier))
+              DocumentInfoField(
+                name: "memoryFootprint",
+                value: byteCountDescription(info.memoryFootprint))
+              DocumentInfoField(
+                name: "availableMemory",
+                value: availableMemoryDescription(info.availableMemory))
               DocumentInfoField(
                 name: "currentDocumentIdentifier",
                 value: info.currentDocumentIdentifier ?? "nil")
