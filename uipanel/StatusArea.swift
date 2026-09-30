@@ -101,6 +101,19 @@ struct StatusAreaView: View {
               }
             }
           }
+          Button {
+            vm.showDocumentInfo()
+          } label: {
+            VStack {
+              ZStack {
+                Circle().fill(Color.gray).frame(
+                  width: circleDiameter, height: circleDiameter)
+                Image(systemName: "info").resizable().scaledToFit().frame(width: 14)
+                  .foregroundColor(.white)
+              }
+              Text("Info").foregroundColor(.primary)
+            }
+          }.accessibilityIdentifier("Document info")
           Button(role: .destructive) {
             client.terminateExtension()
           } label: {

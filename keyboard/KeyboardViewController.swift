@@ -42,9 +42,12 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   private static let documentPollingInterval: TimeInterval = 0.2
+  private static let initializedAt = Date()
   nonisolated(unsafe) private static var liveControllerCount = 0
 
   nonisolated let uuid = UUID().uuidString
+  // Force the lazy static timestamp to initialize with the first controller, not when Info opens.
+  private let processStartTime = KeyboardViewController.initializedAt
   nonisolated(unsafe) private var countedAsLive = false
   private var hostingController: UIHostingController<VirtualKeyboardView>?
   private var hostingConstraints = [NSLayoutConstraint]()
@@ -526,6 +529,53 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
 
   public func triggerQuickPhrase() {
     Fcitx.triggerQuickPhrase(program, currentDocumentIdentifier())
+  }
+
+  public func currentDocumentInfo() -> DocumentInfo {
+    let documentIdentifier = currentDocumentIdentifier()
+    return DocumentInfo(
+      processStartTime: processStartTime,
+      capturedAt: Date(),
+      currentDocumentIdentifier: documentIdentifier.isEmpty ? nil : documentIdentifier,
+      keyboardType: keyboardTypeDescription(textDocumentProxy.keyboardType),
+      documentContextBeforeInput: textDocumentProxy.documentContextBeforeInput,
+      selectedText: textDocumentProxy.selectedText,
+      documentContextAfterInput: textDocumentProxy.documentContextAfterInput)
+  }
+
+  private func keyboardTypeDescription(_ keyboardType: UIKeyboardType?) -> String {
+    guard let keyboardType else { return "nil" }
+
+    let name: String
+    switch keyboardType {
+    case .default:
+      name = "default"
+    case .asciiCapable:
+      name = "asciiCapable"
+    case .numbersAndPunctuation:
+      name = "numbersAndPunctuation"
+    case .URL:
+      name = "URL"
+    case .numberPad:
+      name = "numberPad"
+    case .phonePad:
+      name = "phonePad"
+    case .namePhonePad:
+      name = "namePhonePad"
+    case .emailAddress:
+      name = "emailAddress"
+    case .decimalPad:
+      name = "decimalPad"
+    case .twitter:
+      name = "twitter"
+    case .webSearch:
+      name = "webSearch"
+    case .asciiCapableNumberPad:
+      name = "asciiCapableNumberPad"
+    @unknown default:
+      name = "unknown"
+    }
+    return "\(name) (rawValue: \(keyboardType.rawValue))"
   }
 
   public func terminateExtension() {

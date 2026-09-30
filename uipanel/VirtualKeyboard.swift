@@ -7,6 +7,7 @@ public enum DisplayMode {
   case candidates
   case edit
   case statusArea
+  case documentInfo
   case symbol
   case numpad
   case syncPending
@@ -63,6 +64,7 @@ public class ViewModel: ObservableObject {
   @Published var inputContext = ""
 
   @Published var actions = [StatusAreaAction]()
+  @Published var documentInfo: DocumentInfo? = nil
   @Published var inputMethods = [InputMethod]()
   @Published var spaceLabel = ""
   @Published var enterLabel = ""
@@ -171,6 +173,15 @@ public class ViewModel: ObservableObject {
   func setStatusArea(_ inputContext: String, _ actions: [StatusAreaAction]) {
     self.inputContext = inputContext
     self.actions = actions
+  }
+
+  func showDocumentInfo() {
+    refreshDocumentInfo()
+    setDisplayMode(.documentInfo, resetReturnMode: true)
+  }
+
+  func refreshDocumentInfo() {
+    documentInfo = client.currentDocumentInfo()
   }
 
   func setCurrentInputMethod(_ im: String, _ inputMethods: [InputMethod]) {
@@ -379,6 +390,8 @@ public struct VirtualKeyboardView: View {
             if viewModel.mode == .statusArea {
               StatusAreaView(
                 width: width, inputContext: viewModel.inputContext, actions: $viewModel.actions)
+            } else if viewModel.mode == .documentInfo {
+              DocumentInfoView(width: width, info: viewModel.documentInfo)
             } else if viewModel.mode == .edit {
               EditView(totalWidth: width)
             } else if viewModel.mode == .symbol {
