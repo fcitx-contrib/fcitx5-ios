@@ -152,7 +152,7 @@ struct DocumentInfoView: View {
             } else {
               Text("Document information is unavailable.")
             }
-          }.padding()
+          }.padding([.horizontal, .bottom])
         }.frame(height: getKeyboardHeight(totalHeight))
         Button {
           vm.refreshDocumentInfo()
