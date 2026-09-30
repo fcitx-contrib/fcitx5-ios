@@ -177,7 +177,7 @@ public class ViewModel: ObservableObject {
 
   func showDocumentInfo() {
     refreshDocumentInfo()
-    setDisplayMode(.documentInfo, resetReturnMode: true)
+    setDisplayMode(.documentInfo)
   }
 
   func refreshDocumentInfo() {
