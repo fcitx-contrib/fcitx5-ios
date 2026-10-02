@@ -104,6 +104,30 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     return identifier.uuidString
   }
 
+  private func isStartOfNonFirstLine() -> Bool {
+    guard let last = textDocumentProxy.documentContextBeforeInput?.last else { return false }
+    return last == "\n" || last == "\r"
+  }
+
+  private func scheduleForCurrentDocument(
+    after timeout: TimeInterval = 0, _ action: @escaping @MainActor @Sendable () -> Void
+  ) {
+    let documentIdentifier = currentDocumentIdentifier()
+    let execute: @MainActor @Sendable () -> Void = {
+      guard self.currentDocumentIdentifier() == documentIdentifier else {
+        self.isChangingLines = false
+        self.resetUndoRedoForCurrentDocument()
+        return
+      }
+      action()
+    }
+    if timeout == 0 {
+      DispatchQueue.main.async(execute: execute)
+    } else {
+      DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: execute)
+    }
+  }
+
   private func currentDocumentState() -> UndoRedoDocumentState {
     UndoRedoDocumentState(
       identifier: currentDocumentIdentifier(),
@@ -425,33 +449,24 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   public func forwardKey(_ key: String, _ code: String) {
-    let documentIdentifier = currentDocumentIdentifier()
     // documentContextBeforeInput could be all text or text in current line before cursor.
-    // In the latter case, it will be '\n' if caret is at the beginning of a non-first line.
+    // In the latter case, it will be '\n' (in Messages/Telegram) or '\r' (in 微信/Tim, mainly use \n to trigger send)
+    // if caret is at the start of a non-first line.
+    // documentContextAfterInput is always nil if caret is at the end of a line.
     switch code {
     case "ArrowDown":
       let contextAfterInput = textDocumentProxy.documentContextAfterInput ?? ""
-      guard contextAfterInput.contains("\n") else { return }
-      isChangingLines = true
-      resetUndoRedoForCurrentDocument()
       let offset = lastLine(textDocumentProxy.documentContextBeforeInput ?? "").count
       let step = firstLine(contextAfterInput).utf16.count
       textDocumentProxy.adjustTextPosition(byCharacterOffset: step)
-      DispatchQueue.main.async {
-        guard self.currentDocumentIdentifier() == documentIdentifier else {
-          self.isChangingLines = false
-          self.resetUndoRedoForCurrentDocument()
-          return
-        }
-        // Move to the start of next line if exists.
+      // No delay is needed for subsequent adjustTextPosition.
+      scheduleForCurrentDocument {
+        // Move to the start of next line if exists. If combined with the previous step, it fails when caret is on the last line.
         self.textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
-        // Must have a delay, otherwise nextLineLength is always 0.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-          guard self.currentDocumentIdentifier() == documentIdentifier else {
-            self.isChangingLines = false
-            self.resetUndoRedoForCurrentDocument()
-            return
-          }
+        // Must have a delay, otherwise documentContextAfterInput won't update.
+        self.scheduleForCurrentDocument(after: 0.1) {
+          self.isChangingLines = self.isStartOfNonFirstLine()
+          guard self.isChangingLines else { return }
           let textAfter = self.textDocumentProxy.documentContextAfterInput ?? ""
           let column = min(offset, firstLine(textAfter).count)
           self.textDocumentProxy.adjustTextPosition(
@@ -462,7 +477,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       }
     case "ArrowLeft":
       let textBefore = textDocumentProxy.documentContextBeforeInput ?? ""
-      let changesLine = textBefore.hasSuffix("\n")
+      let changesLine = isStartOfNonFirstLine()
       textDocumentProxy.adjustTextPosition(
         byCharacterOffset: -max(1, textBefore.suffix(1).utf16.count))
       if changesLine {
@@ -470,35 +485,25 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       }
     case "ArrowRight":
       let textAfter = textDocumentProxy.documentContextAfterInput ?? ""
-      let changesLine = textAfter.hasPrefix("\n")
       textDocumentProxy.adjustTextPosition(
         byCharacterOffset: max(1, textAfter.prefix(1).utf16.count))
-      if changesLine {
-        resetUndoRedoForCurrentDocument()
+      scheduleForCurrentDocument(after: 0.1) {
+        if self.isStartOfNonFirstLine() {
+          self.resetUndoRedoForCurrentDocument()
+        }
       }
     case "ArrowUp":
       let contextBeforeInput = textDocumentProxy.documentContextBeforeInput ?? ""
-      guard contextBeforeInput.contains("\n") else { return }
-      isChangingLines = true
-      resetUndoRedoForCurrentDocument()
       let textBefore = lastLine(contextBeforeInput)
       let offset = textBefore.count
       textDocumentProxy.adjustTextPosition(byCharacterOffset: -textBefore.utf16.count)
-      DispatchQueue.main.async {
-        guard self.currentDocumentIdentifier() == documentIdentifier else {
-          self.isChangingLines = false
-          self.resetUndoRedoForCurrentDocument()
-          return
-        }
+      scheduleForCurrentDocument(after: 0.1) {
+        self.isChangingLines = self.isStartOfNonFirstLine()
         // Move to the end of previous line if exists.
         self.textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
+        guard self.isChangingLines else { return }
         // Must have a delay, otherwise previousLineLength may always be 0.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-          guard self.currentDocumentIdentifier() == documentIdentifier else {
-            self.isChangingLines = false
-            self.resetUndoRedoForCurrentDocument()
-            return
-          }
+        self.scheduleForCurrentDocument(after: 0.1) {
           let textBefore = lastLine(self.textDocumentProxy.documentContextBeforeInput ?? "")
           if textBefore.count > offset {
             self.textDocumentProxy.adjustTextPosition(

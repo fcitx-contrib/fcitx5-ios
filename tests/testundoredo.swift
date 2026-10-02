@@ -212,6 +212,12 @@ private func testHistoryInvalidation(_ test: TestContext) {
   test.expect(!manager.canUndo && !manager.canRedo, "newline edits should clear line-scoped history")
 }
 
+@MainActor
+private func testCarriageReturnLineHelpers(_ test: TestContext) {
+  test.expect(firstLine("first\rsecond") == "first", "firstLine should recognize carriage return")
+  test.expect(lastLine("first\rsecond") == "second", "lastLine should recognize carriage return")
+}
+
 @main
 struct UndoRedoTest {
   @MainActor
@@ -225,6 +231,7 @@ struct UndoRedoTest {
     testCaretMoveWithinLine(test)
     testUndoAfterSelectionChange(test)
     testHistoryInvalidation(test)
+    testCarriageReturnLineHelpers(test)
     if test.failures > 0 {
       fatalError("\(test.failures) undo/redo tests failed")
     }
