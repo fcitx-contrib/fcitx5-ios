@@ -126,7 +126,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     let documentIdentifier = currentDocumentIdentifier()
     let execute: @MainActor @Sendable () -> Void = {
       guard self.currentDocumentIdentifier() == documentIdentifier else {
-        self.isChangingLines = false
+        self.cancelVerticalMovements()
         self.resetUndoRedoForCurrentDocument()
         return
       }
