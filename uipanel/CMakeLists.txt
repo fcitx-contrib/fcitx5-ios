@@ -14,6 +14,7 @@ add_library(KeyboardUI STATIC
     CandidateBar.swift
     CandidateTabActionColumn.swift
     Toolbar.swift
+    Clipboard.swift
     StatusArea.swift
     DocumentInfo.swift
     Edit.swift
