@@ -51,6 +51,21 @@ struct EditorButton: View {
   }
 }
 
+struct ClipboardButton: View {
+  @Environment(\.colorScheme) var colorScheme
+  @Environment(\.totalHeight) var totalHeight
+
+  var body: some View {
+    Button {
+      vm.setDisplayMode(.clipboard)
+    } label: {
+      Image(systemName: "doc.on.clipboard")
+        .foregroundColor(getNormalForeground(colorScheme))
+        .frame(width: getBarHeight(totalHeight), height: getBarHeight(totalHeight))
+    }
+  }
+}
+
 struct StatusAreaButton: View {
   @Environment(\.colorScheme) var colorScheme
   @Environment(\.totalHeight) var totalHeight
@@ -87,14 +102,15 @@ struct ToolbarButtons: View {
   let width: CGFloat
 
   var body: some View {
-    let itemWidth = width / 6
+    let itemWidth = width / 7
     HStack(spacing: 0) {
       UndoButton().frame(width: itemWidth)
       RedoButton().frame(width: itemWidth)
       EditorButton().frame(width: itemWidth)
+      ClipboardButton().frame(width: itemWidth)
       StatusAreaButton().frame(width: itemWidth)
       DismissKeyboardButton().frame(width: itemWidth)
-    }.frame(width: itemWidth * 5)
+    }.frame(width: itemWidth * 6)
   }
 }
 
@@ -112,10 +128,10 @@ struct ToolbarView: View {
         } label: {
           Image(systemName: "arrow.backward")
             .foregroundColor(getNormalForeground(colorScheme))
-            .frame(width: width / 6, height: getBarHeight(totalHeight))
+            .frame(width: width / 7, height: getBarHeight(totalHeight))
         }
       } else {
-        Spacer().frame(width: width / 6)
+        Spacer().frame(width: width / 7)
       }
       ToolbarButtons(width: width)
     }.frame(width: width)

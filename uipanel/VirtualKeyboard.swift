@@ -6,6 +6,7 @@ public enum DisplayMode {
   case initial
   case candidates
   case edit
+  case clipboard
   case statusArea
   case documentInfo
   case symbol
@@ -100,7 +101,9 @@ public class ViewModel: ObservableObject {
     let shouldResetInput = self.mode == .candidates && mode == .numpad
     if resetReturnMode || mode == .numpad {
       returnMode = .initial
-    } else if self.mode == .numpad && (mode == .edit || mode == .statusArea) {
+    } else if self.mode == .numpad
+      && (mode == .edit || mode == .clipboard || mode == .statusArea)
+    {
       returnMode = .numpad
     } else if self.mode == .candidates && mode == .symbol {
       returnMode = .candidates
@@ -394,6 +397,8 @@ public struct VirtualKeyboardView: View {
               DocumentInfoView(width: width, info: viewModel.documentInfo)
             } else if viewModel.mode == .edit {
               EditView(totalWidth: width)
+            } else if viewModel.mode == .clipboard {
+              ClipboardView(width: width)
             } else if viewModel.mode == .symbol {
               SymbolView(width: width)
             } else if viewModel.mode == .numpad {
