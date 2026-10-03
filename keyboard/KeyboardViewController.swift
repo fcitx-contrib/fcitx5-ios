@@ -70,6 +70,10 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   private var inputTraitsState: InputTraitsState?
   private var documentPollingTimer: Timer?
   private let undoRedoManager = UndoRedoManager()
+  private var arrowDownGeneration = 0
+  private var arrowUpGeneration = 0
+  private var isArrowDownMovementInProgress = false
+  private var isArrowUpMovementInProgress = false
   private var isChangingLines = false
   private var isSlidingBackspace = false
   private var hasMarkedText = false
@@ -105,8 +109,15 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   private func isStartOfNonFirstLine() -> Bool {
-    guard let last = textDocumentProxy.documentContextBeforeInput?.last else { return false }
-    return last == "\n" || last == "\r"
+    textDocumentProxy.documentContextBeforeInput?.last?.isNewline ?? false
+  }
+
+  private func cancelVerticalMovements() {
+    arrowDownGeneration &+= 1
+    arrowUpGeneration &+= 1
+    isArrowDownMovementInProgress = false
+    isArrowUpMovementInProgress = false
+    isChangingLines = false
   }
 
   private func scheduleForCurrentDocument(
@@ -162,6 +173,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     let shouldReset = currentDocumentState != documentState
     let documentChanged = currentDocumentState.identifier != documentState?.identifier
     if documentChanged {
+      cancelVerticalMovements()
       hasMarkedText = false
       undoRedoManager.reset(to: currentDocumentState)
       documentState = currentDocumentState
@@ -233,7 +245,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
         guard let self else { return }
         let currentDocumentState = self.currentDocumentState()
         if currentDocumentState.identifier != self.documentState?.identifier {
-          self.isChangingLines = false
+          self.cancelVerticalMovements()
           self.isSlidingBackspace = false
           self.hasMarkedText = false
           self.undoRedoManager.reset(to: currentDocumentState)
@@ -279,7 +291,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     documentPollingTimer = nil
     documentState = nil
     undoRedoManager.reset()
-    isChangingLines = false
+    cancelVerticalMovements()
     isSlidingBackspace = false
     hasMarkedText = false
     updateUndoRedoAvailability()
@@ -455,23 +467,36 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     // documentContextAfterInput is always nil if caret is at the end of a line.
     switch code {
     case "ArrowDown":
+      guard !isArrowDownMovementInProgress else { return }
+      arrowUpGeneration &+= 1
+      isArrowUpMovementInProgress = false
+      isChangingLines = false
+      isArrowDownMovementInProgress = true
+      arrowDownGeneration &+= 1
+      let generation = arrowDownGeneration
       let contextAfterInput = textDocumentProxy.documentContextAfterInput ?? ""
       let offset = lastLine(textDocumentProxy.documentContextBeforeInput ?? "").count
       let step = firstLine(contextAfterInput).utf16.count
       textDocumentProxy.adjustTextPosition(byCharacterOffset: step)
       // No delay is needed for subsequent adjustTextPosition.
       scheduleForCurrentDocument {
+        guard self.arrowDownGeneration == generation else { return }
         // Move to the start of next line if exists. If combined with the previous step, it fails when caret is on the last line.
         self.textDocumentProxy.adjustTextPosition(byCharacterOffset: 1)
         // Must have a delay, otherwise documentContextAfterInput won't update.
         self.scheduleForCurrentDocument(after: 0.1) {
+          guard self.arrowDownGeneration == generation else { return }
           self.isChangingLines = self.isStartOfNonFirstLine()
-          guard self.isChangingLines else { return }
+          guard self.isChangingLines else {
+            self.isArrowDownMovementInProgress = false
+            return
+          }
           let textAfter = self.textDocumentProxy.documentContextAfterInput ?? ""
           let column = min(offset, firstLine(textAfter).count)
           self.textDocumentProxy.adjustTextPosition(
             byCharacterOffset: textAfter.prefix(column).utf16.count)
           self.isChangingLines = false
+          self.isArrowDownMovementInProgress = false
           self.resetUndoRedoForCurrentDocument()
         }
       }
@@ -493,17 +518,29 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
         }
       }
     case "ArrowUp":
+      guard !isArrowUpMovementInProgress else { return }
+      arrowDownGeneration &+= 1
+      isArrowDownMovementInProgress = false
+      isChangingLines = false
+      isArrowUpMovementInProgress = true
+      arrowUpGeneration &+= 1
+      let generation = arrowUpGeneration
       let contextBeforeInput = textDocumentProxy.documentContextBeforeInput ?? ""
       let textBefore = lastLine(contextBeforeInput)
       let offset = textBefore.count
       textDocumentProxy.adjustTextPosition(byCharacterOffset: -textBefore.utf16.count)
       scheduleForCurrentDocument(after: 0.1) {
+        guard self.arrowUpGeneration == generation else { return }
         self.isChangingLines = self.isStartOfNonFirstLine()
         // Move to the end of previous line if exists.
         self.textDocumentProxy.adjustTextPosition(byCharacterOffset: -1)
-        guard self.isChangingLines else { return }
+        guard self.isChangingLines else {
+          self.isArrowUpMovementInProgress = false
+          return
+        }
         // Must have a delay, otherwise previousLineLength may always be 0.
         self.scheduleForCurrentDocument(after: 0.1) {
+          guard self.arrowUpGeneration == generation else { return }
           let textBefore = lastLine(self.textDocumentProxy.documentContextBeforeInput ?? "")
           if textBefore.count > offset {
             self.textDocumentProxy.adjustTextPosition(
@@ -511,6 +548,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
                 -textBefore.suffix(textBefore.count - offset).utf16.count)
           }
           self.isChangingLines = false
+          self.isArrowUpMovementInProgress = false
           self.resetUndoRedoForCurrentDocument()
         }
       }
