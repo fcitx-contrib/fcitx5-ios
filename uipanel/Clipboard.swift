@@ -75,10 +75,18 @@ private struct ClipboardEntryView: View {
     .simultaneousGesture(
       DragGesture(minimumDistance: 10)
         .onChanged { value in
+          guard !vm.showMenu else {
+            swipeOffset = 0
+            return
+          }
           guard abs(value.translation.width) > abs(value.translation.height) else { return }
           swipeOffset = min(0, value.translation.width)
         }
         .onEnded { value in
+          guard !vm.showMenu else {
+            swipeOffset = 0
+            return
+          }
           let isHorizontal = abs(value.translation.width) > abs(value.translation.height)
           if isHorizontal && value.translation.width < -deleteThreshold {
             withAnimation(.easeOut(duration: 0.15)) {
