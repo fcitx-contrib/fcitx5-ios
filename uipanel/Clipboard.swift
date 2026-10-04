@@ -18,10 +18,12 @@ private struct ClipboardEntryView: View {
 
   var body: some View {
     ZStack(alignment: .trailing) {
-      Color.red
-      Image(systemName: "trash")
-        .foregroundColor(.white)
-        .padding(.trailing, 16)
+      if swipeOffset < 0 {
+        Color.red
+        Image(systemName: "trash")
+          .foregroundColor(.white)
+          .padding(.trailing, 16)
+      }
 
       Text(entry.text)
         .font(.system(size: 14))
@@ -33,7 +35,8 @@ private struct ClipboardEntryView: View {
         .padding(.trailing, entry.isPinned ? 10 : 0)
         .frame(maxWidth: .infinity, minHeight: 30, alignment: .leading)
         .background(
-          isPressed ? getFunctionBackground(colorScheme) : getNormalBackground(colorScheme)
+          (isPressed ? getFunctionBackground(colorScheme) : getNormalBackground(colorScheme))
+            .blend(with: getBackground(colorScheme))
         )
         .cornerRadius(8)
         .overlay(alignment: .bottomTrailing) {
