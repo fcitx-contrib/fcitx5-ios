@@ -51,10 +51,6 @@ private struct ClipboardEntryView: View {
     }
     .clipShape(RoundedRectangle(cornerRadius: 8))
     .contentShape(RoundedRectangle(cornerRadius: 8))
-    .onTapGesture {
-      guard swipeOffset == 0 else { return }
-      client.commitString(entry.text)
-    }
     .onContextMenu(
       onPressingChanged: { pressing in
         isPressed = pressing
@@ -98,6 +94,13 @@ private struct ClipboardEntryView: View {
             }
           }
         }
+        .exclusively(
+          before: TapGesture()
+            .onEnded {
+              guard !vm.showMenu else { return }
+              client.commitString(entry.text)
+            }
+        )
     )
   }
 }
