@@ -14,7 +14,7 @@ struct EditView: View {
     let width = totalWidth / 4
 
     VStack(spacing: 0) {
-      ReturnBarView(width: totalWidth)
+      ReturnBarView(width: totalWidth, title: NSLocalizedString("Text edit", comment: ""))
 
       ZStack {
         button(

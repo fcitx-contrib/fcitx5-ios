@@ -738,6 +738,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       UIPasteboard.general.string = text
     }
     KeyboardViewController.clipboardText = text
+    vm.addClipboardEntry(text)
   }
 
   public func cut() {

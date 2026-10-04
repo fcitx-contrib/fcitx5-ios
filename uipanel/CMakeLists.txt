@@ -3,6 +3,7 @@ add_library(KeyboardUI STATIC
     VirtualKeyboard.swift
     Color.swift
     ContextMenu.swift
+    Dialog.swift
     Key.swift
     Bubble.swift
     Shadow.swift
