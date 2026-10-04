@@ -1,11 +1,26 @@
 import SwiftUI
 
-struct ReturnBarView: View {
+struct ReturnBarView<TrailingContent: View>: View {
   @Environment(\.colorScheme) var colorScheme
   @Environment(\.totalHeight) var totalHeight
+
   let width: CGFloat
-  var showsBackspace = false
-  var isLocked: Binding<Bool>? = nil
+  let title: String?
+  let showsBackspace: Bool
+  let isLocked: Binding<Bool>?
+  let trailingContent: TrailingContent
+
+  init(
+    width: CGFloat, title: String? = nil, showsBackspace: Bool = false,
+    isLocked: Binding<Bool>? = nil,
+    @ViewBuilder trailingContent: () -> TrailingContent
+  ) {
+    self.width = width
+    self.title = title
+    self.showsBackspace = showsBackspace
+    self.isLocked = isLocked
+    self.trailingContent = trailingContent()
+  }
 
   var body: some View {
     let barHeight = getBarHeight(totalHeight)
@@ -26,12 +41,32 @@ struct ReturnBarView: View {
             .frame(width: barHeight, height: barHeight)
         }
       }
+      if let title {
+        Text(title)
+          .font(.headline)
+          .foregroundColor(getNormalForeground(colorScheme))
+          .lineLimit(1)
+      }
       Spacer()
       if showsBackspace {
         let backspaceWidth = width * 0.15
         BackspaceView(x: 0, y: 0, width: backspaceWidth, height: barHeight)
           .frame(width: backspaceWidth, height: barHeight)
       }
+      trailingContent
     }.frame(width: width, height: barHeight)
+  }
+}
+
+extension ReturnBarView where TrailingContent == EmptyView {
+  init(
+    width: CGFloat, title: String? = nil, showsBackspace: Bool = false,
+    isLocked: Binding<Bool>? = nil
+  ) {
+    self.init(
+      width: width, title: title, showsBackspace: showsBackspace, isLocked: isLocked
+    ) {
+      EmptyView()
+    }
   }
 }

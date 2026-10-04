@@ -73,8 +73,11 @@ public class ViewModel: ObservableObject {
   @Published var textIsEmpty = false
   @Published var canUndo = false
   @Published var canRedo = false
+  @Published var clipboardEntries = [ClipboardEntry]()
   @Published var layer = "default"
   @Published var lock = false
+
+  private var clipboardSequence: UInt64 = 0
 
   // XXX: In floating state for iPad simulator, switching to fcitx5 causes layout shift due to unstable width.
   @Published var totalHeight: CGFloat = getDefaultTotalHeight()
@@ -207,6 +210,46 @@ public class ViewModel: ObservableObject {
     }
     if self.canRedo != canRedo {
       self.canRedo = canRedo
+    }
+  }
+
+  public func addClipboardEntry(_ text: String) {
+    guard text.contains(where: { !$0.isWhitespace }) else { return }
+
+    clipboardSequence &+= 1
+    var entries = clipboardEntries
+    if let index = entries.firstIndex(where: { $0.text == text }) {
+      entries[index].sequence = clipboardSequence
+    } else {
+      entries.append(ClipboardEntry(text: text, sequence: clipboardSequence))
+    }
+    sortClipboardEntries(&entries)
+    clipboardEntries = entries
+  }
+
+  func toggleClipboardEntryPin(_ id: UUID) {
+    var entries = clipboardEntries
+    guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+
+    entries[index].isPinned.toggle()
+    sortClipboardEntries(&entries)
+    clipboardEntries = entries
+  }
+
+  func clearClipboard(includePinned: Bool) {
+    if includePinned {
+      clipboardEntries.removeAll()
+    } else {
+      clipboardEntries.removeAll { !$0.isPinned }
+    }
+  }
+
+  private func sortClipboardEntries(_ entries: inout [ClipboardEntry]) {
+    entries.sort {
+      if $0.isPinned != $1.isPinned {
+        return $0.isPinned
+      }
+      return $0.sequence > $1.sequence
     }
   }
 
