@@ -10,46 +10,84 @@ struct ClipboardEntry: Identifiable {
 private struct ClipboardEntryView: View {
   @Environment(\.colorScheme) private var colorScheme
   @State private var isPressed = false
+  @State private var swipeOffset: CGFloat = 0
 
   let entry: ClipboardEntry
 
+  private let deleteThreshold: CGFloat = 60
+
   var body: some View {
-    Text(entry.text)
-      .font(.system(size: 14))
-      .foregroundColor(getNormalForeground(colorScheme))
-      .lineLimit(4)
-      .multilineTextAlignment(.leading)
-      .padding(.horizontal, 8)
-      .padding(.vertical, 6)
-      .padding(.trailing, entry.isPinned ? 10 : 0)
-      .frame(maxWidth: .infinity, minHeight: 30, alignment: .leading)
-      .background(isPressed ? getFunctionBackground(colorScheme) : getNormalBackground(colorScheme))
-      .cornerRadius(8)
-      .overlay(alignment: .bottomTrailing) {
-        if entry.isPinned {
-          Image(systemName: "pin.fill")
-            .font(.system(size: 9))
-            .foregroundColor(getNormalForeground(colorScheme).opacity(0.4))
-            .padding(4)
+    ZStack(alignment: .trailing) {
+      Color.red
+      Image(systemName: "trash")
+        .foregroundColor(.white)
+        .padding(.trailing, 16)
+
+      Text(entry.text)
+        .font(.system(size: 14))
+        .foregroundColor(getNormalForeground(colorScheme))
+        .lineLimit(4)
+        .multilineTextAlignment(.leading)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .padding(.trailing, entry.isPinned ? 10 : 0)
+        .frame(maxWidth: .infinity, minHeight: 30, alignment: .leading)
+        .background(
+          isPressed ? getFunctionBackground(colorScheme) : getNormalBackground(colorScheme)
+        )
+        .cornerRadius(8)
+        .overlay(alignment: .bottomTrailing) {
+          if entry.isPinned {
+            Image(systemName: "pin.fill")
+              .font(.system(size: 9))
+              .foregroundColor(getNormalForeground(colorScheme).opacity(0.4))
+              .padding(4)
+          }
         }
+        .offset(x: swipeOffset)
+    }
+    .clipShape(RoundedRectangle(cornerRadius: 8))
+    .contentShape(RoundedRectangle(cornerRadius: 8))
+    .onTapGesture {
+      guard swipeOffset == 0 else { return }
+      client.commitString(entry.text)
+    }
+    .onContextMenu(
+      onPressingChanged: { pressing in
+        isPressed = pressing
+      },
+      {
+        [
+          MenuItem(
+            text: entry.isPinned
+              ? NSLocalizedString("Unpin", comment: "")
+              : NSLocalizedString("Pin", comment: ""),
+            action: { vm.toggleClipboardEntryPin(entry.id) }),
+          MenuItem(
+            text: NSLocalizedString("Delete", comment: ""),
+            action: { vm.deleteClipboardEntry(entry.id) }),
+        ]
       }
-      .contentShape(RoundedRectangle(cornerRadius: 8))
-      .onTapGesture {
-        client.commitString(entry.text)
-      }
-      .onContextMenu(
-        onPressingChanged: { pressing in
-          isPressed = pressing
-        },
-        {
-          [
-            MenuItem(
-              text: entry.isPinned
-                ? NSLocalizedString("Unpin", comment: "")
-                : NSLocalizedString("Pin", comment: ""),
-              action: { vm.toggleClipboardEntryPin(entry.id) })
-          ]
-        })
+    )
+    .simultaneousGesture(
+      DragGesture(minimumDistance: 10)
+        .onChanged { value in
+          guard abs(value.translation.width) > abs(value.translation.height) else { return }
+          swipeOffset = min(0, value.translation.width)
+        }
+        .onEnded { value in
+          let isHorizontal = abs(value.translation.width) > abs(value.translation.height)
+          if isHorizontal && value.translation.width < -deleteThreshold {
+            withAnimation(.easeOut(duration: 0.15)) {
+              vm.deleteClipboardEntry(entry.id)
+            }
+          } else {
+            withAnimation(.easeOut(duration: 0.15)) {
+              swipeOffset = 0
+            }
+          }
+        }
+    )
   }
 }
 

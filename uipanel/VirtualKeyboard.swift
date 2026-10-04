@@ -236,6 +236,10 @@ public class ViewModel: ObservableObject {
     clipboardEntries = entries
   }
 
+  func deleteClipboardEntry(_ id: UUID) {
+    clipboardEntries.removeAll { $0.id == id }
+  }
+
   func clearClipboard(includePinned: Bool) {
     if includePinned {
       clipboardEntries.removeAll()
