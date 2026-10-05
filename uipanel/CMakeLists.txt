@@ -4,6 +4,7 @@ add_library(KeyboardUI STATIC
     Color.swift
     ContextMenu.swift
     Dialog.swift
+    Toast.swift
     Key.swift
     Bubble.swift
     Shadow.swift

@@ -236,16 +236,34 @@ public class ViewModel: ObservableObject {
     clipboardEntries = entries
   }
 
-  func deleteClipboardEntry(_ id: UUID) {
-    clipboardEntries.removeAll { $0.id == id }
+  @discardableResult
+  func deleteClipboardEntry(_ id: UUID) -> ClipboardEntry? {
+    guard let index = clipboardEntries.firstIndex(where: { $0.id == id }) else { return nil }
+    return clipboardEntries.remove(at: index)
   }
 
-  func clearClipboard(includePinned: Bool) {
+  @discardableResult
+  func clearClipboard(includePinned: Bool) -> [ClipboardEntry] {
+    let deletedEntries = clipboardEntries.filter { includePinned || !$0.isPinned }
     if includePinned {
       clipboardEntries.removeAll()
     } else {
       clipboardEntries.removeAll { !$0.isPinned }
     }
+    return deletedEntries
+  }
+
+  func restoreClipboardEntries(_ deletedEntries: [ClipboardEntry]) {
+    var entries = clipboardEntries
+    for deletedEntry in deletedEntries {
+      if let index = entries.firstIndex(where: { $0.text == deletedEntry.text }) {
+        entries[index].isPinned = deletedEntry.isPinned
+      } else {
+        entries.append(deletedEntry)
+      }
+    }
+    sortClipboardEntries(&entries)
+    clipboardEntries = entries
   }
 
   private func sortClipboardEntries(_ entries: inout [ClipboardEntry]) {

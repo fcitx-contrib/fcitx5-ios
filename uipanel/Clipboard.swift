@@ -13,6 +13,7 @@ private struct ClipboardEntryView: View {
   @State private var swipeOffset: CGFloat = 0
 
   let entry: ClipboardEntry
+  let onDelete: (UUID) -> Void
 
   private let deleteThreshold: CGFloat = 60
 
@@ -64,7 +65,7 @@ private struct ClipboardEntryView: View {
             action: { vm.toggleClipboardEntryPin(entry.id) }),
           MenuItem(
             text: NSLocalizedString("Delete", comment: ""),
-            action: { vm.deleteClipboardEntry(entry.id) }),
+            action: { onDelete(entry.id) }),
         ]
       }
     )
@@ -86,7 +87,8 @@ private struct ClipboardEntryView: View {
           let isHorizontal = abs(value.translation.width) > abs(value.translation.height)
           if isHorizontal && value.translation.width < -deleteThreshold {
             withAnimation(.easeOut(duration: 0.15)) {
-              vm.deleteClipboardEntry(entry.id)
+              swipeOffset = 0
+              onDelete(entry.id)
             }
           } else {
             withAnimation(.easeOut(duration: 0.15)) {
@@ -114,6 +116,10 @@ struct ClipboardView: View {
 
   @State private var showClearConfirmation = false
   @State private var clearIncludesPinned = false
+  @State private var pendingDeletedEntries = [ClipboardEntry]()
+  @State private var toastDismissID = UUID()
+
+  private let toastDuration: UInt64 = 3_000_000_000
 
   private var hasUnpinnedEntries: Bool {
     viewModel.clipboardEntries.contains { !$0.isPinned }
@@ -135,8 +141,48 @@ struct ClipboardView: View {
     return NSLocalizedString("Delete all items?", comment: "")
   }
 
+  private var deletedItemsMessage: String {
+    String.localizedStringWithFormat(
+      NSLocalizedString("%lld item(s) deleted", comment: ""),
+      Int64(pendingDeletedEntries.count))
+  }
+
+  private func deleteEntry(_ id: UUID) {
+    guard let deletedEntry = viewModel.deleteClipboardEntry(id) else { return }
+    showUndoToast(for: [deletedEntry])
+  }
+
+  private func showUndoToast(for deletedEntries: [ClipboardEntry]) {
+    guard !deletedEntries.isEmpty else { return }
+    pendingDeletedEntries.append(contentsOf: deletedEntries)
+    toastDismissID = UUID()
+  }
+
+  private func undoDelete() {
+    let deletedEntries = pendingDeletedEntries
+    dismissUndoToast(animated: false)
+    withAnimation(.easeOut(duration: 0.15)) {
+      viewModel.restoreClipboardEntries(deletedEntries)
+    }
+  }
+
+  private func dismissUndoToast(animated: Bool) {
+    toastDismissID = UUID()
+    if animated {
+      withAnimation(.easeOut(duration: 0.35)) {
+        pendingDeletedEntries.removeAll()
+      }
+    } else {
+      var transaction = Transaction()
+      transaction.disablesAnimations = true
+      withTransaction(transaction) {
+        pendingDeletedEntries.removeAll()
+      }
+    }
+  }
+
   var body: some View {
-    ZStack {
+    ZStack(alignment: .bottom) {
       VStack(spacing: 0) {
         ReturnBarView(width: width, title: NSLocalizedString("Clipboard", comment: "")) {
           Button {
@@ -167,7 +213,7 @@ struct ClipboardView: View {
               ForEach(0..<2) { column in
                 LazyVStack(spacing: 8) {
                   ForEach(entries(inColumn: column)) { entry in
-                    ClipboardEntryView(entry: entry)
+                    ClipboardEntryView(entry: entry, onDelete: deleteEntry)
                   }
                 }
                 .frame(maxWidth: .infinity)
@@ -178,6 +224,16 @@ struct ClipboardView: View {
           .frame(width: width, height: getKeyboardHeight(totalHeight))
         }
       }
+      if !pendingDeletedEntries.isEmpty {
+        ToastView(
+          message: deletedItemsMessage,
+          actionTitle: NSLocalizedString("Undo", comment: ""),
+          action: undoDelete
+        )
+        .frame(width: min(max(width - 48, 0), 480))
+        .padding(.bottom, 16)
+        .transition(.opacity)
+      }
       if showClearConfirmation {
         DialogView(
           width: width,
@@ -186,11 +242,26 @@ struct ClipboardView: View {
           actions: [
             DialogAction(NSLocalizedString("Cancel", comment: "")),
             DialogAction(NSLocalizedString("Clear", comment: ""), role: .destructive) {
-              viewModel.clearClipboard(includePinned: clearIncludesPinned)
+              showUndoToast(
+                for: viewModel.clearClipboard(includePinned: clearIncludesPinned))
             },
           ],
           onDismiss: { showClearConfirmation = false })
       }
+    }
+    .task(id: toastDismissID) {
+      guard !pendingDeletedEntries.isEmpty else { return }
+      let dismissID = toastDismissID
+      do {
+        try await Task.sleep(nanoseconds: toastDuration)
+      } catch {
+        return
+      }
+      guard !Task.isCancelled, toastDismissID == dismissID else { return }
+      dismissUndoToast(animated: true)
+    }
+    .onDisappear {
+      dismissUndoToast(animated: false)
     }
   }
 }
