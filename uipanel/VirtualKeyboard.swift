@@ -254,9 +254,16 @@ public class ViewModel: ObservableObject {
   }
 
   func restoreClipboardEntries(_ deletedEntries: [ClipboardEntry]) {
-    let existingIDs = Set(clipboardEntries.map(\.id))
-    clipboardEntries.append(contentsOf: deletedEntries.filter { !existingIDs.contains($0.id) })
-    sortClipboardEntries(&clipboardEntries)
+    var entries = clipboardEntries
+    for deletedEntry in deletedEntries {
+      if let index = entries.firstIndex(where: { $0.text == deletedEntry.text }) {
+        entries[index].isPinned = deletedEntry.isPinned
+      } else {
+        entries.append(deletedEntry)
+      }
+    }
+    sortClipboardEntries(&entries)
+    clipboardEntries = entries
   }
 
   private func sortClipboardEntries(_ entries: inout [ClipboardEntry]) {
