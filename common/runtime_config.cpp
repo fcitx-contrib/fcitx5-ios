@@ -215,15 +215,19 @@ parseAddonUri(const std::string &uri) {
 
 std::string getAddons() {
     auto addons = nlohmann::json::array();
-    auto names = instance->addonManager().addonNames(AddonCategory::Module);
-    for (const auto &name : names) {
-        const auto *info = instance->addonManager().addonInfo(name);
-        if (!info || !info->isConfigurable()) {
-            continue;
+    for (const auto category :
+         {AddonCategory::Frontend, AddonCategory::Module}) {
+        auto names = instance->addonManager().addonNames(category);
+        for (const auto &name : names) {
+            const auto *info = instance->addonManager().addonInfo(name);
+            if (!info || !info->isConfigurable()) {
+                continue;
+            }
+            addons.push_back(
+                nlohmann::json{{"id", info->uniqueName()},
+                               {"name", info->name().match()},
+                               {"comment", info->comment().match()}});
         }
-        addons.push_back(nlohmann::json{{"id", info->uniqueName()},
-                                        {"name", info->name().match()},
-                                        {"comment", info->comment().match()}});
     }
     return addons.dump();
 }

@@ -737,8 +737,9 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       // On real device, this fails silently if full access is not granted. Simulator works which is misleading.
       UIPasteboard.general.string = text
     }
-    KeyboardViewController.clipboardText = text
-    vm.addClipboardEntry(text)
+    let filteredText = String(filterClipboardEntry(text))
+    KeyboardViewController.clipboardText = filteredText
+    vm.addClipboardEntry(filteredText)
   }
 
   public func cut() {

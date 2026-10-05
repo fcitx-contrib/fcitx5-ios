@@ -18,6 +18,7 @@ void processKey(const char *program, const char *documentIdentifier,
 void resetInput(const char *program, const char *documentIdentifier);
 void triggerUnicode(const char *program, const char *documentIdentifier);
 void triggerQuickPhrase(const char *program, const char *documentIdentifier);
+std::string filterClipboardEntry(const char *text);
 void reload();
 void toggle();
 

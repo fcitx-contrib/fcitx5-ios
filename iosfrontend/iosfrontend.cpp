@@ -1,7 +1,9 @@
 #include "iosfrontend.h"
+#include "../deps/url-filter/src/url-filter.hpp"
 #include "iosfrontend-swift.h"
 
 #include <atomic>
+#include <utility>
 
 namespace fcitx {
 namespace {
@@ -10,6 +12,24 @@ std::atomic_size_t liveInputContextCount = 0;
 
 IosFrontend::IosFrontend(Instance *instance)
     : instance_(instance), focusGroup_("ios", instance->inputContextManager()) {
+    reloadConfig();
+}
+
+void IosFrontend::reloadConfig() { readAsIni(config_, ConfPath); }
+
+void IosFrontend::save() { safeSaveAsIni(config_, ConfPath); }
+
+void IosFrontend::setConfig(const RawConfig &config) {
+    config_.load(config, true);
+    safeSaveAsIni(config_, ConfPath);
+}
+
+std::string IosFrontend::filterClipboardEntry(std::string text) const {
+    // Long strings are unlikely to be URLs and can take seconds to process.
+    if (text.size() <= 2048 && *config_.removeTrackingParameters) {
+        return url_filter::filterTrackingParameters(std::move(text));
+    }
+    return text;
 }
 
 IosInputContext *

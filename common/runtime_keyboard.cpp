@@ -95,6 +95,13 @@ void triggerQuickPhrase(const char *p, const char *d) {
     });
 }
 
+std::string filterClipboardEntry(const char *text) {
+    std::string clipboardText = text;
+    return with_fcitx([clipboardText] {
+        return frontend->filterClipboardEntry(clipboardText);
+    });
+}
+
 void reload() {
     dispatcher->schedule([] {
         instance->reloadConfig();

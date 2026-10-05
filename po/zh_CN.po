@@ -1,0 +1,20 @@
+# Simplified Chinese translations for fcitx5-ios.
+# This file is distributed under the same license as the fcitx5-ios package.
+msgid ""
+msgstr ""
+"Project-Id-Version: fcitx5-ios 0.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-05 00:00-0400\n"
+"PO-Revision-Date: 2026-10-05 00:00-0400\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: iosfrontend/iosfrontend.h
+msgid "Remove tracking parameters"
+msgstr "清除追踪参数"
+
+#: iosfrontend/iosfrontend.conf.in.in
+msgid "iOS Frontend"
+msgstr "iOS 前端"
