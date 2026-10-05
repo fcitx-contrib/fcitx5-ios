@@ -251,12 +251,13 @@ struct ClipboardView: View {
     }
     .task(id: toastDismissID) {
       guard !pendingDeletedEntries.isEmpty else { return }
+      let dismissID = toastDismissID
       do {
         try await Task.sleep(nanoseconds: toastDuration)
       } catch {
         return
       }
-      guard !Task.isCancelled else { return }
+      guard !Task.isCancelled, toastDismissID == dismissID else { return }
       dismissUndoToast(animated: true)
     }
     .onDisappear {
