@@ -87,6 +87,7 @@ private struct ClipboardEntryView: View {
           let isHorizontal = abs(value.translation.width) > abs(value.translation.height)
           if isHorizontal && value.translation.width < -deleteThreshold {
             withAnimation(.easeOut(duration: 0.15)) {
+              swipeOffset = 0
               onDelete(entry.id)
             }
           } else {
