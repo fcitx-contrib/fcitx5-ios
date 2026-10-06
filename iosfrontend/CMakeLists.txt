@@ -16,7 +16,7 @@ _swift_generate_cxx_header(
 
 add_fcitx5_addon(iosfrontend iosfrontend.cpp)
 add_dependencies(iosfrontend SwiftFrontend)
-target_link_libraries(iosfrontend Fcitx5::Core)
+target_link_libraries(iosfrontend Fcitx5::Core url-filter)
 target_include_directories(iosfrontend PUBLIC
     "${CMAKE_CURRENT_BINARY_DIR}/include"
 )

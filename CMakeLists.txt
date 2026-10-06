@@ -140,7 +140,11 @@ fcitx5_get_addon_targets(COMMON_TARGETS iosnotifications fcitx5 iosfrontend uipa
 add_subdirectory(assets)
 add_subdirectory(common)
 add_subdirectory(keyboard)
+add_subdirectory(po)
 add_subdirectory(src)
+
+fcitx5_add_i18n_definition(TARGETS iosfrontend)
+target_compile_definitions(iosfrontend PRIVATE -DFCITX_GETTEXT_DOMAIN=\"fcitx5-ios\")
 
 get_property(RUNTIME_ADDONS GLOBAL PROPERTY FCITX_RUNTIME_ADDONS)
 fcitx5_import_addons(FcitxRuntime

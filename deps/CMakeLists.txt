@@ -1,5 +1,9 @@
 add_subdirectory(AlertToast)
 
+set(ENABLE_TEST OFF)
+add_subdirectory(url-filter)
+unset(ENABLE_TEST)
+
 file(GLOB SWIFTER_FILES CONFIGURE_DEPENDS swifter/Xcode/Sources/*.swift)
 add_library(Swifter STATIC ${SWIFTER_FILES})
 set_target_properties(Swifter PROPERTIES Swift_MODULE_NAME Swifter)

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <fcitx-config/configuration.h>
+#include <fcitx-config/iniparser.h>
+#include <fcitx-utils/i18n.h>
 #include <fcitx/addonfactory.h>
 #include <fcitx/addoninstance.h>
 #include <fcitx/addonmanager.h>
@@ -14,15 +16,22 @@ namespace fcitx {
 
 class IosInputContext;
 
+FCITX_CONFIGURATION(IosFrontendConfig,
+                    Option<bool> removeTrackingParameters{
+                        this, "RemoveTrackingParameters",
+                        _("Remove tracking parameters"), true};);
+
 class IosFrontend : public AddonInstance {
   public:
     IosFrontend(Instance *instance);
     Instance *instance() { return instance_; }
 
-    void reloadConfig() override {}
-    void save() override {}
-    const Configuration *getConfig() const override { return nullptr; }
-    void setConfig(const RawConfig &config) override {}
+    void reloadConfig() override;
+    void save() override;
+    const Configuration *getConfig() const override { return &config_; }
+    void setConfig(const RawConfig &config) override;
+
+    std::string filterClipboardEntry(std::string text) const;
 
     bool keyEvent(const std::string &program,
                   const std::string &documentIdentifier, const Key &key,
@@ -43,6 +52,7 @@ class IosFrontend : public AddonInstance {
 
   private:
     Instance *instance_;
+    IosFrontendConfig config_;
     FocusGroup focusGroup_;
     std::unordered_map<std::string, IosInputContext *> inputContexts_;
 
@@ -52,6 +62,8 @@ class IosFrontend : public AddonInstance {
     IosInputContext &ensureInputContext(const std::string &program,
                                         const std::string &documentIdentifier);
     void destroyInputContext(IosInputContext *ic);
+
+    static const inline std::string ConfPath = "conf/iosfrontend.conf";
 };
 
 class IosFrontendFactory : public AddonFactory {

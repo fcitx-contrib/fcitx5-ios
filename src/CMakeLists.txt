@@ -189,6 +189,7 @@ generate_profile(App "." "${DEFAULT_INPUT_METHODS}")
 add_dependencies(${BUNDLE_NAME} AppProfile)
 
 install_cxx_translations("fcitx5/po")
+install_cxx_translations("po")
 
 # Global addons
 copy_to(app copy "${PROJECT_BINARY_DIR}/iosfrontend/iosfrontend.conf" "${ADDON_PREFIX}/iosfrontend.conf")
