@@ -26,8 +26,25 @@ struct DialogView: View {
   let width: CGFloat
   let height: CGFloat
   let message: String
+  let detail: String?
   let actions: [DialogAction]
   let onDismiss: () -> Void
+
+  init(
+    width: CGFloat,
+    height: CGFloat,
+    message: String,
+    detail: String? = nil,
+    actions: [DialogAction],
+    onDismiss: @escaping () -> Void
+  ) {
+    self.width = width
+    self.height = height
+    self.message = message
+    self.detail = detail
+    self.actions = actions
+    self.onDismiss = onDismiss
+  }
 
   var body: some View {
     ZStack {
@@ -38,11 +55,19 @@ struct DialogView: View {
         }
 
       VStack(spacing: 0) {
-        Text(message)
-          .font(.headline)
-          .foregroundColor(getNormalForeground(colorScheme))
-          .multilineTextAlignment(.center)
-          .padding()
+        VStack(spacing: 8) {
+          Text(message)
+            .font(.headline)
+            .foregroundColor(getNormalForeground(colorScheme))
+            .multilineTextAlignment(.center)
+          if let detail {
+            Text(detail)
+              .font(.subheadline)
+              .foregroundColor(getNormalForeground(colorScheme))
+              .multilineTextAlignment(.center)
+          }
+        }
+        .padding()
         Divider()
         HStack(spacing: 0) {
           ForEach(Array(actions.enumerated()), id: \.element.id) { index, action in

@@ -35,6 +35,10 @@ class IosFrontend : public AddonInstance {
     void setConfig(const RawConfig &config) override;
 
     bool monitorPasteboard() const { return *config_.monitorPasteboard; }
+    void setMonitorPasteboard(bool enabled) {
+        config_.monitorPasteboard.setValue(enabled);
+        save();
+    }
     std::string filterClipboardEntry(std::string text) const;
 
     bool keyEvent(const std::string &program,

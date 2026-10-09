@@ -10,6 +10,12 @@
       <key>Title</key>
       <string>PROMPT_FULL_ACCESS</string>
     </dict>
+    <dict>
+      <key>Type</key>
+      <string>PSGroupSpecifier</string>
+      <key>Title</key>
+      <string>PROMPT_PASTE_FROM_OTHER_APPS</string>
+    </dict>
   </array>
   <key>StringsTable</key>
   <string>Root</string>

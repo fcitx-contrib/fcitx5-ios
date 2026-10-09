@@ -90,13 +90,25 @@ struct ContentView: View {
       }
       .navigationTitle(NSLocalizedString("Fcitx5", comment: ""))
       .overlay(alignment: .bottomTrailing) {
-        NavigationLink(destination: SyncConfigView()) {
-          Text("Sync config")
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(8)
+        HStack(spacing: 8) {
+          Button {
+            UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+          } label: {
+            Text("Full Access")
+              .padding(.horizontal, 12)
+              .padding(.vertical, 8)
+              .background(Color.blue)
+              .foregroundColor(.white)
+              .cornerRadius(8)
+          }
+          NavigationLink(destination: SyncConfigView()) {
+            Text("Sync config")
+              .padding(.horizontal, 12)
+              .padding(.vertical, 8)
+              .background(Color.blue)
+              .foregroundColor(.white)
+              .cornerRadius(8)
+          }
         }
         .padding()
       }
