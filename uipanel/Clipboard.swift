@@ -118,6 +118,8 @@ struct ClipboardView: View {
   @State private var clearIncludesPinned = false
   @State private var pendingDeletedEntries = [ClipboardEntry]()
   @State private var toastDismissID = UUID()
+  @State private var isMonitoring = false
+  @State private var showMonitorFullAccessDialog = false
 
   private let toastDuration: UInt64 = 3_000_000_000
 
@@ -145,6 +147,18 @@ struct ClipboardView: View {
     String.localizedStringWithFormat(
       NSLocalizedString("%lld item(s) deleted", comment: ""),
       Int64(pendingDeletedEntries.count))
+  }
+
+  private var monitorBinding: Binding<Bool> {
+    Binding(
+      get: { isMonitoring },
+      set: { enabled in
+        isMonitoring = enabled
+        client.setClipboardMonitoring(enabled)
+        if enabled && !client.hasKeyboardFullAccess() {
+          showMonitorFullAccessDialog = true
+        }
+      })
   }
 
   private func deleteEntry(_ id: UUID) {
@@ -185,18 +199,25 @@ struct ClipboardView: View {
     ZStack(alignment: .bottom) {
       VStack(spacing: 0) {
         ReturnBarView(width: width, title: NSLocalizedString("Clipboard", comment: "")) {
-          Button {
-            clearIncludesPinned = !hasUnpinnedEntries
-            showClearConfirmation = true
-          } label: {
-            Image(systemName: "trash")
-              .foregroundColor(
-                viewModel.clipboardEntries.isEmpty
-                  ? disabledForeground : getNormalForeground(colorScheme)
-              )
-              .frame(width: getBarHeight(totalHeight), height: getBarHeight(totalHeight))
+          HStack(spacing: 4) {
+            Text("Monitor")
+            Toggle("", isOn: monitorBinding)
+              .labelsHidden()
+              .accessibilityLabel(Text("Monitor"))
+              .fixedSize()
+            Button {
+              clearIncludesPinned = !hasUnpinnedEntries
+              showClearConfirmation = true
+            } label: {
+              Image(systemName: "trash")
+                .foregroundColor(
+                  viewModel.clipboardEntries.isEmpty
+                    ? disabledForeground : getNormalForeground(colorScheme)
+                )
+                .frame(width: getBarHeight(totalHeight), height: getBarHeight(totalHeight))
+            }
+            .disabled(viewModel.clipboardEntries.isEmpty)
           }
-          .disabled(viewModel.clipboardEntries.isEmpty)
         }
         if viewModel.clipboardEntries.isEmpty {
           VStack(spacing: 12) {
@@ -248,6 +269,23 @@ struct ClipboardView: View {
           ],
           onDismiss: { showClearConfirmation = false })
       }
+      if showMonitorFullAccessDialog {
+        DialogView(
+          width: width,
+          height: totalHeight,
+          message: NSLocalizedString(
+            "Full access is required to monitor the clipboard.", comment: ""),
+          detail: NSLocalizedString(
+            "In the Fcitx5 main app, tap \"Full Access\", then follow the instructions at the bottom of the page.",
+            comment: ""),
+          actions: [
+            DialogAction(NSLocalizedString("OK", comment: "")),
+            DialogAction(NSLocalizedString("Close", comment: "")) {
+              monitorBinding.wrappedValue = false
+            },
+          ],
+          onDismiss: { showMonitorFullAccessDialog = false })
+      }
     }
     .task(id: toastDismissID) {
       guard !pendingDeletedEntries.isEmpty else { return }
@@ -259,6 +297,12 @@ struct ClipboardView: View {
       }
       guard !Task.isCancelled, toastDismissID == dismissID else { return }
       dismissUndoToast(animated: true)
+    }
+    .onAppear {
+      isMonitoring = client.clipboardMonitoringEnabled()
+      if isMonitoring && !client.hasKeyboardFullAccess() {
+        showMonitorFullAccessDialog = true
+      }
     }
     .onDisappear {
       dismissUndoToast(animated: false)

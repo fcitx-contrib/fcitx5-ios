@@ -56,6 +56,9 @@ public protocol FcitxProtocol: AnyObject {
   func terminateExtension()
   func slideBackspace(_ step: Int)
   func syncConfig()
+  func clipboardMonitoringEnabled() -> Bool
+  func setClipboardMonitoring(_ enabled: Bool)
+  func hasKeyboardFullAccess() -> Bool
 }
 
 extension FcitxProtocol {

@@ -1,1 +1,2 @@
 PROMPT_FULL_ACCESS = "请打开“⌨️ 键盘”并开启“允许完全访问”";
+PROMPT_PASTE_FROM_OTHER_APPS = "请将“从其他App粘贴”设为“允许”";

@@ -1,1 +1,2 @@
 PROMPT_FULL_ACCESS = "Please open \"⌨️ Keyboards\" and enable \"Allow Full Access\"";
+PROMPT_PASTE_FROM_OTHER_APPS = "Please set \"Paste from Other Apps\" to \"Allow\"";

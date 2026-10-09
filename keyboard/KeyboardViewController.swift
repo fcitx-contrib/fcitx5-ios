@@ -748,7 +748,9 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   private func startClipboardMonitoring() {
-    guard pasteboardPollingTimer == nil, isClipboardMonitoringEnabled() else { return }
+    guard pasteboardPollingTimer == nil, hasFullAccess, isClipboardMonitoringEnabled() else {
+      return
+    }
 
     let timer = Timer(timeInterval: Self.clipboardPollingInterval, repeats: true) {
       [weak self] _ in
@@ -934,5 +936,22 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   public func syncConfig() {
     vm.setDisplayMode(.syncRunning)
     Task { await doSyncConfig(Self.keyboard) }
+  }
+
+  public func clipboardMonitoringEnabled() -> Bool {
+    isClipboardMonitoringEnabled()
+  }
+
+  public func setClipboardMonitoring(_ enabled: Bool) {
+    setClipboardMonitoringEnabled(enabled)
+    if enabled && hasFullAccess {
+      startClipboardMonitoring()
+    } else {
+      stopClipboardMonitoring()
+    }
+  }
+
+  public func hasKeyboardFullAccess() -> Bool {
+    hasFullAccess
   }
 }
