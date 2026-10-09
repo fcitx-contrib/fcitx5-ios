@@ -95,6 +95,10 @@ void triggerQuickPhrase(const char *p, const char *d) {
     });
 }
 
+bool isClipboardMonitoringEnabled() {
+    return with_fcitx([] { return frontend->monitorPasteboard(); });
+}
+
 std::string filterClipboardEntry(const char *text) {
     std::string clipboardText = text;
     return with_fcitx([clipboardText] {

@@ -55,6 +55,8 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   }
 
   private static let documentPollingInterval: TimeInterval = 0.2
+  private static let clipboardPollingInterval: TimeInterval = 0.5
+  private static var lastPasteboardChangeCount: Int?
   nonisolated(unsafe) private static var liveControllerCount = 0
 
   nonisolated let uuid = UUID().uuidString
@@ -69,6 +71,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
   private var documentState: UndoRedoDocumentState?
   private var inputTraitsState: InputTraitsState?
   private var documentPollingTimer: Timer?
+  private var pasteboardPollingTimer: Timer?
   private let undoRedoManager = UndoRedoManager()
   private var arrowDownGeneration = 0
   private var arrowUpGeneration = 0
@@ -416,6 +419,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       updateDisplayModeForInputTraits()
       Fcitx.focusIn(program, currentDocumentIdentifier())
       self.resetInput()  // Avoid old context carried over.
+      startClipboardMonitoring()
     }
     startDocumentPolling()
   }
@@ -427,6 +431,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     inputTraitsState = nil
     Fcitx.focusOut(program, currentDocumentIdentifier())
     stopDocumentPolling()
+    stopClipboardMonitoring()
     uninstallHostingController()
   }
 
@@ -737,6 +742,36 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
       // On real device, this fails silently if full access is not granted. Simulator works which is misleading.
       UIPasteboard.general.string = text
     }
+    let filteredText = String(filterClipboardEntry(text))
+    KeyboardViewController.clipboardText = filteredText
+    vm.addClipboardEntry(filteredText)
+  }
+
+  private func startClipboardMonitoring() {
+    guard pasteboardPollingTimer == nil, isClipboardMonitoringEnabled() else { return }
+
+    let timer = Timer(timeInterval: Self.clipboardPollingInterval, repeats: true) {
+      [weak self] _ in
+      MainActor.assumeIsolated {
+        self?.recordCurrentPasteboardContents()
+      }
+    }
+    RunLoop.main.add(timer, forMode: .common)
+    pasteboardPollingTimer = timer
+  }
+
+  private func stopClipboardMonitoring() {
+    pasteboardPollingTimer?.invalidate()
+    pasteboardPollingTimer = nil
+  }
+
+  private func recordCurrentPasteboardContents() {
+    let pasteboard = UIPasteboard.general
+    let changeCount = pasteboard.changeCount
+    guard changeCount != Self.lastPasteboardChangeCount else { return }
+    Self.lastPasteboardChangeCount = changeCount
+    guard let text = pasteboard.string else { return }
+
     let filteredText = String(filterClipboardEntry(text))
     KeyboardViewController.clipboardText = filteredText
     vm.addClipboardEntry(filteredText)
