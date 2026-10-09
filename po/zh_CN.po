@@ -12,6 +12,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: iosfrontend/iosfrontend.h
+msgid "Monitor Pasteboard"
+msgstr "监视剪贴板"
+
+#: iosfrontend/iosfrontend.h
 msgid "Remove tracking parameters"
 msgstr "清除追踪参数"
 
