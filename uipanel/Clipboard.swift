@@ -1,10 +1,119 @@
 import SwiftUI
+import UIKit
 
 struct ClipboardEntry: Identifiable {
   let id = UUID()
   let text: String
   var isPinned = false
   var sequence: UInt64
+}
+
+private struct ClipboardEntryInteraction: UIViewRepresentable {
+  let onPressingChanged: (Bool) -> Void
+  let onTap: () -> Void
+  let onLongPress: (CGRect) -> Void
+  let onSwipeChanged: (CGFloat) -> Void
+  let onSwipeEnded: (CGFloat?) -> Void
+
+  func makeUIView(context: Context) -> ClipboardGestureView {
+    ClipboardGestureView(frame: .zero)
+  }
+
+  func updateUIView(_ view: ClipboardGestureView, context: Context) {
+    view.onPressingChanged = onPressingChanged
+    view.onTap = onTap
+    view.onLongPress = onLongPress
+    view.onSwipeChanged = onSwipeChanged
+    view.onSwipeEnded = onSwipeEnded
+  }
+}
+
+private class ClipboardGestureView: UIView, UIGestureRecognizerDelegate {
+  var onPressingChanged: ((Bool) -> Void)?
+  var onTap: (() -> Void)?
+  var onLongPress: ((CGRect) -> Void)?
+  var onSwipeChanged: ((CGFloat) -> Void)?
+  var onSwipeEnded: ((CGFloat?) -> Void)?
+
+  private lazy var pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan))
+
+  override init(frame: CGRect) {
+    super.init(frame: frame)
+    pan.maximumNumberOfTouches = 1
+    pan.delegate = self
+    addGestureRecognizer(pan)
+
+    let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress))
+    addGestureRecognizer(longPress)
+
+    let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap))
+    tap.require(toFail: pan)
+    tap.require(toFail: longPress)
+    addGestureRecognizer(tap)
+  }
+
+  required init?(coder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
+
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    super.touchesBegan(touches, with: event)
+    onPressingChanged?(true)
+  }
+
+  override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    super.touchesEnded(touches, with: event)
+    onPressingChanged?(false)
+  }
+
+  override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+    super.touchesCancelled(touches, with: event)
+    onPressingChanged?(false)
+  }
+
+  override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+    guard gestureRecognizer === pan else { return true }
+    let translation = pan.translation(in: self)
+    // Fail before recognition so a vertical drag can start the enclosing ScrollView.
+    return translation.x < 0 && abs(translation.x) > abs(translation.y) * 1.2
+  }
+
+  func gestureRecognizer(
+    _ gestureRecognizer: UIGestureRecognizer,
+    shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer
+  ) -> Bool {
+    guard gestureRecognizer === pan,
+      let scrollView = otherGestureRecognizer.view as? UIScrollView
+    else { return false }
+    // The scroll recognizer waits only until this directional pan begins or fails.
+    return otherGestureRecognizer === scrollView.panGestureRecognizer
+  }
+
+  @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+    onPressingChanged?(false)
+    onTap?()
+  }
+
+  @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+    if gesture.state == .began {
+      onLongPress?(convert(bounds, to: nil))
+    }
+  }
+
+  @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
+    onPressingChanged?(false)
+    let translation = gesture.translation(in: self).x
+    switch gesture.state {
+    case .began, .changed:
+      onSwipeChanged?(translation)
+    case .ended:
+      onSwipeEnded?(translation)
+    case .cancelled, .failed:
+      onSwipeEnded?(nil)
+    default:
+      break
+    }
+  }
 }
 
 private struct ClipboardEntryView: View {
@@ -16,6 +125,11 @@ private struct ClipboardEntryView: View {
   let onDelete: (UUID) -> Void
 
   private let deleteThreshold: CGFloat = 60
+
+  private func commitEntry() {
+    guard !vm.showMenu else { return }
+    client.commitString(entry.text)
+  }
 
   var body: some View {
     ZStack(alignment: .trailing) {
@@ -52,58 +166,39 @@ private struct ClipboardEntryView: View {
     }
     .clipShape(RoundedRectangle(cornerRadius: 8))
     .contentShape(RoundedRectangle(cornerRadius: 8))
-    .onContextMenu(
-      onPressingChanged: { pressing in
-        isPressed = pressing
-      },
-      {
-        [
-          MenuItem(
-            text: entry.isPinned
-              ? NSLocalizedString("Unpin", comment: "")
-              : NSLocalizedString("Pin", comment: ""),
-            action: { vm.toggleClipboardEntryPin(entry.id) }),
-          MenuItem(
-            text: NSLocalizedString("Delete", comment: ""),
-            action: { onDelete(entry.id) }),
-        ]
-      }
-    )
-    .simultaneousGesture(
-      DragGesture(minimumDistance: 10)
-        .onChanged { value in
-          guard !vm.showMenu else {
+    .overlay {
+      ClipboardEntryInteraction(
+        onPressingChanged: { isPressed = $0 },
+        onTap: commitEntry,
+        onLongPress: { frame in
+          guard !vm.showMenu else { return }
+          vm.showContextMenu(
+            frame,
+            [
+              MenuItem(
+                text: entry.isPinned
+                  ? NSLocalizedString("Unpin", comment: "")
+                  : NSLocalizedString("Pin", comment: ""),
+                action: { vm.toggleClipboardEntryPin(entry.id) }),
+              MenuItem(
+                text: NSLocalizedString("Delete", comment: ""),
+                action: { onDelete(entry.id) }),
+            ])
+        },
+        onSwipeChanged: { translation in
+          swipeOffset = vm.showMenu ? 0 : min(0, translation)
+        },
+        onSwipeEnded: { translation in
+          withAnimation(.easeOut(duration: 0.15)) {
             swipeOffset = 0
-            return
-          }
-          guard abs(value.translation.width) > abs(value.translation.height) else { return }
-          swipeOffset = min(0, value.translation.width)
-        }
-        .onEnded { value in
-          guard !vm.showMenu else {
-            swipeOffset = 0
-            return
-          }
-          let isHorizontal = abs(value.translation.width) > abs(value.translation.height)
-          if isHorizontal && value.translation.width < -deleteThreshold {
-            withAnimation(.easeOut(duration: 0.15)) {
-              swipeOffset = 0
+            if !vm.showMenu, let translation, translation < -deleteThreshold {
               onDelete(entry.id)
             }
-          } else {
-            withAnimation(.easeOut(duration: 0.15)) {
-              swipeOffset = 0
-            }
           }
-        }
-        .exclusively(
-          before: TapGesture()
-            .onEnded {
-              guard !vm.showMenu else { return }
-              client.commitString(entry.text)
-            }
-        )
-    )
+        })
+    }
+    .accessibilityAddTraits(.isButton)
+    .accessibilityAction { commitEntry() }
   }
 }
 
