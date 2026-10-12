@@ -35,6 +35,14 @@
         },
         {
             "type": "shell",
+            "label": "Test",
+            "command": "ctest --test-dir build/SIMULATORARM64 --output-on-failure",
+            "group": {
+                "kind": "build"
+            }
+        },
+        {
+            "type": "shell",
             "label": "Install (arm64 simulator)",
             "command": "xcrun simctl install booted build/SIMULATORARM64/src/Fcitx5.app",
             "group": {

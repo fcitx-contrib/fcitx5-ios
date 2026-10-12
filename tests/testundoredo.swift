@@ -209,7 +209,8 @@ private func testHistoryInvalidation(_ test: TestContext) {
 
   manager.reset(to: state("abc", 3))
   manager.update(to: state("", 0, beforePrefix: "abc\n"))
-  test.expect(!manager.canUndo && !manager.canRedo, "newline edits should clear line-scoped history")
+  test.expect(
+    !manager.canUndo && !manager.canRedo, "newline edits should clear line-scoped history")
 }
 
 @MainActor
