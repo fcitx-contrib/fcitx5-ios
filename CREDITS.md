@@ -4,6 +4,7 @@
 * [ios-cmake](https://github.com/leetal/ios-cmake): BSD-3-Clause
 * [swift-cmake-examples](https://github.com/apple/swift-cmake-examples): Apache-2.0
 * [AlertToast](https://github.com/elai950/AlertToast): MIT
+* [GRDB](https://github.com/groue/GRDB.swift): MIT
 * [swifter](https://github.com/httpswift/swifter): BSD-3-Clause
 * [ZIPFoundation](https://github.com/weichsel/ZIPFoundation): MIT
 
