@@ -22,6 +22,8 @@ add_executable(${BUNDLE_NAME} MACOSX_BUNDLE
     AppDelegate.swift
     SceneDelegate.swift
     DataManager.swift
+    BackupArchive.swift
+    DatabaseBackup.swift
     ${CONFIG_UI_FILES}
 )
 
@@ -162,6 +164,7 @@ target_link_libraries(${BUNDLE_NAME}
     Swifter
     FcitxIpc
     ZIPFoundation
+    GRDB
 )
 
 foreach(Keyboard ${KEYBOARDS})

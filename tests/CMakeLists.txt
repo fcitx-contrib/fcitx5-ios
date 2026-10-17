@@ -17,3 +17,5 @@ add_custom_command(
 )
 add_custom_target(UndoRedoSwiftTest ALL DEPENDS "${UNDO_REDO_TEST}")
 add_test(NAME UndoRedoSwift COMMAND "${UNDO_REDO_TEST}")
+
+add_subdirectory(backup)
