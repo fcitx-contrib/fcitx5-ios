@@ -13,3 +13,6 @@ target_compile_options(Swifter PRIVATE -suppress-warnings)
 file(GLOB ZIP_FOUNDATION_FILES CONFIGURE_DEPENDS ZIPFoundation/Sources/ZIPFoundation/*.swift)
 add_library(ZIPFoundation STATIC ${ZIP_FOUNDATION_FILES})
 set_target_properties(ZIPFoundation PROPERTIES Swift_MODULE_NAME ZIPFoundation)
+
+set(GRDB_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/GRDB")
+include("${PROJECT_SOURCE_DIR}/cmake/GRDB.cmake")

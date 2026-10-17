@@ -4,17 +4,10 @@ import SwiftUI
 import SwiftUtil
 import UIKit
 import UniformTypeIdentifiers
-import ZIPFoundation
 
 private struct ExportedArchive: Identifiable {
   let url: URL
   let id = UUID()
-}
-
-private struct ArchiveEntry {
-  let sourceURL: URL?
-  let archivePath: String
-  let isDirectory: Bool
 }
 
 private struct ActivityView: UIViewControllerRepresentable {
@@ -34,195 +27,16 @@ private struct ActivityView: UIViewControllerRepresentable {
   func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
-private let fcitx5ExportMappings = [
-  (source: appGroupConfig, destination: "external/config/"),
-  (source: appGroupData, destination: "external/data/"),
-]
-
-private let requiredDirectoryEntries = [
-  "external/",
-  "databases/",
-  "recently_used/",
-  "shared_prefs/",
-]
-
-private let metadataEntry = "metadata.json"
-private let hamsterRimePrefix = "HamsterBackup/RIME/Rime/"
-
-private struct InvalidZipError: Error {}
-
-private enum ImportSource: Sendable {
-  case fcitx5
-  case hamster
-
-  var mappings: [(source: String, destination: URL)] {
-    switch self {
-    case .fcitx5:
-      return [
-        ("external/config/", appGroupConfig),
-        ("external/data/", appGroupData),
-      ]
-    case .hamster:
-      return [
-        (hamsterRimePrefix, appGroupData.appendingPathComponent("rime"))
-      ]
-    }
-  }
-}
+private let backupArchive = BackupArchive(
+  configDirectory: appGroupConfig,
+  dataDirectory: appGroupData,
+  databasesDirectory: documents.appendingPathComponent("databases"))
 
 private func archiveFileName(_ date: Date) -> String {
   let formatter = ISO8601DateFormatter()
   formatter.formatOptions = [.withInternetDateTime]
   let timestamp = formatter.string(from: date).replacingOccurrences(of: ":", with: "_")
   return "fcitx5-ios_\(timestamp).zip"
-}
-
-private func getMetadata(_ date: Date) throws -> Data {
-  let object: [String: Any] = [
-    "packageName": "org.fcitx.fcitx5.android",
-    "versionCode": 0,
-    "versionName": "",
-    "exportTime": Int64(date.timeIntervalSince1970 * 1000),
-  ]
-  return try JSONSerialization.data(withJSONObject: object)
-}
-
-private func collectEntries() -> [ArchiveEntry] {
-  var entries = [ArchiveEntry]()
-
-  for mapping in fcitx5ExportMappings {
-    var isDirectory: ObjCBool = false
-    guard FileManager.default.fileExists(atPath: mapping.source.path, isDirectory: &isDirectory),
-      isDirectory.boolValue
-    else {
-      continue
-    }
-
-    entries.append(
-      ArchiveEntry(sourceURL: nil, archivePath: mapping.destination, isDirectory: true))
-
-    guard
-      let enumerator = FileManager.default.enumerator(
-        at: mapping.source,
-        includingPropertiesForKeys: [.isDirectoryKey],
-        options: [])
-    else {
-      continue
-    }
-
-    for case let url as URL in enumerator {
-      let values = try? url.resourceValues(forKeys: [.isDirectoryKey])
-      let isDirectory = values?.isDirectory == true
-      let basePath = ((mapping.source.path as NSString).standardizingPath as String) + "/"
-      let path = (url.path as NSString).standardizingPath
-      guard path.hasPrefix(basePath) else {
-        continue
-      }
-      let relativePath = String(path.dropFirst(basePath.count))
-      let archivePath = mapping.destination + relativePath + (isDirectory ? "/" : "")
-      entries.append(
-        ArchiveEntry(
-          sourceURL: isDirectory ? nil : url, archivePath: archivePath, isDirectory: isDirectory))
-    }
-  }
-
-  return entries
-}
-
-private func addDirectory(_ path: String, to archive: Archive) throws {
-  try archive.addEntry(
-    with: path.hasSuffix("/") ? path : path + "/",
-    type: .directory,
-    uncompressedSize: Int64(0),
-    provider: { _, _ in Data() })
-}
-
-private func createExportArchive(at destinationURL: URL, date: Date) throws {
-  let entries = collectEntries()
-
-  try? FileManager.default.removeItem(at: destinationURL)
-
-  var success = false
-  defer {
-    if !success {
-      try? FileManager.default.removeItem(at: destinationURL)
-    }
-  }
-
-  let archive = try Archive(url: destinationURL, accessMode: .create)
-  var addedDirectories = Set<String>()
-
-  for path in requiredDirectoryEntries {
-    try addDirectory(path, to: archive)
-    addedDirectories.insert(path)
-  }
-
-  for entry in entries.filter({ $0.isDirectory }).sorted(by: { $0.archivePath < $1.archivePath })
-  where !addedDirectories.contains(entry.archivePath) {
-    try addDirectory(entry.archivePath, to: archive)
-    addedDirectories.insert(entry.archivePath)
-  }
-
-  for entry in entries.filter({ !$0.isDirectory }).sorted(by: { $0.archivePath < $1.archivePath }) {
-    if let sourceURL = entry.sourceURL {
-      try archive.addEntry(
-        with: entry.archivePath,
-        fileURL: sourceURL,
-        compressionMethod: .deflate)
-    }
-  }
-
-  let metadata = try getMetadata(date)
-  try archive.addEntry(
-    with: metadataEntry,
-    type: .file,
-    uncompressedSize: Int64(metadata.count),
-    compressionMethod: .deflate,
-    provider: { position, size in
-      let start = Int(position)
-      let end = min(start + size, metadata.count)
-      return metadata.subdata(in: start..<end)
-    })
-
-  success = true
-}
-
-private func validateImportArchive(_ archive: Archive, source: ImportSource) -> Bool {
-  switch source {
-  case .fcitx5:
-    return archive.contains { $0.path == metadataEntry }
-  case .hamster:
-    return archive.contains { $0.path == hamsterRimePrefix || $0.path.hasPrefix(hamsterRimePrefix) }
-  }
-}
-
-private func destinationURL(root: URL, relativePath: String) throws -> URL {
-  guard !relativePath.hasPrefix("/"), !relativePath.contains("\\") else {
-    throw InvalidZipError()
-  }
-
-  var destination = root
-  for component in relativePath.split(separator: "/", omittingEmptySubsequences: true) {
-    guard component != "." && component != ".." else {
-      throw InvalidZipError()
-    }
-    destination.appendPathComponent(String(component))
-  }
-
-  let rootPath = (root.path as NSString).standardizingPath
-  let destinationPath = (destination.path as NSString).standardizingPath
-  guard destinationPath == rootPath || destinationPath.hasPrefix(rootPath + "/") else {
-    throw InvalidZipError()
-  }
-  return destination
-}
-
-private func destinationURL(for entry: Entry, source: ImportSource) throws -> URL? {
-  for mapping in source.mappings where entry.path.hasPrefix(mapping.source) {
-    let relativePath = String(entry.path.dropFirst(mapping.source.count))
-    return try destinationURL(root: mapping.destination, relativePath: relativePath)
-  }
-  return nil
 }
 
 private func importArchive(from sourceURL: URL, source: ImportSource) throws {
@@ -233,35 +47,7 @@ private func importArchive(from sourceURL: URL, source: ImportSource) throws {
     }
   }
 
-  let archive = try Archive(url: sourceURL, accessMode: .read)
-  guard validateImportArchive(archive, source: source) else {
-    throw InvalidZipError()
-  }
-
-  for entry in archive {
-    try Task.checkCancellation()
-    guard let destination = try destinationURL(for: entry, source: source) else {
-      continue
-    }
-
-    switch entry.type {
-    case .directory:
-      var isDirectory: ObjCBool = false
-      if FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory),
-        !isDirectory.boolValue
-      {
-        try FileManager.default.removeItem(at: destination)
-      }
-      try FileManager.default.createDirectory(at: destination, withIntermediateDirectories: true)
-    case .file:
-      try FileManager.default.createDirectory(
-        at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
-      try? FileManager.default.removeItem(at: destination)
-      _ = try archive.extract(entry, to: destination)
-    case .symlink:
-      continue
-    }
-  }
+  try backupArchive.importData(from: sourceURL, source: source)
 }
 
 struct DataManagerView: View {
@@ -299,7 +85,7 @@ struct DataManagerView: View {
     exporting = true
     exportTask = Task.detached(priority: .userInitiated) {
       do {
-        try createExportArchive(at: url, date: date)
+        try backupArchive.export(to: url, date: date)
         guard !Task.isCancelled else {
           try? FileManager.default.removeItem(at: url)
           return
