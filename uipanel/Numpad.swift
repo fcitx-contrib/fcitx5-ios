@@ -4,7 +4,7 @@ private let numpadRows = [
   ["+", "1", "2", "3", "="],
   ["-", "4", "5", "6", "@"],
   ["*", "7", "8", "9", "backspace"],
-  ["/", ",", "0", "spaceAndPeriod", "enter"],
+  ["/", "commaAndColon", "0", "spaceAndPeriod", "enter"],
 ]
 
 private let numpadDigitCodes = [
@@ -52,6 +52,16 @@ struct NumpadView: View {
               label: viewModel.enterLabel, cr: viewModel.hasPreedit,
               disable: viewModel.textIsEmpty && viewModel.enterHighlight,
               highlight: viewModel.enterHighlight)
+          } else if key == "commaAndColon" {
+            let splitKeyWidth = keyWidth / 2
+            KeyView(
+              x: x, y: y, width: splitKeyWidth, height: keyHeight,
+              label: ",", key: ",", code: "", forward: true, subLabel: nil, swipeUp: nil,
+              longPress: nil)
+            KeyView(
+              x: x + splitKeyWidth, y: y, width: splitKeyWidth, height: keyHeight,
+              label: ":", key: ":", code: "", forward: true, subLabel: nil, swipeUp: nil,
+              longPress: nil)
           } else if key == "spaceAndPeriod" {
             let splitKeyWidth = keyWidth / 2
             SpaceView(
