@@ -353,6 +353,11 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     // UIKit may retain this KeyboardViewController after its host app stops using the keyboard.
     // Create the SwiftUI tree only while it is visible so inactive hosts do not retain one each.
     let hostingController = UIHostingController(rootView: VirtualKeyboardView())
+    // The first measurement can use the previous orientation's height until onAppear updates it.
+    // Invalidate UIKit's intrinsic size when SwiftUI publishes the corrected height.
+    // Regression test (iPhone 17 simulator): dismiss the Chinese keyboard in landscape,
+    // rotate to normal portrait, then reopen it. Verify the toolbar and bottom row are not clipped.
+    hostingController.sizingOptions = .intrinsicContentSize
     hostingController.view.translatesAutoresizingMaskIntoConstraints = false
     hostingController.view.backgroundColor = .clear
     self.hostingController = hostingController
