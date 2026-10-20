@@ -77,10 +77,14 @@ struct KeyView: View {
   let swipeUp: [String: Any]?
   let longPress: [String: Any]?
 
+  private var fontSize: CGFloat {
+    getKeyLabelFontSize(height)
+  }
+
   var body: some View {
     let longPressCells = parseLongPressCells(longPress)
     Text(label)
-      .font(.system(size: height * 0.5).weight(.light))
+      .font(.system(size: fontSize, weight: .regular))
       .keyProperties(
         x: x, y: y, width: width, height: height,
         background: getNormalBackground(colorScheme),
