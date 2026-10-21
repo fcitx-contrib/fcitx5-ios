@@ -14,6 +14,10 @@ fcitx5-ios is an iOS input method built with CMake + Ninja (not managed by Xcode
 - UI update callbacks are accepted only when both the controller `program` is current and the InputContext token still resolves to a focused context. In `FcitxProtocol`, `isCurrentDocument` is for frontend document callbacks and `isCurrentProgram` is for UI callback routing.
 - Name parameters that carry the C++ UUID `inputContext` or `inputContextToken`, never `documentIdentifier`. Reserve `documentIdentifier` for the identifier supplied by iOS.
 
+## Keyboard Size and Typography Measurements
+
+When changing keyboard heights, key-label fonts, or simulator coverage, follow [the keyboard measurement workflow](docs/keyboard-measurements.md). Compare native Simplified Chinese Pinyin and the actual Chinese extension in the same input host; distinguish measured devices from same-screen mappings. Keep `docs/size.md`, the versioned survey CSV, `uipanel/height.swift`, and `uipanel/Key.swift` consistent. Preserve historical measurements and their explanations rather than replacing them with configured defaults.
+
 ## Build
 
 After changing code, always build for the arm64 simulator to verify the change compiles:
