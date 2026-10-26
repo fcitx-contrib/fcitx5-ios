@@ -54,7 +54,7 @@ function(_swift_generate_cxx_header target header)
     DEPENDS ${_SwiftSources}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMAND
-      ${CMAKE_Swift_COMPILER} -frontend -typecheck
+      ${CMAKE_Swift_COMPILER} -typecheck -whole-module-optimization
       ${ARG_SEARCH_PATHS}
       ${_SwiftSources}
       ${SDK_FLAGS}
