@@ -13,7 +13,7 @@ Note: Without developer account, App Group can't be used, so please
 * click `Sync config` after making changes to configuration or data.
 
 ## Build for simulator
-This project is NOT managed by Xcode, but Xcode is needed for iOS SDK.
+This project is NOT managed by Xcode, but Xcode 27.1 is needed for iOS SDK.
 
 Below assumes Apple Silicon.
 For Intel, replace all `SIMULATORARM64` with `SIMULATOR64`.
@@ -41,7 +41,7 @@ You can also use `Cmd+Shift+B` in VSCode to execute a task.
 ```sh
 xcrun simctl list devices
 xcrun simctl boot UUID
-open /Applications/Xcode.app/Contents/Developer/Applications/Simulator.app
+open /Applications/Xcode.app/Contents/Applications/DeviceHub.app
 xcrun simctl install booted build/SIMULATORARM64/src/Fcitx5.app
 ```
 After the first time you execute `xcrun simctl install`,
