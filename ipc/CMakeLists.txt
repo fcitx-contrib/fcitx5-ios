@@ -8,5 +8,5 @@ _swift_generate_cxx_header(
     FcitxIpc
     "${CMAKE_CURRENT_BINARY_DIR}/include/fcitxipc-swift.h"
     SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/ipc.swift"
-    SEARCH_PATHS "${PROJECT_BINARY_DIR}/common"
+    SEARCH_PATHS "${PROJECT_BINARY_DIR}/common;${PROJECT_BINARY_DIR}/deps;${PROJECT_SOURCE_DIR}/deps/GRDB/Sources/GRDBSQLite"
 )

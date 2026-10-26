@@ -16,6 +16,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
   ) -> Bool {
     logPaths()
     initProfile()
+    Task.detached {
+      do { _ = try clipboardStore.entries() } catch {
+        FCITX_ERROR("Failed to initialize clipboard: \(error)")
+      }
+    }
     let locale = getLocale()
     setLocale(locale)
     syncLocale(locale)

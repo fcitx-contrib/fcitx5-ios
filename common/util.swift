@@ -13,6 +13,10 @@ public let appGroupConfig = appGroup.appendingPathComponent("config")
 public let appGroupTmp = appGroup.appendingPathComponent("tmp")
 public let appGroupData = appGroup.appendingPathComponent("data")
 public let appGroupAvailable = appGroup != documents
+public let clipboardDatabases = appGroup.appendingPathComponent("databases")
+public let clipboardStore = ClipboardStore(
+  directory: clipboardDatabases,
+  legacyDirectory: appGroupAvailable ? documents.appendingPathComponent("databases") : nil)
 
 public func logPaths() {
   FCITX_INFO("Bundle: \(Bundle.main.bundleURL)")

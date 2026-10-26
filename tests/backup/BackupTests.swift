@@ -12,7 +12,7 @@ private func expect(_ condition: Bool, _ message: String) throws {
 }
 
 // Android's Room v4 model. Do not reuse UI UUIDs or timestamps in seconds.
-private struct ClipboardRecord: Codable, FetchableRecord, PersistableRecord, Equatable {
+private struct AndroidClipboardFixture: Codable, FetchableRecord, PersistableRecord, Equatable {
   static let databaseTableName = "clipboard"
   let id: Int64
   let text: String
@@ -23,13 +23,13 @@ private struct ClipboardRecord: Codable, FetchableRecord, PersistableRecord, Equ
   let sensitive: Bool
 
   static let fixtures = [
-    ClipboardRecord(
+    AndroidClipboardFixture(
       id: 1, text: "普通文本 ' SQL ; 中文 🐧", pinned: false, timestamp: 1_791_662_951_174,
       type: "text/plain", deleted: false, sensitive: false),
-    ClipboardRecord(
+    AndroidClipboardFixture(
       id: 2, text: "置顶", pinned: true, timestamp: 1_791_662_971_116,
       type: "text/plain", deleted: false, sensitive: false),
-    ClipboardRecord(
+    AndroidClipboardFixture(
       id: 3, text: "已删除", pinned: true, timestamp: 1_791_662_987_381,
       type: "text/html", deleted: true, sensitive: true),
   ]
@@ -39,6 +39,7 @@ private struct ClipboardRecord: Codable, FetchableRecord, PersistableRecord, Equ
 private struct BackupTests {
   static var manager: FileManager { .default }
   static let roomHash = "b0fe6cdac09e0d7deaff17d8b45fe565"
+  static let clipboardArchivePath = "databases/\(ClipboardStore.databaseFileName)"
 
   static func main() async throws {
     let root = manager.temporaryDirectory.appendingPathComponent("backup-tests-\(UUID())")
@@ -48,31 +49,38 @@ private struct BackupTests {
     try testWALRoundTrip(root: root, includeSHM: true)
     try testWALRoundTrip(root: root, includeSHM: false)
     try testLiveExport(root: root)
+    try testAndroidImportWithStaleWAL(root: root)
     try testReplacement(root: root)
     try testFailurePreservesDatabase(root: root)
     try testLegacyArchives(root: root)
     try testPathTraversal(root: root)
     try testNoDatabaseDirectoryEntry(root: root)
     try testUncommittedTransactions(root: root)
-    try testOldSchemas(root: root)
+    try testUnsupportedVersions(root: root)
     try await testCancellation(root: root)
 
     // Optional local-only verification of a user's archive, never included as a fixture.
     if CommandLine.arguments.count > 1 {
       let backup = store(at: root.appendingPathComponent("android-archive"))
       try backup.importData(from: URL(fileURLWithPath: CommandLine.arguments[1]), source: .fcitx5)
-      try assertStandalone(backup.databasesDirectory.appendingPathComponent("clbdb"))
-      let records = try readDatabase(backup.databasesDirectory.appendingPathComponent("clbdb")) {
-        try ClipboardRecord.order(Column("id")).fetchAll($0)
+      try assertStandalone(
+        backup.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName))
+      let records = try readDatabase(
+        backup.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName)
+      ) {
+        try AndroidClipboardFixture.order(Column("id")).fetchAll($0)
       }
       let exported = root.appendingPathComponent("android-roundtrip.zip")
       try backup.export(to: exported, date: Date())
       let restored = store(at: root.appendingPathComponent("android-roundtrip"))
       try restored.importData(from: exported, source: .fcitx5)
-      try assertStandalone(restored.databasesDirectory.appendingPathComponent("clbdb"))
-      try readDatabase(restored.databasesDirectory.appendingPathComponent("clbdb")) { db in
+      try assertStandalone(
+        restored.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName))
+      try readDatabase(
+        restored.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName)
+      ) { db in
         try expect(
-          try ClipboardRecord.order(Column("id")).fetchAll(db) == records,
+          try AndroidClipboardFixture.order(Column("id")).fetchAll(db) == records,
           "Actual Android archive roundtrip")
       }
       print("PASS supplied Android archive roundtrip (\(records.count) rows)")
@@ -114,7 +122,7 @@ private struct BackupTests {
           """)
       try db.execute(
         sql: "INSERT INTO room_master_table VALUES (42, ?)", arguments: [roomHash])
-      for record in ClipboardRecord.fixtures { try record.insert(db) }
+      for record in AndroidClipboardFixture.fixtures { try record.insert(db) }
     }
     return queue
   }
@@ -147,7 +155,8 @@ private struct BackupTests {
     try assertStandalone(url)
     try readDatabase(url) { db in
       try expect(
-        try ClipboardRecord.order(Column("id")).fetchAll(db) == ClipboardRecord.fixtures,
+        try AndroidClipboardFixture.order(Column("id")).fetchAll(db)
+          == AndroidClipboardFixture.fixtures,
         "Record fields")
       try expect(
         try Int.fetchOne(db, sql: "SELECT seq FROM sqlite_sequence WHERE name = 'clipboard'") == 3,
@@ -177,7 +186,8 @@ private struct BackupTests {
   }
 
   static func walArchive(root: URL, includeSHM: Bool) throws -> URL {
-    let database = root.appendingPathComponent("source/clbdb")
+    let database = root.appendingPathComponent("source").appendingPathComponent(
+      ClipboardStore.databaseFileName)
     let queue = try fixture(at: database, wal: true)
     defer { try? queue.close() }
     let main = try Data(contentsOf: database)
@@ -185,9 +195,9 @@ private struct BackupTests {
     try expect(
       main.count == 4096 && wal.count > main.count, "Fixture must have WAL-only schema and rows")
     // WAL precedes the main file, testing extraction order independence.
-    var entries = [("databases/clbdb-wal", wal), ("databases/clbdb", main)]
+    var entries = [(clipboardArchivePath + "-wal", wal), (clipboardArchivePath, main)]
     if includeSHM {
-      entries.append(("databases/clbdb-shm", Data("stale Android WAL index".utf8)))
+      entries.append((clipboardArchivePath + "-shm", Data("stale Android WAL index".utf8)))
     }
     entries.append(("external/config/example", Data("config".utf8)))
     entries.append(("external/data/example", Data("data".utf8)))
@@ -201,7 +211,8 @@ private struct BackupTests {
     let archiveURL = try walArchive(root: directory, includeSHM: includeSHM)
     let backup = store(at: directory.appendingPathComponent("imported"))
     try backup.importData(from: archiveURL, source: .fcitx5)
-    try assertFixture(backup.databasesDirectory.appendingPathComponent("clbdb"))
+    try assertFixture(
+      backup.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName))
     try expect(
       try Data(contentsOf: backup.configDirectory.appendingPathComponent("example"))
         == Data("config".utf8), "Config mapping")
@@ -211,23 +222,27 @@ private struct BackupTests {
     let exported = directory.appendingPathComponent("ios.zip")
     try backup.export(to: exported, date: Date())
     let archive = try Archive(url: exported, accessMode: .read)
-    try expect(archive["databases/clbdb"] != nil, "Database archive path")
+    try expect(archive[clipboardArchivePath] != nil, "Database archive path")
     try expect(
-      !archive.contains { $0.path.hasSuffix("-wal") || $0.path.hasSuffix("-shm") },
-      "No ZIP sidecars")
+      archive[clipboardArchivePath + "-wal"]?.uncompressedSize == 0,
+      "Empty compatibility WAL")
+    try expect(
+      !archive.contains { $0.path.hasSuffix("-shm") || $0.path.hasSuffix("-journal") },
+      "No SHM or rollback journal")
     try expect(
       archive["external/config/example"] != nil && archive["metadata.json"] != nil,
       "Android ZIP layout")
     let restored = store(at: directory.appendingPathComponent("roundtrip"))
     try restored.importData(from: exported, source: .fcitx5)
-    try assertFixture(restored.databasesDirectory.appendingPathComponent("clbdb"))
+    try assertFixture(
+      restored.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName))
     print("PASS WAL import/export, SHM=\(includeSHM)")
   }
 
   static func testLiveExport(root: URL) throws {
     let directory = root.appendingPathComponent("live")
     let backup = store(at: directory)
-    let main = backup.databasesDirectory.appendingPathComponent("clbdb")
+    let main = backup.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName)
     let queue = try fixture(at: main, wal: true)
     defer { try? queue.close() }
     let before = try Data(contentsOf: URL(fileURLWithPath: main.path + "-wal"))
@@ -238,25 +253,79 @@ private struct BackupTests {
       "Source WAL must not change")
     let restored = store(at: directory.appendingPathComponent("restored"))
     try restored.importData(from: exported, source: .fcitx5)
-    try assertFixture(restored.databasesDirectory.appendingPathComponent("clbdb"))
+    try assertFixture(
+      restored.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName))
     print("PASS live WAL export without checkpointing source")
+  }
+
+  static func testAndroidImportWithStaleWAL(root: URL) throws {
+    let directory = root.appendingPathComponent("android-stale-wal")
+    let backup = store(at: directory.appendingPathComponent("source"))
+    let source = backup.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName)
+    let sourceQueue = try fixture(at: source, wal: false)
+    try sourceQueue.close()
+    let exported = directory.appendingPathComponent("ios.zip")
+    try backup.export(to: exported, date: Date())
+
+    let target = directory.appendingPathComponent("android").appendingPathComponent(
+      ClipboardStore.databaseFileName)
+    let targetQueue = try fixture(at: target, wal: true)
+    defer { try? targetQueue.close() }
+    try targetQueue.write { db in
+      _ = try AndroidClipboardFixture.deleteAll(db)
+    }
+    // Preserve the sidecars left by Android's open Room connection during import.
+    let wal = try Data(contentsOf: URL(fileURLWithPath: target.path + "-wal"))
+    let shm = try Data(contentsOf: URL(fileURLWithPath: target.path + "-shm"))
+    try targetQueue.close()
+    try wal.write(to: URL(fileURLWithPath: target.path + "-wal"))
+    try shm.write(to: URL(fileURLWithPath: target.path + "-shm"))
+    try Data(contentsOf: source).write(to: target)
+    try readDatabase(target) { db in
+      try expect(
+        try AndroidClipboardFixture.fetchCount(db) == 0,
+        "Fixture WAL must hide imported records when only the main file is replaced")
+    }
+
+    // Android overlays only files present in the ZIP, retaining any old sidecars.
+    let archive = try Archive(url: exported, accessMode: .read)
+    for entry in archive where entry.type == .file && entry.path.hasPrefix("databases/") {
+      var data = Data()
+      _ = try archive.extract(entry) { data.append($0) }
+      try data.write(
+        to: target.deletingLastPathComponent().appendingPathComponent(
+          String(entry.path.dropFirst("databases/".count))))
+    }
+    try readDatabase(target) { db in
+      try expect(
+        try String.fetchOne(db, sql: "PRAGMA integrity_check") == "ok", "Android integrity")
+      try expect(
+        try AndroidClipboardFixture.order(Column("id")).fetchAll(db)
+          == AndroidClipboardFixture.fixtures,
+        "Stale Android WAL must not override imported records")
+    }
+    print("PASS Android overlay import with stale WAL and SHM")
   }
 
   static func testReplacement(root: URL) throws {
     let directory = root.appendingPathComponent("replace")
     let archive = try walArchive(root: directory, includeSHM: true)
     let backup = store(at: directory.appendingPathComponent("imported"))
-    let old = try fixture(at: backup.databasesDirectory.appendingPathComponent("clbdb"), wal: false)
+    let old = try fixture(
+      at: backup.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName),
+      wal: false)
     try old.close()
     let unrelated = backup.databasesDirectory.appendingPathComponent("other")
     let other = try fixture(at: unrelated, wal: false)
     try other.close()
     for suffix in ["-wal", "-shm", "-journal"] {
       try Data("old sidecar".utf8).write(
-        to: URL(fileURLWithPath: backup.databasesDirectory.path + "/clbdb" + suffix))
+        to: backup.databasesDirectory.appendingPathComponent(
+          ClipboardStore.databaseFileName + suffix))
     }
     try backup.importData(from: archive, source: .fcitx5)
-    try assertFixture(backup.databasesDirectory.appendingPathComponent("clbdb"))
+    try assertFixture(
+      backup.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName))
     try assertFixture(unrelated)
     print("PASS atomic replacement and stale sidecar cleanup")
   }
@@ -264,12 +333,12 @@ private struct BackupTests {
   static func testFailurePreservesDatabase(root: URL) throws {
     let directory = root.appendingPathComponent("failure")
     let backup = store(at: directory)
-    let main = backup.databasesDirectory.appendingPathComponent("clbdb")
+    let main = backup.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName)
     let queue = try fixture(at: main, wal: false)
     try queue.close()
     let before = try Data(contentsOf: main)
     for (name, entries) in [
-      ("corrupt", [("databases/clbdb", Data("not SQLite".utf8))]),
+      ("corrupt", [(clipboardArchivePath, Data("not SQLite".utf8))]),
       ("orphan", [("databases/missing-wal", Data("orphan WAL".utf8))]),
     ] {
       let archive = directory.appendingPathComponent("\(name).zip")
@@ -288,7 +357,7 @@ private struct BackupTests {
   static func testLegacyArchives(root: URL) throws {
     let directory = root.appendingPathComponent("legacy")
     let backup = store(at: directory)
-    let main = backup.databasesDirectory.appendingPathComponent("clbdb")
+    let main = backup.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName)
     let queue = try fixture(at: main, wal: false)
     try queue.close()
     let archive = directory.appendingPathComponent("legacy.zip")
@@ -336,20 +405,22 @@ private struct BackupTests {
     // walArchive intentionally has no explicit databases/ directory entry.
     let directory = root.appendingPathComponent("plain")
     let backup = store(at: directory)
-    let source = directory.appendingPathComponent("source/clbdb")
+    let source = directory.appendingPathComponent("source").appendingPathComponent(
+      ClipboardStore.databaseFileName)
     let queue = try fixture(at: source, wal: false)
     try queue.close()
     let archive = directory.appendingPathComponent("plain.zip")
-    try makeArchive(at: archive, entries: [("databases/clbdb", try Data(contentsOf: source))])
+    try makeArchive(at: archive, entries: [(clipboardArchivePath, try Data(contentsOf: source))])
     try backup.importData(from: archive, source: .fcitx5)
-    try assertFixture(backup.databasesDirectory.appendingPathComponent("clbdb"))
+    try assertFixture(
+      backup.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName))
     print("PASS standalone import without directory entries")
   }
 
   static func testUncommittedTransactions(root: URL) throws {
     let directory = root.appendingPathComponent("uncommitted")
     let backup = store(at: directory)
-    let main = backup.databasesDirectory.appendingPathComponent("clbdb")
+    let main = backup.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName)
     let queue = try fixture(at: main, wal: true)
     defer { try? queue.close() }
     try queue.writeWithoutTransaction { db in
@@ -368,16 +439,18 @@ private struct BackupTests {
         try backup.export(to: archive, date: Date())
         let restored = store(at: directory.appendingPathComponent("restored"))
         try restored.importData(from: archive, source: .fcitx5)
-        try assertFixture(restored.databasesDirectory.appendingPathComponent("clbdb"))
+        try assertFixture(
+          restored.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName))
         let importedWAL = directory.appendingPathComponent("uncommitted-wal.zip")
         try makeArchive(
           at: importedWAL,
           entries: [
-            ("databases/clbdb", try Data(contentsOf: main)),
-            ("databases/clbdb-wal", wal),
+            (clipboardArchivePath, try Data(contentsOf: main)),
+            (clipboardArchivePath + "-wal", wal),
           ])
         try restored.importData(from: importedWAL, source: .fcitx5)
-        try assertFixture(restored.databasesDirectory.appendingPathComponent("clbdb"))
+        try assertFixture(
+          restored.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName))
         try db.execute(sql: "ROLLBACK")
       } catch {
         try? db.execute(sql: "ROLLBACK")
@@ -387,54 +460,30 @@ private struct BackupTests {
     print("PASS uncommitted WAL frames are neither imported nor exported")
   }
 
-  static func testOldSchemas(root: URL) throws {
-    for version in 1...3 {
+  static func testUnsupportedVersions(root: URL) throws {
+    for version in [0, 1, 2, 3, 5] {
       let directory = root.appendingPathComponent("schema-\(version)")
-      let main = directory.appendingPathComponent("source/clbdb")
-      try manager.createDirectory(
-        at: main.deletingLastPathComponent(), withIntermediateDirectories: true)
-      let queue = try DatabaseQueue(path: main.path)
-      let extraColumns =
-        version == 1
-        ? "" : ", timestamp INTEGER NOT NULL DEFAULT -1, type TEXT NOT NULL DEFAULT 'text/plain'"
-      let deletedColumn = version == 3 ? ", deleted INTEGER NOT NULL DEFAULT 0" : ""
-      let hash = [
-        "6703837121d954933d8376d61e4d8291", "fc902cf5d26aca7d0ac10be1fc3728f0",
-        "3046f390f998a6787882456a529ac924",
-      ][version - 1]
-      try queue.write { db in
-        try db.execute(
-          sql: """
-            CREATE TABLE clipboard (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-              text TEXT NOT NULL, pinned INTEGER NOT NULL\(extraColumns)\(deletedColumn));
-            CREATE TABLE room_master_table (id INTEGER PRIMARY KEY, identity_hash TEXT);
-            PRAGMA user_version = \(version);
-            """)
-        try db.execute(sql: "INSERT INTO room_master_table VALUES (42, ?)", arguments: [hash])
-        try db.execute(sql: "INSERT INTO clipboard (text, pinned) VALUES ('old schema', 1)")
-      }
-      let originalSchema = try queue.read { db in
-        try String.fetchOne(db, sql: "SELECT sql FROM sqlite_master WHERE name = 'clipboard'")
-      }
+      let main = directory.appendingPathComponent("source").appendingPathComponent(
+        ClipboardStore.databaseFileName)
+      let queue = try fixture(at: main, wal: false)
+      try queue.write { try $0.execute(sql: "PRAGMA user_version = \(version)") }
       try queue.close()
+      let before = try Data(contentsOf: main)
       let archive = directory.appendingPathComponent("old.zip")
-      try makeArchive(at: archive, entries: [("databases/clbdb", try Data(contentsOf: main))])
+      try makeArchive(at: archive, entries: [(clipboardArchivePath, try Data(contentsOf: main))])
       let backup = store(at: directory.appendingPathComponent("restored"))
-      try backup.importData(from: archive, source: .fcitx5)
-      try readDatabase(backup.databasesDirectory.appendingPathComponent("clbdb")) { db in
-        try expect(
-          try Int.fetchOne(db, sql: "PRAGMA user_version") == version, "No automatic migrations")
-        try expect(
-          try String.fetchOne(db, sql: "SELECT identity_hash FROM room_master_table WHERE id = 42")
-            == hash, "Old Room hash")
-        try expect(
-          try String.fetchOne(db, sql: "SELECT sql FROM sqlite_master WHERE name = 'clipboard'")
-            == originalSchema, "Old schema preserved")
-        try expect(
-          try Bool.fetchOne(db, sql: "SELECT pinned FROM clipboard") == true, "Old pin state")
+      let target = backup.databasesDirectory.appendingPathComponent(ClipboardStore.databaseFileName)
+      try fixture(at: target, wal: false).close()
+      do {
+        try backup.importData(from: archive, source: .fcitx5)
+        throw TestFailure(message: "Unsupported archive schema must fail")
+      } catch ClipboardStore.Failure.unsupportedVersion(let rejected) {
+        try expect(rejected == version, "Report unsupported archive version")
       }
+      try expect(try Data(contentsOf: main) == before, "Source database unchanged")
+      try assertFixture(target)
     }
-    print("PASS Android schema versions 1–3 preserved without migrations")
+    print("PASS unsupported archive schemas rejected without replacing existing data")
   }
 
   static func testCancellation(root: URL) async throws {

@@ -1,7 +1,14 @@
 import Foundation
 import GRDB
 
-/// Copies SQLite's committed view, including WAL transactions, without changing its schema.
+// The app imports these types from SwiftUtil; macOS tests compile their source
+// files directly into the test module, where no SwiftUtil import is needed.
+#if canImport(SwiftUtil)
+  import SwiftUtil
+#endif
+
+/// Copies SQLite's committed view, including WAL transactions. Only iOS clipboard
+/// sync bookkeeping is omitted; Android's schema and version are preserved.
 enum DatabaseBackup {
   enum Failure: Error {
     case invalidDirectory
@@ -47,6 +54,10 @@ enum DatabaseBackup {
     let reader = try DatabaseQueue(path: source.path, configuration: configuration)
     defer { try? reader.close() }
     try reader.read { db in
+      if source.lastPathComponent == ClipboardStore.databaseFileName {
+        let version = try Int.fetchOne(db, sql: "PRAGMA user_version") ?? 0
+        guard version == 4 else { throw ClipboardStore.Failure.unsupportedVersion(version) }
+      }
       try checkIntegrity(db)
     }
 
@@ -60,6 +71,11 @@ enum DatabaseBackup {
         throw Failure.snapshotStillUsesWAL
       }
       try checkIntegrity(db)
+    }
+    try writer.write { db in
+      if source.lastPathComponent == ClipboardStore.databaseFileName {
+        try ClipboardStore.removeSyncMetadata(from: db)
+      }
     }
     try writer.close()
     try reader.close()

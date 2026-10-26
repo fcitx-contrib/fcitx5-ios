@@ -1,0 +1,440 @@
+import Foundation
+import GRDB
+import Swifter
+import ZIPFoundation
+
+private struct CheckFailure: Error { let message: String }
+
+private func check(_ value: @autoclosure () throws -> Bool, _ message: String) throws {
+  if try !value() { throw CheckFailure(message: message) }
+}
+
+@main
+private struct ClipboardTests {
+  static var manager: FileManager { .default }
+
+  static func main() async throws {
+    if CommandLine.arguments.count == 4, CommandLine.arguments[1] == "--writer" {
+      let store = ClipboardStore(directory: URL(fileURLWithPath: CommandLine.arguments[2]))
+      for index in 0..<20 {
+        try store.capture("shared text")
+        try store.capture("\(CommandLine.arguments[3])-\(index)")
+      }
+      return
+    }
+    let root = manager.temporaryDirectory.appendingPathComponent("clipboard-tests-\(UUID())")
+    try manager.createDirectory(at: root, withIntermediateDirectories: true)
+    defer { try? manager.removeItem(at: root) }
+    try testCRUD(root)
+    try testUnsupportedVersions(root)
+    try testLegacy(root)
+    try testMerge(root)
+    try testImportAndRetry(root)
+    try testInFlightChanges(root)
+    try testReset(root)
+    try testSharedImport(root)
+    try await testDeletedDatabase(root)
+    try testProcesses(root)
+    try await testHTTP(root)
+    print("All clipboard tests passed")
+  }
+
+  static func active(_ store: ClipboardStore) throws -> [ClipboardSyncEntry] {
+    try store.entries().filter { !$0.record.deleted }
+  }
+
+  static func item(_ text: String, in store: ClipboardStore) throws -> ClipboardSyncEntry {
+    guard let entry = try active(store).first(where: { $0.record.text == text }) else {
+      throw CheckFailure(message: "Missing \(text)")
+    }
+    return entry
+  }
+
+  static func sync(_ keyboard: ClipboardStore, _ main: ClipboardStore) throws {
+    let request = try keyboard.prepareSync()
+    // Exercise the actual Codable wire format, including UUID dictionary aliases.
+    let encoded = try JSONEncoder().encode(request)
+    let decoded = try JSONDecoder().decode(ClipboardSyncRequest.self, from: encoded)
+    let response = try main.merge(decoded)
+    let result = try JSONDecoder().decode(
+      ClipboardSyncResponse.self, from: JSONEncoder().encode(response))
+    try keyboard.apply(result)
+  }
+
+  static func testCRUD(_ root: URL) throws {
+    let directory = root.appendingPathComponent("crud")
+    let store = ClipboardStore(directory: directory)
+    try store.capture(" \n\t")
+    try check(store.entries().isEmpty, "Ignore whitespace")
+    try store.capture("text ' SQL 中文 🐧")
+    try store.capture("text ' SQL 中文 🐧")
+    try check(active(store).count == 1, "Text deduplication")
+    let first = try active(store)[0]
+    try store.togglePin(first.id)
+    try store.capture("other")
+    try check(active(store)[0].record.pinned, "Pinned first")
+    let removed = try store.delete(first.id)
+    try store.capture(first.record.text)
+    try store.restore(removed)
+    try check(active(store).count == 2, "Undo deduplicates new capture")
+    try check(item(first.record.text, in: store).record.pinned, "Undo keeps pin")
+    let unpinned = try store.clear(includePinned: false)
+    try check(unpinned.count == 1 && active(store).count == 1, "Clear preserves pins")
+    try store.restore(unpinned)
+    let reopened = ClipboardStore(directory: directory)
+    try check(reopened.entries() == store.entries(), "Persistent identities, fields and ordering")
+    try reopened.database().read { db in
+      let columns = try db.columns(in: "clipboard")
+      try check(
+        columns.map(\.name) == [
+          "id", "text", "pinned", "timestamp", "type", "deleted", "sensitive",
+        ], "Android columns")
+      try check(columns.allSatisfy(\.isNotNull), "Android NOT NULL constraints")
+      try check(
+        columns.map(\.defaultValueSQL) == [nil, nil, nil, "-1", "'text/plain'", "0", "0"],
+        "Android default values")
+      try check(Int.fetchOne(db, sql: "PRAGMA user_version") == 4, "Android version")
+    }
+    print("PASS persistent CRUD, text deduplication, undo and Android v4 schema")
+  }
+
+  static func testUnsupportedVersions(_ root: URL) throws {
+    for version in [0, 1, 2, 3, 5] {
+      let directory = root.appendingPathComponent("unsupported-\(version)")
+      let store = ClipboardStore(directory: directory)
+      try store.capture("existing")
+      let queue = try store.database()
+      try queue.write { try $0.execute(sql: "PRAGMA user_version = \(version)") }
+      do {
+        _ = try ClipboardStore(directory: directory).entries()
+        throw CheckFailure(message: "Unsupported schema must fail")
+      } catch ClipboardStore.Failure.unsupportedVersion(let rejected) {
+        try check(rejected == version, "Report unsupported version")
+      }
+      try queue.read { db in
+        try check(Int.fetchOne(db, sql: "PRAGMA user_version") == version, "Version unchanged")
+        try check(ClipboardRecord.fetchAll(db).map(\.text) == ["existing"], "Records unchanged")
+      }
+      try queue.close()
+    }
+    print("PASS unsupported schema rejection without migration or data loss")
+  }
+
+  static func testLegacy(_ root: URL) throws {
+    let privateDirectory = root.appendingPathComponent("private")
+    let legacy = ClipboardStore(directory: privateDirectory)
+    try legacy.capture("legacy")
+    let directory = root.appendingPathComponent("app-group")
+    let shared = ClipboardStore(directory: directory, legacyDirectory: privateDirectory)
+    try check(
+      active(shared).map { $0.record.text } == ["legacy"], "Migrate main's legacy private database")
+    try shared.capture("shared")
+    try legacy.capture("do not seed again")
+    let reopened = ClipboardStore(directory: directory, legacyDirectory: privateDirectory)
+    try check(active(reopened).count == 2, "Existing shared database takes priority")
+    let keyboardFirstDirectory = root.appendingPathComponent("keyboard-created-group")
+    let keyboardFirst = ClipboardStore(directory: keyboardFirstDirectory)
+    try keyboardFirst.capture("legacy")
+    try keyboardFirst.togglePin(item("legacy", in: keyboardFirst).id)
+    let mainLater = ClipboardStore(
+      directory: keyboardFirstDirectory, legacyDirectory: privateDirectory)
+    try check(
+      active(mainLater).count == 2,
+      "Main migrates legacy-only entries even when a keyboard opened shared first")
+    try check(
+      item("legacy", in: mainLater).record.pinned, "Existing shared fields win over legacy values")
+    print("PASS private-to-App-Group migration without overwriting shared data")
+  }
+
+  static func testMerge(_ root: URL) throws {
+    let main = ClipboardStore(directory: root.appendingPathComponent("merge-main"))
+    let keyboard = ClipboardStore(directory: root.appendingPathComponent("merge-keyboard"))
+    try main.capture("same")
+    try main.togglePin(item("same", in: main).id)
+    try keyboard.capture("same")
+    try keyboard.capture("keyboard-only")
+    try check(
+      item("same", in: main).record.id == item("same", in: keyboard).record.id,
+      "Independent ID collision fixture")
+    try sync(keyboard, main)
+    try check(active(main).count == 2 && active(keyboard).count == 2, "Union, not file overwrite")
+    try check(item("same", in: keyboard).record.pinned, "Main wins first-sync text conflict")
+    let removed = try keyboard.delete(item("keyboard-only", in: keyboard).id)
+    try sync(keyboard, main)
+    try check(active(main).count == 1, "Keyboard-only delete reaches main")
+    try keyboard.restore(removed)
+    try sync(keyboard, main)
+    try check(active(main).count == 2, "Undo synchronizes")
+    _ = try keyboard.delete(item("keyboard-only", in: keyboard).id)
+    try sync(keyboard, main)
+    try keyboard.capture("keyboard-only")
+    try sync(keyboard, main)
+    try check(active(main).count == 2, "Explicit recapture after acknowledged deletion")
+    try main.togglePin(item("keyboard-only", in: main).id)
+    _ = try keyboard.delete(item("keyboard-only", in: keyboard).id)
+    try sync(keyboard, main)
+    try check(
+      item("keyboard-only", in: keyboard).record.pinned, "Main wins concurrent pin vs delete")
+    let second = ClipboardStore(directory: root.appendingPathComponent("merge-second"))
+    try sync(second, main)
+    _ = try main.clear(includePinned: true)
+    try second.capture("another keyboard")
+    try sync(second, main)
+    try check(
+      active(main).map { $0.record.text } == ["another keyboard"],
+      "Stale peers cannot resurrect main deletions")
+    print(
+      "PASS bidirectional three-way merge, text/ID conflicts, pins, deletions and multiple peers")
+  }
+
+  static func testImportAndRetry(_ root: URL) throws {
+    let main = ClipboardStore(directory: root.appendingPathComponent("retry-main"))
+    let keyboardDirectory = root.appendingPathComponent("retry-keyboard")
+    let keyboard = ClipboardStore(directory: keyboardDirectory)
+    try main.capture("before import")
+    try main.capture("same text")
+    try sync(keyboard, main)
+    try keyboard.capture("new keyboard text")
+    let pending = try keyboard.prepareSync()
+    _ = try main.merge(pending)  // Simulate response lost after main committed.
+    let imported = ClipboardStore(directory: root.appendingPathComponent("imported"))
+    try imported.capture("same text")
+    try imported.togglePin(item("same text", in: imported).id)
+    try main.importDatabase(from: imported.databaseURL)
+    let reopened = ClipboardStore(directory: keyboardDirectory)
+    try check(reopened.prepareSync() == pending, "Pending request survives restart")
+    let replay = try main.merge(pending)
+    try reopened.apply(replay)
+    try check(
+      active(main).count == 1 && active(reopened).count == 1,
+      "Retry cannot undo a subsequent import")
+    try check(item("same text", in: reopened).record.pinned, "Imported main pin wins")
+    try reopened.capture("captured after import")
+    try sync(reopened, main)
+    try check(active(main).count == 2, "New capture merges with imported content")
+    let offline = ClipboardStore(directory: root.appendingPathComponent("offline-import-keyboard"))
+    try sync(offline, main)
+    try offline.capture("offline capture")
+    try offline.togglePin(item("same text", in: offline).id)
+    try main.importDatabase(from: imported.databaseURL)
+    try sync(offline, main)
+    try check(
+      active(main).count == 2, "Offline capture survives while stale pre-import rows disappear")
+    try check(
+      item("same text", in: offline).record.pinned,
+      "Import wins even if imported values match old baseline")
+    try check(
+      item("offline capture", in: main).record.text == "offline capture",
+      "Offline capture is merged, not overwritten")
+    print("PASS authoritative import, persisted retry, idempotency and main-first conflicts")
+  }
+
+  static func testInFlightChanges(_ root: URL) throws {
+    let main = ClipboardStore(directory: root.appendingPathComponent("flight-main"))
+    let keyboard = ClipboardStore(directory: root.appendingPathComponent("flight-keyboard"))
+    try keyboard.capture("first")
+    let sent = try keyboard.prepareSync()
+    let response = try main.merge(sent)
+    try keyboard.togglePin(item("first", in: keyboard).id)
+    try keyboard.capture("during HTTP")
+    try keyboard.apply(response)
+    try check(item("first", in: keyboard).record.pinned, "In-flight pin preserved")
+    try check(
+      active(keyboard).count == 2 && keyboard.hasPendingChanges(), "In-flight capture stays pending"
+    )
+    try sync(keyboard, main)
+    try check(
+      active(main).count == 2 && item("first", in: main).record.pinned,
+      "Rebased edits synchronize on next pass")
+    try check(!keyboard.hasPendingChanges(), "Sync converges without ID-related false changes")
+    print("PASS writes during HTTP transfer are rebased and eventually synchronized")
+  }
+
+  static func testReset(_ root: URL) throws {
+    let main = ClipboardStore(directory: root.appendingPathComponent("reset-main"))
+    let directory = root.appendingPathComponent("reset-keyboard")
+    let keyboard = ClipboardStore(directory: directory)
+    let reader = ClipboardStore(directory: directory)
+    try main.capture("from main")
+    try sync(keyboard, main)
+    let authoritative = try main.entries()
+    _ = try keyboard.delete(item("from main", in: keyboard).id)
+    try keyboard.capture("discard local pin")
+    try keyboard.togglePin(item("discard local pin", in: keyboard).id)
+    let pending = try keyboard.prepareSync()
+    _ = try reader.entries()
+
+    try keyboard.reset()
+    try check(reader.entries().isEmpty, "Reset removes pinned entries and tombstones")
+    let fresh = try reader.prepareSync()
+    try check(fresh.baseline.isEmpty && fresh.entries.isEmpty, "Reset discards the old baseline")
+    try check(
+      fresh.id != pending.id && fresh.clientID != pending.clientID,
+      "Reset discards pending requests and the previous client identity")
+    try sync(reader, main)
+    try check(main.entries() == authoritative, "Reset does not send discarded edits to main")
+    let restored = try keyboard.entries()
+    try check(
+      restored.count == 1 && restored[0].id == authoritative[0].id
+        && restored[0].hasSameContent(as: authoritative[0]) && !keyboard.hasPendingChanges(),
+      "Full resync repopulates the existing connection from main and converges")
+    print("PASS explicit reset clears local clipboard and sync state before full resync")
+  }
+
+  static func testSharedImport(_ root: URL) throws {
+    let directory = root.appendingPathComponent("live-import")
+    let main = ClipboardStore(directory: directory.appendingPathComponent("databases"))
+    let otherProcess = ClipboardStore(directory: directory.appendingPathComponent("databases"))
+    try main.capture("old shared content")
+    try main.capture("imported")
+    _ = try active(otherProcess)
+    let old = try main.clear(includePinned: true)
+    let incomingDirectory = root.appendingPathComponent("live-import-source")
+    let incoming = ClipboardStore(directory: incomingDirectory.appendingPathComponent("databases"))
+    try incoming.capture("imported")
+    try incoming.togglePin(item("imported", in: incoming).id)
+    let export = BackupArchive(
+      configDirectory: incomingDirectory.appendingPathComponent("config"),
+      dataDirectory: incomingDirectory.appendingPathComponent("data"),
+      databasesDirectory: incomingDirectory.appendingPathComponent("databases"),
+      clipboardStore: incoming)
+    let zip = root.appendingPathComponent("clipboard.zip")
+    try export.export(to: zip, date: Date())
+    let restore = BackupArchive(
+      configDirectory: directory.appendingPathComponent("config"),
+      dataDirectory: directory.appendingPathComponent("data"),
+      databasesDirectory: directory.appendingPathComponent("databases"), clipboardStore: main)
+    try restore.importData(from: zip, source: .fcitx5)
+    try check(
+      active(otherProcess).map { $0.record.text } == ["imported"],
+      "Open connection sees imported contents")
+    try otherProcess.restore(old)
+    try check(active(otherProcess).count == 1, "Old undo cannot resurrect entries after import")
+    try check(
+      item("imported", in: otherProcess).record.pinned,
+      "Old undo cannot change an imported entry with the same text")
+    try otherProcess.capture("other connection")
+    try check(active(main).count == 2, "Both open connections still write same inode")
+    let plain = root.appendingPathComponent("plain-snapshot")
+    try DatabaseBackup.snapshotDirectory(from: restore.databasesDirectory, to: plain)
+    let reader = try DatabaseQueue(
+      path: plain.appendingPathComponent(ClipboardStore.databaseFileName).path)
+    try reader.read { db in
+      try check(!db.tableExists("ios_clipboard_identity"), "No iOS identity metadata in export")
+      try check(!db.tableExists("ios_clipboard_state"), "No iOS sync state in export")
+      try check(ClipboardRecord.fetchCount(db) == 2, "Export includes committed WAL")
+    }
+    try reader.close()
+    print("PASS live shared import, stale undo isolation and standalone Android-format export")
+  }
+
+  static func testDeletedDatabase(_ root: URL) async throws {
+    for deleteDirectory in [false, true] {
+      let directory = root.appendingPathComponent("deleted-main-\(deleteDirectory)")
+      let main = ClipboardStore(directory: directory)
+      let keyboard = ClipboardStore(
+        directory: root.appendingPathComponent("deleted-keyboard-\(deleteDirectory)"))
+      try keyboard.capture("already synced")
+      try sync(keyboard, main)
+      try keyboard.capture("captured since last sync")
+      try keyboard.togglePin(item("captured since last sync", in: keyboard).id)
+      // Deleting Documents' database does not close the main app's cached connection.
+      try manager.removeItem(at: deleteDirectory ? directory : main.databaseURL)
+      let server = HttpServer()
+      server.listenAddressIPv4 = "127.0.0.1"
+      server.POST["/clipboard/sync"] = { ClipboardSyncServer.handle($0, store: main) }
+      try server.start(0, forceIPv4: true)
+      defer { server.stop() }
+      let url = URL(string: "http://127.0.0.1:\(try server.port())/clipboard/sync")!
+      try await ClipboardTransport.synchronize(store: keyboard, endpoint: url)
+      try check(!keyboard.hasPendingChanges(), "Sync converges after main database is deleted")
+      try check(
+        item("captured since last sync", in: main).record.pinned,
+        "New keyboard captures and their pin state reach the recreated main database")
+      let reopened = ClipboardStore(directory: directory)
+      try check(reopened.entries() == main.entries(), "Recreated data is persisted, not unlinked")
+      try keyboard.capture("next sync")
+      try await ClipboardTransport.synchronize(store: keyboard, endpoint: url)
+      try check(!keyboard.hasPendingChanges(), "Subsequent synchronization also converges")
+      try check(active(reopened).count == 2, "Subsequent sync writes to the recreated database")
+    }
+    print("PASS HTTP synchronization after deleting an open database file or directory")
+  }
+
+  private final class HTTPAttempt: @unchecked Sendable {
+    private let lock = NSLock()
+    private var count = 0
+    func next() -> Int {
+      lock.lock()
+      defer { lock.unlock() }
+      count += 1
+      return count
+    }
+  }
+
+  static func testHTTP(_ root: URL) async throws {
+    let main = ClipboardStore(directory: root.appendingPathComponent("http-main"))
+    let keyboard = ClipboardStore(directory: root.appendingPathComponent("http-keyboard"))
+    try main.capture("main over HTTP")
+    try keyboard.capture("keyboard over HTTP")
+    let attempts = HTTPAttempt()
+    let server = HttpServer()
+    server.listenAddressIPv4 = "127.0.0.1"
+    server.POST["/clipboard/sync"] = { request in
+      let result = ClipboardSyncServer.handle(request, store: main)
+      switch attempts.next() {
+      case 1: return .raw(503, "Lost response", nil, nil)
+      case 2:
+        do { try keyboard.capture("captured during HTTP") } catch {
+          return .internalServerError(nil)
+        }
+      default: break
+      }
+      return result
+    }
+    try server.start(0, forceIPv4: true)
+    defer { server.stop() }
+    let url = URL(string: "http://127.0.0.1:\(try server.port())/clipboard/sync")!
+    do {
+      try await ClipboardTransport.synchronize(store: keyboard, endpoint: url)
+      throw CheckFailure(message: "Failed HTTP must not report success")
+    } catch ClipboardTransport.Failure.serverRejected(503) {}
+    try await ClipboardTransport.synchronize(store: keyboard, endpoint: url)
+    try check(
+      active(main).count == 3 && active(keyboard).count == 3,
+      "HTTP retry merges both sides and drains in-flight writes")
+    try check(!keyboard.hasPendingChanges(), "HTTP success means local changes acknowledged")
+    var invalid = URLRequest(url: url)
+    invalid.httpMethod = "POST"
+    invalid.httpBody = Data("not JSON".utf8)
+    let (_, response) = try await URLSession.shared.data(for: invalid)
+    try check((response as? HTTPURLResponse)?.statusCode == 400, "Malformed HTTP request rejected")
+    print("PASS HTTP server/client integration, failed response retry and in-flight writes")
+  }
+
+  static func testProcesses(_ root: URL) throws {
+    let directory = root.appendingPathComponent("processes")
+    let store = ClipboardStore(directory: directory)
+    // Let all five processes race to initialize the initially absent database.
+    var children = [Foundation.Process]()
+    for index in 0..<5 {
+      let process = Foundation.Process()
+      process.executableURL = URL(fileURLWithPath: CommandLine.arguments[0])
+      process.arguments = ["--writer", directory.path, String(index)]
+      try process.run()
+      children.append(process)
+    }
+    for process in children {
+      process.waitUntilExit()
+    }
+    try check(
+      children.allSatisfy { $0.terminationStatus == 0 }, "Concurrent writers exited successfully")
+    let entries = try active(store)
+    try check(entries.count == 101, "Five processes preserve all unique captures")
+    try check(
+      entries.filter { $0.record.text == "shared text" }.count == 1,
+      "Cross-process transactional text deduplication")
+    print(
+      "PASS five concurrent processes share one WAL database without lost or duplicate captures")
+  }
+}

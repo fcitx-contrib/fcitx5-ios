@@ -395,6 +395,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     installHostingController()
 
     vm.setReturnKeyType(textDocumentProxy.returnKeyType)
+    Task { await vm.refreshClipboard() }
     super.viewWillAppear(animated)
     if appGroupAvailable {
       if removeFile(appGroupTmp.appendingPathComponent("\(Self.keyboard).reload")) {

@@ -1,5 +1,6 @@
-add_library(SwiftUtil util.swift logging.swift locale.swift)
+add_library(SwiftUtil util.swift logging.swift locale.swift ClipboardStore.swift ClipboardSync.swift ClipboardTransport.swift)
 set_target_properties(SwiftUtil PROPERTIES Swift_MODULE_NAME SwiftUtil)
+target_link_libraries(SwiftUtil PUBLIC GRDB)
 
 set(CMAKE_SHARED_LINKER_FLAGS "")
 add_library(FcitxRuntime SHARED
@@ -29,4 +30,9 @@ target_link_libraries(FcitxRuntime
     NotifySwift
     SwiftUtil
     FcitxProtocol
+)
+# Export the complete shared API, including backup methods used only by the app.
+# Consumers import the Swift modules but use the implementation in FcitxRuntime.
+set_target_properties(FcitxRuntime PROPERTIES
+    LINK_LIBRARY_OVERRIDE "WHOLE_ARCHIVE,SwiftUtil,GRDB"
 )

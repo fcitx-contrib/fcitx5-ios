@@ -18,6 +18,10 @@ fcitx5-ios is an iOS input method built with CMake + Ninja (not managed by Xcode
 
 When changing keyboard heights, key-label fonts, or simulator coverage, follow [the keyboard measurement workflow](docs/keyboard-measurements.md). Compare native Simplified Chinese Pinyin and the actual Chinese extension in the same input host; distinguish measured devices from same-screen mappings. Keep `docs/size.md`, the versioned survey CSV, `uipanel/height.swift`, and `uipanel/Key.swift` consistent. Preserve historical measurements and their explanations rather than replacing them with configured defaults.
 
+## Synchronization Without App Group
+
+Before adding or changing main-app/keyboard synchronization, read [the synchronization guide](docs/synchronization.md). It describes private-store ownership, the existing HTTP workflow, clipboard three-way merge and retry semantics, and extension/testing requirements for future bidirectional datasets. Keep implemented behavior separate from proposed changes: main-database generation handling remains unimplemented, and loss/recreation of main's database can currently discard previously synchronized keyboard data.
+
 ## Build
 
 After changing code, always build for the arm64 simulator to verify the change compiles:

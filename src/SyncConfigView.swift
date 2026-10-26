@@ -26,6 +26,12 @@ final class ServerManager: Sendable {
     server["/list"] = ServerManager.listHandler
     server["/download"] = ServerManager.downloadHandler
     server["/done"] = ServerManager.doneHandler
+    server.POST["/clipboard/sync"] = ServerManager.clipboardHandler
+  }
+
+  private static func clipboardHandler(_ request: HttpRequest) -> HttpResponse {
+    guard !appGroupAvailable else { return .forbidden(nil) }
+    return ClipboardSyncServer.handle(request, store: clipboardStore)
   }
 
   private static func listHandler(_ request: HttpRequest) -> HttpResponse {

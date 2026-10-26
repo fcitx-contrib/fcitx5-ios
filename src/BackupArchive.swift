@@ -1,6 +1,12 @@
 import Foundation
 import ZIPFoundation
 
+// The app imports these types from SwiftUtil; macOS tests compile their source
+// files directly into the test module, where no SwiftUtil import is needed.
+#if canImport(SwiftUtil)
+  import SwiftUtil
+#endif
+
 struct InvalidZipError: Error {}
 
 enum ImportSource: Sendable {
@@ -13,6 +19,7 @@ struct BackupArchive {
   let configDirectory: URL
   let dataDirectory: URL
   let databasesDirectory: URL
+  var clipboardStore: ClipboardStore? = nil
 
   private struct ArchiveEntry {
     let sourceURL: URL?
@@ -50,6 +57,8 @@ struct BackupArchive {
 
   func export(to destination: URL, date: Date) throws {
     try Task.checkCancellation()
+    // Also initializes a new store, so exports include an empty Android-compatible clbdb.
+    _ = try clipboardStore?.entries()
     let manager = FileManager.default
     let staging = manager.temporaryDirectory.appendingPathComponent("backup-\(UUID())")
     try manager.createDirectory(at: staging, withIntermediateDirectories: true)
@@ -94,6 +103,14 @@ struct BackupArchive {
       if let sourceURL = entry.sourceURL {
         try archive.addEntry(
           with: entry.archivePath, fileURL: sourceURL, compressionMethod: .deflate)
+        if entry.archivePath.hasPrefix("databases/") {
+          // Android's importer overlays files without removing the old WAL.
+          // Include an empty WAL to truncate it, preventing stale transactions from
+          // overriding this standalone snapshot. All committed data is in the main file.
+          try archive.addEntry(
+            with: entry.archivePath + "-wal", type: .file, uncompressedSize: Int64(0),
+            provider: { _, _ in Data() })
+        }
       }
     }
     let metadata = try Self.getMetadata(date)
@@ -163,6 +180,24 @@ struct BackupArchive {
 
   private func installDatabases(from incoming: URL, staging: URL) throws {
     let manager = FileManager.default
+    let clipboard = incoming.appendingPathComponent(ClipboardStore.databaseFileName)
+    if let clipboardStore, manager.fileExists(atPath: clipboard.path) {
+      // Update the live inode through SQLite; other processes may still have it open.
+      try clipboardStore.importDatabase(from: clipboard)
+      try manager.removeItem(at: clipboard)
+      for suffix in ["-wal", "-shm", "-journal"] {
+        let sidecar = URL(fileURLWithPath: clipboard.path + suffix)
+        if manager.fileExists(atPath: sidecar.path) { try manager.removeItem(at: sidecar) }
+      }
+    }
+    if clipboardStore != nil {
+      // Other Android databases are not opened by this app. Never replace the live
+      // databases directory, which also contains clbdb's WAL and shared-memory index.
+      try manager.createDirectory(at: databasesDirectory, withIntermediateDirectories: true)
+      try Self.validateDirectory(databasesDirectory)
+      try overlayDatabases(from: incoming, to: databasesDirectory)
+      return
+    }
     let replacement = staging.appendingPathComponent("replacement")
     let exists = manager.fileExists(atPath: databasesDirectory.path)
     if exists {

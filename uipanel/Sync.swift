@@ -44,15 +44,21 @@ struct SyncRunningView: View {
 
 struct SyncDoneView: View {
   @ObservedObject var viewModel = vm
+  @State private var isResetting = false
 
   var body: some View {
     VStack {
       Spacer()
       Button {
-        let _ = removeFile(documents.appendingPathComponent("tmp/checksums.json"))
-        let _ = removeFile(documents.appendingPathComponent("config"))
-        let _ = removeFile(documents.appendingPathComponent("data"))
-        client.syncConfig()
+        isResetting = true
+        Task {
+          defer { isResetting = false }
+          guard await viewModel.resetClipboard() else { return }
+          let _ = removeFile(documents.appendingPathComponent("tmp/checksums.json"))
+          let _ = removeFile(documents.appendingPathComponent("config"))
+          let _ = removeFile(documents.appendingPathComponent("data"))
+          client.syncConfig()
+        }
       } label: {
         Text("Clear data and sync again")
       }
@@ -71,5 +77,14 @@ struct SyncDoneView: View {
       Spacer()
     }.frame(maxWidth: .infinity)
       .padding()
+      .disabled(isResetting)
+      .overlay {
+        if let error = viewModel.clipboardError {
+          DialogView(
+            width: viewModel.totalWidth, height: viewModel.totalHeight, message: error,
+            actions: [DialogAction(NSLocalizedString("OK", comment: ""))],
+            onDismiss: { viewModel.clipboardError = nil })
+        }
+      }
   }
 }
