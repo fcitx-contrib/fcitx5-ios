@@ -54,13 +54,11 @@ function(add_keyboard_extension keyboard language targets)
 
     add_dependencies(${extension} "${keyboard}Profile")
 
-    # The extension's Swift sources import the KeyboardUI, SwiftUtil, FcitxProtocol
-    # and SwiftFrontend modules. Linking these targets makes CMake add their
-    # swiftmodule files as dependencies of the extension's compile step, so the
-    # extension is recompiled whenever a module interface changes. Otherwise the
-    # extension may be linked against a stale class layout and crash at runtime
-    # (e.g. a ViewModel method dispatched through a shifted vtable slot).
-    target_link_libraries(${extension} KeyboardUI SwiftUtil FcitxProtocol SwiftFrontend)
+    # Track imported Swift module changes without duplicating their implementation,
+    # which is already linked into FcitxRuntime.
+    target_link_libraries(${extension}
+        "$<COMPILE_ONLY:KeyboardUI;SwiftUtil;FcitxProtocol;SwiftFrontend>"
+    )
 
     set_property(GLOBAL APPEND PROPERTY FCITX_RUNTIME_ADDONS ${targets})
 

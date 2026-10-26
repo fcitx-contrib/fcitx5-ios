@@ -18,6 +18,7 @@ add_executable(${BUNDLE_NAME} MACOSX_BUNDLE
     AddonConfigView.swift
     ConfigView.swift
     SyncConfigView.swift
+    ClipboardSyncServer.swift
     App.swift
     AppDelegate.swift
     SceneDelegate.swift
@@ -162,9 +163,8 @@ target_link_libraries(${BUNDLE_NAME}
     FcitxRuntime
     AlertToast
     Swifter
-    FcitxIpc
+    "$<COMPILE_ONLY:FcitxIpc;GRDB>"
     ZIPFoundation
-    GRDB
 )
 
 foreach(Keyboard ${KEYBOARDS})

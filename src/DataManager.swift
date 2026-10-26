@@ -30,7 +30,8 @@ private struct ActivityView: UIViewControllerRepresentable {
 private let backupArchive = BackupArchive(
   configDirectory: appGroupConfig,
   dataDirectory: appGroupData,
-  databasesDirectory: documents.appendingPathComponent("databases"))
+  databasesDirectory: clipboardDatabases,
+  clipboardStore: clipboardStore)
 
 private func archiveFileName(_ date: Date) -> String {
   let formatter = ISO8601DateFormatter()

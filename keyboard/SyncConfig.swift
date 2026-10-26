@@ -140,6 +140,17 @@ func doSyncConfig(_ keyboard: String) async {
         }
       }
       saveChecksums(newChecksums)
+      do {
+        try await ClipboardTransport.synchronize(
+          store: clipboardStore, endpoint: generateURL("/clipboard/sync", params: nil))
+      } catch {
+        FCITX_ERROR("Clipboard sync failed: \(error)")
+        if Task.isCancelled { return }
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        continue
+      }
+      if Task.isCancelled { return }
+      await vm.refreshClipboard()
       reload()
       await reportDone(keyboard)
       Task { @MainActor in

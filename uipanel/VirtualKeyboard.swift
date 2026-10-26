@@ -74,10 +74,13 @@ public class ViewModel: ObservableObject {
   @Published var canUndo = false
   @Published var canRedo = false
   @Published var clipboardEntries = [ClipboardEntry]()
+  @Published var clipboardError: String?
   @Published var layer = "default"
   @Published var lock = false
 
-  private var clipboardSequence: UInt64 = 0
+  private var clipboardTask: Task<Void, Never>?
+  private var clipboardOperationID: UInt64 = 0
+  private var appliedClipboardOperationID: UInt64 = 0
 
   // XXX: In floating state for iPad simulator, switching to fcitx5 causes layout shift due to unstable width.
   @Published var totalHeight: CGFloat = getDefaultTotalHeight()
@@ -214,64 +217,67 @@ public class ViewModel: ObservableObject {
   }
 
   public func addClipboardEntry(_ text: String) {
-    guard text.contains(where: { !$0.isWhitespace }) else { return }
-
-    clipboardSequence &+= 1
-    var entries = clipboardEntries
-    if let index = entries.firstIndex(where: { $0.text == text }) {
-      entries[index].sequence = clipboardSequence
-    } else {
-      entries.append(ClipboardEntry(text: text, sequence: clipboardSequence))
-    }
-    sortClipboardEntries(&entries)
-    clipboardEntries = entries
+    Task { await clipboardOperation { try clipboardStore.capture(text) } }
   }
 
   func toggleClipboardEntryPin(_ id: UUID) {
-    var entries = clipboardEntries
-    guard let index = entries.firstIndex(where: { $0.id == id }) else { return }
+    Task { await clipboardOperation { try clipboardStore.togglePin(id) } }
+  }
 
-    entries[index].isPinned.toggle()
-    sortClipboardEntries(&entries)
-    clipboardEntries = entries
+  func deleteClipboardEntry(_ id: UUID) async -> ClipboardEntry? {
+    await clipboardOperation { try clipboardStore.delete(id) }?.first
+  }
+
+  func clearClipboard(includePinned: Bool) async -> [ClipboardEntry] {
+    await clipboardOperation { try clipboardStore.clear(includePinned: includePinned) } ?? []
+  }
+
+  func restoreClipboardEntries(_ deletedEntries: [ClipboardEntry]) async {
+    await clipboardOperation(animation: .easeOut(duration: 0.15)) {
+      try clipboardStore.restore(deletedEntries)
+    }
+  }
+
+  public func refreshClipboard() async {
+    await clipboardOperation {}
+  }
+
+  func resetClipboard() async -> Bool {
+    await clipboardOperation { try clipboardStore.reset() } != nil
   }
 
   @discardableResult
-  func deleteClipboardEntry(_ id: UUID) -> ClipboardEntry? {
-    guard let index = clipboardEntries.firstIndex(where: { $0.id == id }) else { return nil }
-    return clipboardEntries.remove(at: index)
-  }
-
-  @discardableResult
-  func clearClipboard(includePinned: Bool) -> [ClipboardEntry] {
-    let deletedEntries = clipboardEntries.filter { includePinned || !$0.isPinned }
-    if includePinned {
-      clipboardEntries.removeAll()
-    } else {
-      clipboardEntries.removeAll { !$0.isPinned }
+  private func clipboardOperation<T: Sendable>(
+    animation: Animation? = nil,
+    _ operation: @escaping @Sendable () throws -> T
+  ) async -> T? {
+    let previous = clipboardTask
+    clipboardOperationID &+= 1
+    let operationID = clipboardOperationID
+    let task = Task.detached {
+      await previous?.value
+      let value = try operation()
+      return (value, try clipboardStore.entries().filter { !$0.record.deleted })
     }
-    return deletedEntries
-  }
-
-  func restoreClipboardEntries(_ deletedEntries: [ClipboardEntry]) {
-    var entries = clipboardEntries
-    for deletedEntry in deletedEntries {
-      if let index = entries.firstIndex(where: { $0.text == deletedEntry.text }) {
-        entries[index].isPinned = deletedEntry.isPinned
-      } else {
-        entries.append(deletedEntry)
+    clipboardTask = Task { _ = try? await task.value }
+    do {
+      let (value, entries) = try await task.value
+      if operationID > appliedClipboardOperationID {
+        appliedClipboardOperationID = operationID
+        if entries != clipboardEntries {
+          // Animation must wrap the main-actor update, not the asynchronous database work.
+          if let animation {
+            withAnimation(animation) { clipboardEntries = entries }
+          } else {
+            clipboardEntries = entries
+          }
+        }
       }
-    }
-    sortClipboardEntries(&entries)
-    clipboardEntries = entries
-  }
-
-  private func sortClipboardEntries(_ entries: inout [ClipboardEntry]) {
-    entries.sort {
-      if $0.isPinned != $1.isPinned {
-        return $0.isPinned
-      }
-      return $0.sequence > $1.sequence
+      return value
+    } catch {
+      FCITX_ERROR("Clipboard operation failed: \(error)")
+      clipboardError = error.localizedDescription
+      return nil
     }
   }
 

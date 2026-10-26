@@ -45,6 +45,8 @@ set(BACKUP_TEST_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/BackupTests.swift"
     "${PROJECT_SOURCE_DIR}/src/DatabaseBackup.swift"
     "${PROJECT_SOURCE_DIR}/src/BackupArchive.swift"
+    "${PROJECT_SOURCE_DIR}/common/ClipboardStore.swift"
+    "${PROJECT_SOURCE_DIR}/common/ClipboardSync.swift"
 )
 add_custom_command(
     OUTPUT "${BACKUP_TEST}"
@@ -62,3 +64,45 @@ add_custom_command(
 )
 add_custom_target(BackupSwiftTest ALL DEPENDS "${BACKUP_TEST}")
 add_test(NAME BackupSwift COMMAND "${BACKUP_TEST}")
+
+set(CLIPBOARD_TEST "${CMAKE_CURRENT_BINARY_DIR}/ClipboardTests")
+get_target_property(BACKUP_SWIFTER_SOURCES Swifter SOURCES)
+add_custom_command(
+    OUTPUT "${BACKUP_HOST_DIR}/libSwifter.a" "${BACKUP_HOST_DIR}/Swifter.swiftmodule"
+    COMMAND "${XCRUN}" --sdk macosx swiftc
+        -swift-version "${CMAKE_Swift_LANGUAGE_VERSION}"
+        -module-cache-path "${BACKUP_MODULE_CACHE}"
+        -suppress-warnings -emit-library -static -emit-module -module-name Swifter
+        -emit-module-path "${BACKUP_HOST_DIR}/Swifter.swiftmodule"
+        ${BACKUP_SWIFTER_SOURCES}
+        -o "${BACKUP_HOST_DIR}/libSwifter.a"
+    DEPENDS ${BACKUP_SWIFTER_SOURCES} "${BACKUP_HOST_DIR}/libGRDB.a"
+    VERBATIM
+)
+set(CLIPBOARD_TEST_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/ClipboardTests.swift"
+    "${PROJECT_SOURCE_DIR}/common/ClipboardStore.swift"
+    "${PROJECT_SOURCE_DIR}/common/ClipboardSync.swift"
+    "${PROJECT_SOURCE_DIR}/common/ClipboardTransport.swift"
+    "${PROJECT_SOURCE_DIR}/src/ClipboardSyncServer.swift"
+    "${PROJECT_SOURCE_DIR}/src/DatabaseBackup.swift"
+    "${PROJECT_SOURCE_DIR}/src/BackupArchive.swift"
+)
+add_custom_command(
+    OUTPUT "${CLIPBOARD_TEST}"
+    COMMAND "${XCRUN}" --sdk macosx swiftc
+        -swift-version "${CMAKE_Swift_LANGUAGE_VERSION}"
+        -module-cache-path "${BACKUP_MODULE_CACHE}"
+        -I "${BACKUP_HOST_DIR}" -I "${BACKUP_SQLITE_MODULE}"
+        ${CLIPBOARD_TEST_SOURCES}
+        "${BACKUP_HOST_DIR}/libGRDB.a" "${BACKUP_HOST_DIR}/libZIPFoundation.a"
+        "${BACKUP_HOST_DIR}/libSwifter.a"
+        -o "${CLIPBOARD_TEST}"
+    DEPENDS ${CLIPBOARD_TEST_SOURCES}
+        "${BACKUP_HOST_DIR}/libGRDB.a" "${BACKUP_HOST_DIR}/GRDB.swiftmodule"
+        "${BACKUP_HOST_DIR}/libZIPFoundation.a" "${BACKUP_HOST_DIR}/ZIPFoundation.swiftmodule"
+        "${BACKUP_HOST_DIR}/libSwifter.a" "${BACKUP_HOST_DIR}/Swifter.swiftmodule"
+    VERBATIM
+)
+add_custom_target(ClipboardSwiftTest ALL DEPENDS "${CLIPBOARD_TEST}")
+add_test(NAME ClipboardSwift COMMAND "${CLIPBOARD_TEST}")

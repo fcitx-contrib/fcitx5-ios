@@ -1,11 +1,12 @@
 import SwiftUI
+import SwiftUtil
 import UIKit
 
-struct ClipboardEntry: Identifiable {
-  let id = UUID()
-  let text: String
-  var isPinned = false
-  var sequence: UInt64
+typealias ClipboardEntry = ClipboardSyncEntry
+
+extension ClipboardSyncEntry {
+  var text: String { record.text }
+  var isPinned: Bool { record.pinned }
 }
 
 private struct ClipboardEntryInteraction: UIViewRepresentable {
@@ -215,6 +216,7 @@ struct ClipboardView: View {
   @State private var toastDismissID = UUID()
   @State private var isMonitoring = false
   @State private var showMonitorFullAccessDialog = false
+  @State private var isVisible = false
 
   private let toastDuration: UInt64 = 3_000_000_000
 
@@ -257,12 +259,14 @@ struct ClipboardView: View {
   }
 
   private func deleteEntry(_ id: UUID) {
-    guard let deletedEntry = viewModel.deleteClipboardEntry(id) else { return }
-    showUndoToast(for: [deletedEntry])
+    Task {
+      guard let deletedEntry = await viewModel.deleteClipboardEntry(id) else { return }
+      showUndoToast(for: [deletedEntry])
+    }
   }
 
   private func showUndoToast(for deletedEntries: [ClipboardEntry]) {
-    guard !deletedEntries.isEmpty else { return }
+    guard isVisible, !deletedEntries.isEmpty else { return }
     pendingDeletedEntries.append(contentsOf: deletedEntries)
     toastDismissID = UUID()
   }
@@ -270,9 +274,7 @@ struct ClipboardView: View {
   private func undoDelete() {
     let deletedEntries = pendingDeletedEntries
     dismissUndoToast(animated: false)
-    withAnimation(.easeOut(duration: 0.15)) {
-      viewModel.restoreClipboardEntries(deletedEntries)
-    }
+    Task { await viewModel.restoreClipboardEntries(deletedEntries) }
   }
 
   private func dismissUndoToast(animated: Bool) {
@@ -358,8 +360,10 @@ struct ClipboardView: View {
           actions: [
             DialogAction(NSLocalizedString("Cancel", comment: "")),
             DialogAction(NSLocalizedString("Clear", comment: ""), role: .destructive) {
-              showUndoToast(
-                for: viewModel.clearClipboard(includePinned: clearIncludesPinned))
+              Task {
+                showUndoToast(
+                  for: await viewModel.clearClipboard(includePinned: clearIncludesPinned))
+              }
             },
           ],
           onDismiss: { showClearConfirmation = false })
@@ -381,6 +385,12 @@ struct ClipboardView: View {
           ],
           onDismiss: { showMonitorFullAccessDialog = false })
       }
+      if let error = viewModel.clipboardError {
+        DialogView(
+          width: width, height: totalHeight, message: error,
+          actions: [DialogAction(NSLocalizedString("OK", comment: ""))],
+          onDismiss: { viewModel.clipboardError = nil })
+      }
     }
     .task(id: toastDismissID) {
       guard !pendingDeletedEntries.isEmpty else { return }
@@ -394,12 +404,14 @@ struct ClipboardView: View {
       dismissUndoToast(animated: true)
     }
     .onAppear {
+      isVisible = true
       isMonitoring = client.clipboardMonitoringEnabled()
       if isMonitoring && !client.hasKeyboardFullAccess() {
         showMonitorFullAccessDialog = true
       }
     }
     .onDisappear {
+      isVisible = false
       dismissUndoToast(animated: false)
     }
   }
