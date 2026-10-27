@@ -27,6 +27,8 @@ def test_punctuation_map(driver: WebDriver, app: str) -> None:
     for id, value in zip(IDS, VALUES):
         field = find_elements_by_id(driver, id)[0]
         field.click()
+        # Committing the previous field can recreate this list row.
+        field = find_elements_by_id(driver, id)[0]
         field.clear()
         field.send_keys(value)
         field.send_keys("\n")

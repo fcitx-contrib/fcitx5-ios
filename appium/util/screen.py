@@ -47,13 +47,19 @@ def open_global_config(driver: WebDriver):
 
 def open_addon_config(driver: WebDriver, name: str):
     """Open the configuration for a specific addon."""
-    find_element_by_id(driver, "Addon Config").click()
-    find_element_by_id(driver, name).click()
+    link = find_element_by_id(driver, "Addon Config")
+    link.click()
+    WebDriverWait(driver, 10).until(EC.staleness_of(link))
+    addon = find_element_by_id(driver, name)
+    addon.click()
+    WebDriverWait(driver, 10).until(EC.staleness_of(addon))
 
 
 def open_input_method_config(driver: WebDriver, name: str):
     """Open the configuration for a specific input method."""
-    find_element_by_id(driver, name).click()
+    link = find_element_by_id(driver, name)
+    link.click()
+    WebDriverWait(driver, 10).until(EC.staleness_of(link))
 
 
 def reset_page(driver: WebDriver):

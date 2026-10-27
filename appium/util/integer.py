@@ -15,8 +15,8 @@ def decrement_stepper(driver: WebDriver, stepper_id: str):
 
 
 def set_integer_value(text_field: WebElement, value: int):
-    """Set the value of an integer text field."""
-    text_field.clear()
+    """Focus an integer text field and replace its automatically selected value."""
+    text_field.click()
     text_field.send_keys(str(value))
     text_field.send_keys("\n")
 
