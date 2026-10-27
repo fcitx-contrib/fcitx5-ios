@@ -79,6 +79,11 @@ struct ContentView: View {
         }
 
         Section {
+          ConfigLinkView(
+            title: NSLocalizedString("Clipboard", comment: ""),
+            uri: "fcitx://config/addon/iosfrontend/Clipboard"
+          )
+          .accessibilityIdentifier("Clipboard")
           NavigationLink(destination: DataManagerView()) {
             Text("Data Manager")
           }

@@ -21,5 +21,4 @@ target_include_directories(iosfrontend PUBLIC
     "${CMAKE_CURRENT_BINARY_DIR}/include"
 )
 
-configure_file(iosfrontend.conf.in.in iosfrontend.conf.in @ONLY)
-fcitx5_translate_desktop_file(${CMAKE_CURRENT_BINARY_DIR}/iosfrontend.conf.in iosfrontend.conf)
+configure_file(iosfrontend.conf.in.in iosfrontend.conf @ONLY)
