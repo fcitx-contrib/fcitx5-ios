@@ -26,6 +26,8 @@ private struct ClipboardTests {
     try manager.createDirectory(at: root, withIntermediateDirectories: true)
     defer { try? manager.removeItem(at: root) }
     try testCRUD(root)
+    try testHistoryLimit(root)
+    try testHistoryLimitSyncAndImport(root)
     try testUnsupportedVersions(root)
     try testLegacy(root)
     try testMerge(root)
@@ -96,6 +98,109 @@ private struct ClipboardTests {
       try check(Int.fetchOne(db, sql: "PRAGMA user_version") == 4, "Android version")
     }
     print("PASS persistent CRUD, text deduplication, undo and Android v4 schema")
+  }
+
+  static func historyFixture(
+    _ root: URL, _ name: String, timestamps: [Int64], pinned: Set<Int> = [], deleted: Set<Int> = []
+  ) throws -> ClipboardStore {
+    let store = ClipboardStore(directory: root.appendingPathComponent(name))
+    try store.database().write { db in
+      for (index, timestamp) in timestamps.enumerated() {
+        var record = ClipboardRecord(text: "\(index)", timestamp: timestamp)
+        record.pinned = pinned.contains(index)
+        record.deleted = deleted.contains(index)
+        try ClipboardStore.insert(ClipboardSyncEntry(id: UUID(), record: record), in: db)
+      }
+    }
+    return store
+  }
+
+  static func testHistoryLimit(_ root: URL) throws {
+    // Android's regressions: A, B, C, B, D with limit 3; A, B, A, C with limit 2.
+    let middle = try historyFixture(root, "limit-recopy-middle", timestamps: [1, 2, 3])
+    try middle.setHistoryLimit(3)
+    let identity = try item("1", in: middle).id
+    try middle.capture("1")
+    try middle.capture("3")
+    try check(
+      Set(active(middle).map { $0.record.text }) == ["1", "2", "3"],
+      "Recopying a middle entry must not delete too many entries")
+    try check(item("1", in: middle).id == identity, "Recopy retains identity")
+    try check(
+      middle.entries().first { $0.record.text == "0" }?.record.deleted == true,
+      "Overflow remains a sync tombstone")
+
+    let oldest = try historyFixture(root, "limit-recopy-oldest", timestamps: [1, 2])
+    try oldest.setHistoryLimit(2)
+    try oldest.capture("0")
+    try oldest.capture("2")
+    try check(
+      Set(active(oldest).map { $0.record.text }) == ["0", "2"],
+      "Recopying the oldest entry must not exceed the limit")
+
+    let ties = try historyFixture(root, "limit-ties", timestamps: [1, 1, 1])
+    try ties.setHistoryLimit(2)
+    try check(
+      active(ties).map { $0.record.text } == ["2", "1"],
+      "Equal timestamps keep newest IDs deterministically")
+
+    let excluded = try historyFixture(
+      root, "limit-exclusions", timestamps: [1, 2, 3], pinned: [0], deleted: [2])
+    try excluded.setHistoryLimit(1)
+    try check(
+      Set(active(excluded).map { $0.record.text }) == ["0", "1"],
+      "Pinned and deleted entries do not consume the limit")
+
+    let zero = try historyFixture(
+      root, "limit-zero", timestamps: [1, .max, 3], pinned: [0], deleted: [2])
+    try zero.setHistoryLimit(0)
+    try zero.capture("new")
+    try zero.capture("0")
+    try check(
+      active(zero).map { $0.record.text } == ["0"],
+      "Zero retains only pins, including after new captures and future timestamps")
+    try check(item("0", in: zero).record.pinned, "Recopy keeps pin state")
+
+    let reduced = try historyFixture(root, "limit-reduction", timestamps: [1, 2, 3])
+    try reduced.setHistoryLimit(10)
+    try check(active(reduced).count == 3, "Below-limit entries are unchanged")
+    try reduced.setHistoryLimit(1)
+    try check(
+      active(reduced).map { $0.record.text } == ["2"], "Reducing the limit prunes immediately")
+    try reduced.setHistoryLimit(10)
+    try check(active(reduced).count == 1, "Increasing the limit does not resurrect expired entries")
+    let reopened = ClipboardStore(directory: reduced.databaseURL.deletingLastPathComponent())
+    try reopened.setHistoryLimit(0)
+    try check(active(reduced).isEmpty, "A second connection applies the limit to the shared store")
+    print("PASS clipboard history limits, recopy regressions, ties, pins, zero and live changes")
+  }
+
+  static func testHistoryLimitSyncAndImport(_ root: URL) throws {
+    let main = try historyFixture(root, "limit-main", timestamps: [1, 2])
+    try main.setHistoryLimit(2)
+    let keyboard = ClipboardStore(directory: root.appendingPathComponent("limit-keyboard"))
+    try sync(keyboard, main)
+    try keyboard.capture("new A")
+    try keyboard.capture("new B")
+    try sync(keyboard, main)
+    try check(
+      Set(active(main).map { $0.record.text }) == ["new A", "new B"],
+      "Main enforces its limit when merging private keyboard history")
+    try check(
+      Set(active(keyboard).map { $0.record.text }) == ["new A", "new B"],
+      "Keyboard receives main's pruned history")
+    try check(!keyboard.hasPendingChanges(), "Retention converges through normal sync")
+    try sync(keyboard, main)
+    try check(active(main).count == 2, "Another sync cannot resurrect expired history")
+
+    let imported = try historyFixture(
+      root, "limit-import-source", timestamps: [1, 2, 3, 4], pinned: [0])
+    try main.importDatabase(from: imported.databaseURL)
+    try check(
+      Set(active(main).map { $0.record.text }) == ["0", "2", "3"],
+      "Import obeys the configured limit while preserving pins")
+    try check(active(imported).count == 4, "Archive readers do not prune the source database")
+    print("PASS history retention during private-store merge and authoritative import")
   }
 
   static func testUnsupportedVersions(_ root: URL) throws {

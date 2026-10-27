@@ -1,6 +1,6 @@
 # Synchronization without App Group
 
-This is an implementation guide for AI agents extending synchronization between the main app and keyboard extensions, especially future bidirectional datasets. It describes the working-tree implementation as of 2026-10-24, not a claim that every behavior below has shipped. Read the linked code before changing it, and update this document when the protocol changes.
+This is an implementation guide for AI agents extending synchronization between the main app and keyboard extensions, especially future bidirectional datasets. It describes the working-tree implementation as of 2026-10-27, not a claim that every behavior below has shipped. Read the linked code before changing it, and update this document when the protocol changes.
 
 The clipboard is the first bidirectional dataset. Its transport and merge code are reusable, but there is not yet a generic synchronization framework. Configuration-file downloads remain a separate, mostly one-way mechanism.
 
@@ -136,6 +136,8 @@ These are different operations and must not share an undocumented "missing means
 ### Normal deletion
 
 Clipboard delete and clear set `deleted = true`. Tombstones remain in synchronization snapshots so an offline keyboard cannot resurrect a deleted entry. They are not visible clipboard items. The current implementation has no tombstone garbage-collection protocol.
+
+The frontend's `[Clipboard] HistoryLimit` setting defaults to 10 and limits active unpinned entries; pinned and deleted entries do not consume the limit, and zero retains only pins. Loading or saving frontend configuration applies the limit to the process-local `ClipboardStore` and prunes immediately. Capture, main-side merge, and authoritative import also prune in their write transaction. Pruning selects the exact overflow IDs ordered by timestamp descending, then numeric ID descending, and marks them deleted so expiration participates in normal synchronization. Recopying updates timestamps without changing IDs, so deleting a numeric ID range would be incorrect. Archive readers leave retention unconfigured and never prune the backup source. The limit remains a configuration-file setting, not an additional synchronization protocol field.
 
 Undo reactivates appropriate local data and retains pin state; an old undo must not restore an identity removed by import. If matching active text was captured after deletion, undo must not create another active copy.
 

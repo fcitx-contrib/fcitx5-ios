@@ -16,6 +16,10 @@ msgid "Monitor Pasteboard"
 msgstr "监视剪贴板"
 
 #: iosfrontend/iosfrontend.h
+msgid "Clipboard history limit"
+msgstr "剪贴板历史记录上限"
+
+#: iosfrontend/iosfrontend.h
 msgid "Remove tracking parameters"
 msgstr "清除追踪参数"
 

@@ -5,13 +5,13 @@ target_include_directories(SwiftFrontend PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${PROJECT_BINARY_DIR}/protocol"
 )
-target_link_libraries(SwiftFrontend FcitxProtocol)
+target_link_libraries(SwiftFrontend FcitxProtocol SwiftUtil)
 
 _swift_generate_cxx_header(
     SwiftFrontend
     "${CMAKE_CURRENT_BINARY_DIR}/include/iosfrontend-swift.h"
     SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/iosfrontend.swift"
-    SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${PROJECT_BINARY_DIR}/protocol"
+    SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${PROJECT_BINARY_DIR}/protocol;${PROJECT_BINARY_DIR}/common;${PROJECT_BINARY_DIR}/deps;${PROJECT_SOURCE_DIR}/deps/GRDB/Sources/GRDBSQLite"
 )
 
 add_fcitx5_addon(iosfrontend iosfrontend.cpp)

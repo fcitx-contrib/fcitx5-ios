@@ -1,5 +1,14 @@
 import FcitxProtocol
 import Foundation
+import SwiftUtil
+
+public func setClipboardHistoryLimit(_ limit: Int32) {
+  do {
+    try clipboardStore.setHistoryLimit(Int(limit))
+  } catch {
+    FCITX_ERROR("Failed to apply clipboard history limit: \(error)")
+  }
+}
 
 @MainActor
 private weak var client: FcitxProtocol?
