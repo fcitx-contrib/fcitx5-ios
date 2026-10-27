@@ -24,9 +24,21 @@ void IosFrontend::setConfig(const RawConfig &config) {
     safeSaveAsIni(config_, ConfPath);
 }
 
+const Configuration *IosFrontend::getSubConfig(const std::string &path) const {
+    return path == "Clipboard" ? &*config_.clipboard : nullptr;
+}
+
+void IosFrontend::setSubConfig(const std::string &path,
+                               const RawConfig &config) {
+    if (path == "Clipboard") {
+        config_.clipboard.mutableValue()->load(config, true);
+        save();
+    }
+}
+
 std::string IosFrontend::filterClipboardEntry(std::string text) const {
     // Long strings are unlikely to be URLs and can take seconds to process.
-    if (text.size() <= 2048 && *config_.removeTrackingParameters) {
+    if (text.size() <= 2048 && *config_.clipboard->removeTrackingParameters) {
         return url_filter::filterTrackingParameters(std::move(text));
     }
     return text;

@@ -19,6 +19,6 @@ msgstr "监视剪贴板"
 msgid "Remove tracking parameters"
 msgstr "清除追踪参数"
 
-#: iosfrontend/iosfrontend.conf.in.in
-msgid "iOS Frontend"
-msgstr "iOS 前端"
+#: iosfrontend/iosfrontend.h
+msgid "Clipboard"
+msgstr "剪贴板"

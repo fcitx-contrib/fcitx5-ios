@@ -16,13 +16,16 @@ namespace fcitx {
 
 class IosInputContext;
 
-FCITX_CONFIGURATION(IosFrontendConfig,
+FCITX_CONFIGURATION(IosClipboardConfig,
                     Option<bool> monitorPasteboard{this, "MonitorPasteboard",
                                                    _("Monitor Pasteboard"),
                                                    false};
                     Option<bool> removeTrackingParameters{
                         this, "RemoveTrackingParameters",
                         _("Remove tracking parameters"), true};);
+
+FCITX_CONFIGURATION(IosFrontendConfig, Option<IosClipboardConfig> clipboard{
+                                           this, "Clipboard", _("Clipboard")};);
 
 class IosFrontend : public AddonInstance {
   public:
@@ -33,10 +36,15 @@ class IosFrontend : public AddonInstance {
     void save() override;
     const Configuration *getConfig() const override { return &config_; }
     void setConfig(const RawConfig &config) override;
+    const Configuration *getSubConfig(const std::string &path) const override;
+    void setSubConfig(const std::string &path,
+                      const RawConfig &config) override;
 
-    bool monitorPasteboard() const { return *config_.monitorPasteboard; }
+    bool monitorPasteboard() const {
+        return *config_.clipboard->monitorPasteboard;
+    }
     void setMonitorPasteboard(bool enabled) {
-        config_.monitorPasteboard.setValue(enabled);
+        config_.clipboard.mutableValue()->monitorPasteboard.setValue(enabled);
         save();
     }
     std::string filterClipboardEntry(std::string text) const;
