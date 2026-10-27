@@ -84,6 +84,7 @@ extension ClipboardStore {
         }
         // A known identity absent from main was removed by import: do not resurrect it.
       }
+      try pruneHistory(in: db)
       let response = ClipboardSyncResponse(
         requestID: request.id, entries: try Self.entries(db), aliases: aliases)
       try Self.saveState(response, key: requestKey, in: db)

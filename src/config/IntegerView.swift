@@ -49,20 +49,20 @@ struct IntegerView: OptionViewProtocol {
         .multilineTextAlignment(.trailing)
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
-          if !focused, let minValue = minValue, let maxValue = maxValue {
-            if number < minValue {
+          if !focused {
+            if let minValue, number < minValue {
               number = minValue
-            } else if number > maxValue {
+            } else if let maxValue, number > maxValue {
               number = maxValue
             }
           }
         }
         .frame(width: 60)
         .accessibilityIdentifier(option)
-      if let minValue = minValue, let maxValue = maxValue {
+      if minValue != nil || maxValue != nil {
         Stepper(
           value: $number,
-          in: minValue...maxValue,
+          in: (minValue ?? Int.min)...(maxValue ?? Int.max),
           step: 1
         ) {}
         .accessibilityIdentifier(stepperId)

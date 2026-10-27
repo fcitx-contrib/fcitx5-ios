@@ -15,13 +15,19 @@ IosFrontend::IosFrontend(Instance *instance)
     reloadConfig();
 }
 
-void IosFrontend::reloadConfig() { readAsIni(config_, ConfPath); }
+void IosFrontend::reloadConfig() {
+    readAsIni(config_, ConfPath);
+    SwiftFrontend::setClipboardHistoryLimit(*config_.clipboard->historyLimit);
+}
 
-void IosFrontend::save() { safeSaveAsIni(config_, ConfPath); }
+void IosFrontend::save() {
+    safeSaveAsIni(config_, ConfPath);
+    SwiftFrontend::setClipboardHistoryLimit(*config_.clipboard->historyLimit);
+}
 
 void IosFrontend::setConfig(const RawConfig &config) {
     config_.load(config, true);
-    safeSaveAsIni(config_, ConfPath);
+    save();
 }
 
 const Configuration *IosFrontend::getSubConfig(const std::string &path) const {

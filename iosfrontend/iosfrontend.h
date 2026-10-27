@@ -16,13 +16,16 @@ namespace fcitx {
 
 class IosInputContext;
 
-FCITX_CONFIGURATION(IosClipboardConfig,
-                    Option<bool> monitorPasteboard{this, "MonitorPasteboard",
-                                                   _("Monitor Pasteboard"),
-                                                   false};
-                    Option<bool> removeTrackingParameters{
-                        this, "RemoveTrackingParameters",
-                        _("Remove tracking parameters"), true};);
+FCITX_CONFIGURATION(
+    IosClipboardConfig,
+    Option<bool> monitorPasteboard{this, "MonitorPasteboard",
+                                   _("Monitor Pasteboard"), false};
+    Option<int, IntConstrain> historyLimit{this, "HistoryLimit",
+                                           _("Clipboard history limit"), 10,
+                                           IntConstrain(0)};
+    Option<bool> removeTrackingParameters{this, "RemoveTrackingParameters",
+                                          _("Remove tracking parameters"),
+                                          true};);
 
 FCITX_CONFIGURATION(IosFrontendConfig, Option<IosClipboardConfig> clipboard{
                                            this, "Clipboard", _("Clipboard")};);

@@ -69,6 +69,8 @@ public final class ClipboardStore: @unchecked Sendable {
   private let connectionLock = NSLock()
   // Protected by connectionLock. All subsequent access goes through GRDB.
   private var connection: DatabaseQueue?
+  // Access only on the database queue. Archive readers leave retention unconfigured.
+  private var historyLimit: Int?
 
   public init(directory: URL, legacyDirectory: URL? = nil) {
     databaseURL = directory.appendingPathComponent(Self.databaseFileName)
@@ -205,6 +207,26 @@ public final class ClipboardStore: @unchecked Sendable {
     try database().read { try Self.entries($0) }
   }
 
+  public func setHistoryLimit(_ limit: Int) throws {
+    try database().write { db in
+      historyLimit = max(0, limit)
+      try pruneHistory(in: db)
+    }
+  }
+
+  func pruneHistory(in db: Database) throws {
+    guard let historyLimit else { return }
+    // Recopying changes timestamps without changing IDs. Select exact overflow IDs,
+    // including an ID tie-breaker, rather than deleting an ID range.
+    let outdated = ClipboardRecord.filter(!Column("pinned") && !Column("deleted"))
+      .order(Column("timestamp").desc, Column("id").desc)
+      .select(Column("id"))
+      .limit(-1, offset: historyLimit)
+    // Keep tombstones so synchronization cannot resurrect expired entries.
+    try ClipboardRecord.filter(outdated.contains(Column("id")))
+      .updateAll(db, Column("deleted").set(to: true))
+  }
+
   /// Discard local contents and sync history before an explicit full resync.
   /// Keep the database file open so concurrent readers never use an unlinked file.
   public func reset() throws {
@@ -227,6 +249,7 @@ public final class ClipboardStore: @unchecked Sendable {
       } else {
         try Self.insert(ClipboardSyncEntry(id: UUID(), record: ClipboardRecord(text: text)), in: db)
       }
+      try pruneHistory(in: db)
     }
   }
 
@@ -318,6 +341,7 @@ public final class ClipboardStore: @unchecked Sendable {
     let imported = try source.entries().map { ClipboardSyncEntry(id: UUID(), record: $0.record) }
     try database().write { db in
       try Self.replace(imported, in: db)
+      try pruneHistory(in: db)
       // Requests completed before an import remain replayable, but must not reapply their writes.
     }
   }
