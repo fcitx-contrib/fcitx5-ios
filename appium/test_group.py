@@ -24,8 +24,7 @@ def test_reset_group(driver: WebDriver, app: str):
             cfg[FUZZY][SWITCH_IDS[2]],
         ]
 
-    fuzzy = scroll_to_id(driver, FUZZY)
-    v_as_quickphrase = find_element_by_id(driver, SWITCH_IDS[0])
+    v_as_quickphrase = scroll_to_id(driver, SWITCH_IDS[0])
     initial_config = read_config_values()
     v_as_quickphrase_on = get_switch_state(v_as_quickphrase)
     click_switch(v_as_quickphrase)
@@ -34,7 +33,7 @@ def test_reset_group(driver: WebDriver, app: str):
         != v_as_quickphrase_on
     ), UI_NOT_UPDATED
 
-    fuzzy.click()
+    scroll_to_id(driver, FUZZY).click()
     toggled_ui = []
     for toggle_id in SWITCH_IDS[1:]:
         toggle = find_element_by_id(driver, toggle_id)

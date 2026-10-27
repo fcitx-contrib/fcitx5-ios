@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftUtil
+import UIKit
 
 private let numberFormatter: NumberFormatter = {
   let formatter = NumberFormatter()
@@ -49,7 +50,13 @@ struct IntegerView: OptionViewProtocol {
         .multilineTextAlignment(.trailing)
         .focused($isFocused)
         .onChange(of: isFocused) { focused in
-          if !focused {
+          if focused {
+            DispatchQueue.main.async {
+              guard isFocused else { return }
+              UIApplication.shared.sendAction(
+                #selector(UIResponder.selectAll(_:)), to: nil, from: nil, for: nil)
+            }
+          } else {
             if let minValue, number < minValue {
               number = minValue
             } else if let maxValue, number > maxValue {

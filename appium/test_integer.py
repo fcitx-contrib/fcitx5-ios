@@ -33,11 +33,12 @@ def test_integer(driver: WebDriver, app: str):
     assert get_integer_value(text_field) == initial_value, UI_NOT_UPDATED
     assert read_config_value() == str(initial_value), CHANGE_NOT_SAVED
 
-    # Test TextField
-    new_value = initial_value + 5
-    set_integer_value(text_field, new_value)
-    assert get_integer_value(text_field) == new_value, UI_NOT_UPDATED
-    assert read_config_value() == str(new_value), CHANGE_NOT_SAVED
+    # Focusing selects all digits, so typing replaces the value without clearing.
+    # Repeat after submitting to verify selection also works when refocusing.
+    for new_value in (10, 3):
+        set_integer_value(text_field, new_value)
+        assert get_integer_value(text_field) == new_value, UI_NOT_UPDATED
+        assert read_config_value() == str(new_value), CHANGE_NOT_SAVED
 
     # Test Reset Item
     label = find_element_by_id(driver, f"{DEFAULT_PAGE_SIZE}_label")
