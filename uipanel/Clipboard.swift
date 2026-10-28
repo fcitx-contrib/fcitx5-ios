@@ -1,3 +1,4 @@
+import Fcitx
 import SwiftUI
 import SwiftUtil
 import UIKit
@@ -130,6 +131,9 @@ private struct ClipboardEntryView: View {
   private func commitEntry() {
     guard !vm.showMenu else { return }
     client.commitString(entry.text)
+    if isClipboardReturnAfterPasteEnabled() {
+      vm.popDisplayMode()
+    }
   }
 
   var body: some View {

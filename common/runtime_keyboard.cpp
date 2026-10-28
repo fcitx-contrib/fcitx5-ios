@@ -103,6 +103,10 @@ void setClipboardMonitoringEnabled(bool enabled) {
     dispatcher->schedule([=] { frontend->setMonitorPasteboard(enabled); });
 }
 
+bool isClipboardReturnAfterPasteEnabled() {
+    return with_fcitx([] { return frontend->returnAfterPaste(); });
+}
+
 std::string filterClipboardEntry(const char *text) {
     std::string clipboardText = text;
     return with_fcitx([clipboardText] {

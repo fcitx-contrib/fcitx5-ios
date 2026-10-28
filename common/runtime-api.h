@@ -20,6 +20,7 @@ void triggerUnicode(const char *program, const char *documentIdentifier);
 void triggerQuickPhrase(const char *program, const char *documentIdentifier);
 bool isClipboardMonitoringEnabled();
 void setClipboardMonitoringEnabled(bool enabled);
+bool isClipboardReturnAfterPasteEnabled();
 std::string filterClipboardEntry(const char *text);
 void reload();
 void toggle();
