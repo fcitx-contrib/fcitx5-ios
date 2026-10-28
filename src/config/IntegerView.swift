@@ -2,6 +2,9 @@ import SwiftUI
 import SwiftUtil
 import UIKit
 
+private let numberFieldWidth: CGFloat = 60
+private let minimumInputHeight: CGFloat = 44
+
 private let numberFormatter: NumberFormatter = {
   let formatter = NumberFormatter()
   formatter.numberStyle = .decimal
@@ -40,38 +43,49 @@ struct IntegerView: OptionViewProtocol {
     let option = data["Option"] as? String ?? ""
     let stepperId = "\(option)_stepper"
     HStack {
-      // Limit width of TextField and let Text expand, otherwise they take 1/3 each.
-      Text(label)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityIdentifier(option + "_label")
-      TextField("", value: $number, formatter: numberFormatter)
-        .keyboardType(.numbersAndPunctuation)  // Use our own numpad.
-        .submitLabel(.done)
-        .multilineTextAlignment(.trailing)
-        .focused($isFocused)
-        .onChange(of: isFocused) { focused in
-          if focused {
-            DispatchQueue.main.async {
-              guard isFocused else { return }
-              UIApplication.shared.sendAction(
-                #selector(UIResponder.selectAll(_:)), to: nil, from: nil, for: nil)
-            }
-          } else {
-            if let minValue, number < minValue {
-              number = minValue
-            } else if let maxValue, number > maxValue {
-              number = maxValue
+      HStack {
+        // Keep the number compact while the label fills the available space.
+        Text(label)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .accessibilityIdentifier(option + "_label")
+        TextField("", value: $number, formatter: numberFormatter)
+          .keyboardType(.numbersAndPunctuation)  // Use our own numpad.
+          .submitLabel(.done)
+          .multilineTextAlignment(.trailing)
+          .focused($isFocused)
+          .onChange(of: isFocused) { focused in
+            if focused {
+              DispatchQueue.main.async {
+                guard isFocused else { return }
+                UIApplication.shared.sendAction(
+                  #selector(UIResponder.selectAll(_:)), to: nil, from: nil, for: nil)
+              }
+            } else {
+              if let minValue, number < minValue {
+                number = minValue
+              } else if let maxValue, number > maxValue {
+                number = maxValue
+              }
             }
           }
-        }
-        .frame(width: 60)
-        .accessibilityIdentifier(option)
+          .frame(
+            minWidth: numberFieldWidth, maxWidth: numberFieldWidth, minHeight: minimumInputHeight
+          )
+          .accessibilityIdentifier(option)
+      }
+      .frame(maxWidth: .infinity, minHeight: minimumInputHeight)
+      .contentShape(Rectangle())
+      .simultaneousGesture(
+        TapGesture().onEnded {
+          isFocused = true
+        })
       if minValue != nil || maxValue != nil {
         Stepper(
           value: $number,
           in: (minValue ?? Int.min)...(maxValue ?? Int.max),
           step: 1
         ) {}
+        .labelsHidden()
         .accessibilityIdentifier(stepperId)
       } else {
         Stepper {
@@ -80,6 +94,7 @@ struct IntegerView: OptionViewProtocol {
         } onDecrement: {
           number -= 1
         }
+        .labelsHidden()
         .accessibilityIdentifier(stepperId)
       }
     }
