@@ -2,6 +2,9 @@ import SwiftUI
 import SwiftUtil
 import UIKit
 
+private let numberFieldWidth: CGFloat = 60
+private let minimumInputHeight: CGFloat = 44
+
 private let numberFormatter: NumberFormatter = {
   let formatter = NumberFormatter()
   formatter.numberStyle = .decimal
@@ -65,11 +68,12 @@ struct IntegerView: OptionViewProtocol {
               }
             }
           }
-          .frame(width: 60)
-          .frame(minHeight: 44)
+          .frame(
+            minWidth: numberFieldWidth, maxWidth: numberFieldWidth, minHeight: minimumInputHeight
+          )
           .accessibilityIdentifier(option)
       }
-      .frame(maxWidth: .infinity, minHeight: 44)
+      .frame(maxWidth: .infinity, minHeight: minimumInputHeight)
       .contentShape(Rectangle())
       .simultaneousGesture(
         TapGesture().onEnded {
