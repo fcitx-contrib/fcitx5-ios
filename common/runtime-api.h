@@ -21,6 +21,7 @@ void triggerQuickPhrase(const char *program, const char *documentIdentifier);
 bool isClipboardMonitoringEnabled();
 void setClipboardMonitoringEnabled(bool enabled);
 bool isClipboardReturnAfterPasteEnabled();
+bool isClipboardMaskSensitiveEnabled();
 bool isClipboardSuggestionEnabled();
 int getClipboardSuggestionTimeout();
 std::string filterClipboardEntry(const char *text);

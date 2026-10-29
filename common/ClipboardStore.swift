@@ -14,13 +14,16 @@ public struct ClipboardRecord: Codable, FetchableRecord, MutablePersistableRecor
   public var deleted: Bool
   public var sensitive: Bool
 
-  public init(text: String, timestamp: Int64 = Int64(Date().timeIntervalSince1970 * 1000)) {
+  public init(
+    text: String, timestamp: Int64 = Int64(Date().timeIntervalSince1970 * 1000),
+    sensitive: Bool = false
+  ) {
     self.text = text
     self.timestamp = timestamp
     pinned = false
     type = "text/plain"
     deleted = false
-    sensitive = false
+    self.sensitive = sensitive
   }
 
   public mutating func didInsert(_ inserted: InsertionSuccess) { id = inserted.rowID }
@@ -236,7 +239,7 @@ public final class ClipboardStore: @unchecked Sendable {
     }
   }
 
-  public func capture(_ text: String) throws {
+  public func capture(_ text: String, sensitive: Bool = false) throws {
     guard text.contains(where: { !$0.isWhitespace }) else { return }
     try database().write { db in
       if var existing = try ClipboardRecord.filter(Column("text") == text && !Column("deleted"))
@@ -245,9 +248,12 @@ public final class ClipboardStore: @unchecked Sendable {
         let (next, overflow) = existing.timestamp.addingReportingOverflow(1)
         existing.timestamp = max(
           Int64(Date().timeIntervalSince1970 * 1000), overflow ? existing.timestamp : next)
+        existing.sensitive = sensitive
         try existing.update(db)
       } else {
-        try Self.insert(ClipboardSyncEntry(id: UUID(), record: ClipboardRecord(text: text)), in: db)
+        try Self.insert(
+          ClipboardSyncEntry(id: UUID(), record: ClipboardRecord(text: text, sensitive: sensitive)),
+          in: db)
       }
       try pruneHistory(in: db)
     }

@@ -219,11 +219,11 @@ public class ViewModel: ObservableObject {
     }
   }
 
-  public func addClipboardEntry(_ text: String) {
+  public func addClipboardEntry(_ text: String, sensitive: Bool = false) {
     configureClipboardSuggestions()
-    clipboardSuggestion.capture(text)
-    clipboardSuggestionText = clipboardSuggestion.presentedText
-    Task { await clipboardOperation { try clipboardStore.capture(text) } }
+    clipboardSuggestion.capture(text, sensitive: sensitive)
+    updateClipboardSuggestionText()
+    Task { await clipboardOperation { try clipboardStore.capture(text, sensitive: sensitive) } }
   }
 
   private func configureClipboardSuggestions() {
@@ -233,7 +233,15 @@ public class ViewModel: ObservableObject {
 
   func refreshClipboardSuggestion() {
     configureClipboardSuggestions()
-    clipboardSuggestionText = clipboardSuggestion.presentedText
+    updateClipboardSuggestionText()
+  }
+
+  private func updateClipboardSuggestionText() {
+    clipboardSuggestionText = clipboardSuggestion.presentedText.map {
+      clipboardDisplayText(
+        $0, sensitive: clipboardSuggestion.presentedSensitive,
+        maskSensitive: isClipboardMaskSensitiveEnabled(), limit: 42)
+    }
   }
 
   public func hideClipboardSuggestion() {

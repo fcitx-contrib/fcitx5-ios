@@ -107,6 +107,10 @@ bool isClipboardReturnAfterPasteEnabled() {
     return with_fcitx([] { return frontend->returnAfterPaste(); });
 }
 
+bool isClipboardMaskSensitiveEnabled() {
+    return with_fcitx([] { return frontend->maskSensitive(); });
+}
+
 bool isClipboardSuggestionEnabled() {
     return with_fcitx([] { return frontend->showClipboardSuggestions(); });
 }

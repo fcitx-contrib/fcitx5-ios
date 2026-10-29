@@ -1,10 +1,22 @@
 import Foundation
 
+/// Source apps opt into this convention; iOS does not classify passwords for us.
+public let concealedPasteboardType = "org.nspasteboard.ConcealedType"
+
+public func clipboardDisplayText(
+  _ text: String, sensitive: Bool, maskSensitive: Bool, limit: Int? = nil
+) -> String {
+  let excerpt = limit.map { String(text.prefix($0)) } ?? text
+  return sensitive && maskSensitive ? String(repeating: "•", count: excerpt.count) : excerpt
+}
+
 /// Transient clipboard content, independent of history retention and pin ordering.
 public struct ClipboardSuggestionState {
   public private(set) var presentedText: String?
+  public private(set) var presentedSensitive = false
 
   private var capturedText: String?
+  private var capturedSensitive = false
   private var capturedAt: Date?
   private var enabled = true
   private var timeout = 30
@@ -21,13 +33,14 @@ public struct ClipboardSuggestionState {
     }
   }
 
-  public mutating func capture(_ text: String, now: Date = Date()) {
+  public mutating func capture(_ text: String, sensitive: Bool = false, now: Date = Date()) {
     guard enabled else { return }
     guard text.contains(where: { !$0.isWhitespace }) else {
       dismiss()
       return
     }
     capturedText = text
+    capturedSensitive = sensitive
     capturedAt = now
     refresh(now: now)
   }
@@ -41,18 +54,22 @@ public struct ClipboardSuggestionState {
       timeout < 0 || now.timeIntervalSince(capturedAt) < Double(timeout)
     else {
       presentedText = nil
+      presentedSensitive = false
       return
     }
     presentedText = capturedText
+    presentedSensitive = capturedSensitive
   }
 
   public mutating func hide() {
     presentedText = nil
+    presentedSensitive = false
   }
 
   public mutating func dismiss() {
-    presentedText = nil
+    hide()
     capturedText = nil
+    capturedSensitive = false
     capturedAt = nil
   }
 

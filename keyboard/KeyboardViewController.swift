@@ -780,10 +780,11 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     guard changeCount != Self.lastPasteboardChangeCount else { return }
     Self.lastPasteboardChangeCount = changeCount
     guard let text = pasteboard.string else { return }
+    let sensitive = pasteboard.types.contains(concealedPasteboardType)
 
     let filteredText = String(filterClipboardEntry(text))
     KeyboardViewController.clipboardText = filteredText
-    vm.addClipboardEntry(filteredText)
+    vm.addClipboardEntry(filteredText, sensitive: sensitive)
   }
 
   public func cut() {
