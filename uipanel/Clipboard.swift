@@ -124,6 +124,7 @@ private struct ClipboardEntryView: View {
   @State private var swipeOffset: CGFloat = 0
 
   let entry: ClipboardEntry
+  let maskSensitive: Bool
   let onDelete: (UUID) -> Void
 
   private let deleteThreshold: CGFloat = 60
@@ -145,29 +146,32 @@ private struct ClipboardEntryView: View {
           .padding(.trailing, 16)
       }
 
-      Text(entry.text)
-        .font(.system(size: 14))
-        .foregroundColor(getNormalForeground(colorScheme))
-        .lineLimit(4)
-        .multilineTextAlignment(.leading)
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .padding(.trailing, entry.isPinned ? 10 : 0)
-        .frame(maxWidth: .infinity, minHeight: 30, alignment: .leading)
-        .background(
-          (isPressed ? getFunctionBackground(colorScheme) : getNormalBackground(colorScheme))
-            .blend(with: getBackground(colorScheme))
-        )
-        .cornerRadius(8)
-        .overlay(alignment: .bottomTrailing) {
-          if entry.isPinned {
-            Image(systemName: "pin.fill")
-              .font(.system(size: 9))
-              .foregroundColor(getNormalForeground(colorScheme).opacity(0.4))
-              .padding(4)
-          }
+      Text(
+        clipboardDisplayText(
+          entry.text, sensitive: entry.record.sensitive, maskSensitive: maskSensitive)
+      )
+      .font(.system(size: 14))
+      .foregroundColor(getNormalForeground(colorScheme))
+      .lineLimit(4)
+      .multilineTextAlignment(.leading)
+      .padding(.horizontal, 8)
+      .padding(.vertical, 6)
+      .padding(.trailing, entry.isPinned ? 10 : 0)
+      .frame(maxWidth: .infinity, minHeight: 30, alignment: .leading)
+      .background(
+        (isPressed ? getFunctionBackground(colorScheme) : getNormalBackground(colorScheme))
+          .blend(with: getBackground(colorScheme))
+      )
+      .cornerRadius(8)
+      .overlay(alignment: .bottomTrailing) {
+        if entry.isPinned {
+          Image(systemName: "pin.fill")
+            .font(.system(size: 9))
+            .foregroundColor(getNormalForeground(colorScheme).opacity(0.4))
+            .padding(4)
         }
-        .offset(x: swipeOffset)
+      }
+      .offset(x: swipeOffset)
     }
     .clipShape(RoundedRectangle(cornerRadius: 8))
     .contentShape(RoundedRectangle(cornerRadius: 8))
@@ -219,6 +223,7 @@ struct ClipboardView: View {
   @State private var pendingDeletedEntries = [ClipboardEntry]()
   @State private var toastDismissID = UUID()
   @State private var isMonitoring = false
+  @State private var maskSensitive = true
   @State private var showMonitorFullAccessDialog = false
   @State private var isVisible = false
 
@@ -335,7 +340,8 @@ struct ClipboardView: View {
               ForEach(0..<2) { column in
                 LazyVStack(spacing: 8) {
                   ForEach(entries(inColumn: column)) { entry in
-                    ClipboardEntryView(entry: entry, onDelete: deleteEntry)
+                    ClipboardEntryView(
+                      entry: entry, maskSensitive: maskSensitive, onDelete: deleteEntry)
                   }
                 }
                 .frame(maxWidth: .infinity)
@@ -410,6 +416,7 @@ struct ClipboardView: View {
     .onAppear {
       isVisible = true
       isMonitoring = client.clipboardMonitoringEnabled()
+      maskSensitive = isClipboardMaskSensitiveEnabled()
       if isMonitoring && !client.hasKeyboardFullAccess() {
         showMonitorFullAccessDialog = true
       }

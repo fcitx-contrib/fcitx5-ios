@@ -30,6 +30,9 @@ FCITX_CONFIGURATION(
         IntConstrain(-1)};
     Option<bool> returnAfterPaste{this, "ReturnAfterPaste",
                                   _("Return after pasting"), false};
+    Option<bool> maskSensitive{this, "MaskSensitive",
+                               _("Mask sensitive data (such as passwords)"),
+                               true};
     Option<bool> removeTrackingParameters{this, "RemoveTrackingParameters",
                                           _("Remove tracking parameters"),
                                           true};);
@@ -56,6 +59,7 @@ class IosFrontend : public AddonInstance {
     bool returnAfterPaste() const {
         return *config_.clipboard->returnAfterPaste;
     }
+    bool maskSensitive() const { return *config_.clipboard->maskSensitive; }
     bool showClipboardSuggestions() const {
         return *config_.clipboard->showSuggestions;
     }

@@ -32,6 +32,10 @@ msgid "Return after pasting"
 msgstr "粘贴后返回"
 
 #: iosfrontend/iosfrontend.h
+msgid "Mask sensitive data (such as passwords)"
+msgstr "隐藏敏感信息（如密码）"
+
+#: iosfrontend/iosfrontend.h
 msgid "Remove tracking parameters"
 msgstr "清除追踪参数"
 

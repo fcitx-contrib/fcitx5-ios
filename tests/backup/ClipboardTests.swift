@@ -26,6 +26,7 @@ private struct ClipboardTests {
     try manager.createDirectory(at: root, withIntermediateDirectories: true)
     defer { try? manager.removeItem(at: root) }
     try testClipboardSuggestions(root)
+    try testSensitiveClipboard(root)
     try testCRUD(root)
     try testHistoryLimit(root)
     try testHistoryLimitSyncAndImport(root)
@@ -116,6 +117,59 @@ private struct ClipboardTests {
     try check(
       suggestion.takePresentedText() == "not retained", "Suggestions work without retained history")
     print("PASS clipboard suggestions, delayed expiry, full-text paste, lifecycle and zero history")
+  }
+
+  static func testSensitiveClipboard(_ root: URL) throws {
+    let text = "test-password🐧"
+    let masked = String(repeating: "•", count: text.count)
+    try check(
+      clipboardDisplayText(text, sensitive: true, maskSensitive: true) == masked,
+      "Sensitive history previews are masked")
+    try check(
+      clipboardDisplayText(text, sensitive: true, maskSensitive: false) == text,
+      "Disabling masking reveals the original preview")
+    try check(
+      clipboardDisplayText(text, sensitive: false, maskSensitive: true) == text,
+      "Ordinary text remains visible")
+    try check(
+      clipboardDisplayText(text, sensitive: true, maskSensitive: true, limit: 5) == "•••••",
+      "Suggestion previews respect the character limit")
+
+    var suggestion = ClipboardSuggestionState()
+    suggestion.capture(text, sensitive: true)
+    suggestion.hide()
+    suggestion.refresh()
+    try check(suggestion.presentedSensitive, "Reopening retains suggestion sensitivity")
+    try check(suggestion.takePresentedText() == text, "Masked suggestions paste the original text")
+    try check(!suggestion.presentedSensitive, "Consuming clears suggestion sensitivity")
+    suggestion.capture(text, sensitive: true)
+    suggestion.capture("ordinary")
+    try check(!suggestion.presentedSensitive, "Ordinary captures do not inherit sensitivity")
+
+    let directory = root.appendingPathComponent("sensitive")
+    let store = ClipboardStore(directory: directory)
+    try store.capture(text)
+    let identity = try item(text, in: store).id
+    try store.togglePin(identity)
+    try store.capture(text, sensitive: true)
+    let entry = try item(text, in: store)
+    try check(
+      active(store).count == 1 && entry.id == identity && entry.record.pinned
+        && entry.record.sensitive,
+      "Recopying as sensitive updates the flag without duplicating text or losing pins")
+    let reopened = ClipboardStore(directory: directory)
+    try check(item(text, in: reopened).record.sensitive, "Sensitivity persists across reopen")
+    let deleted = try store.delete(identity)
+    try store.restore(deleted)
+    try check(item(text, in: store).record.sensitive, "Undo preserves sensitivity")
+    let main = ClipboardStore(directory: root.appendingPathComponent("sensitive-main"))
+    try sync(store, main)
+    try check(item(text, in: main).record.sensitive, "Synchronization preserves sensitivity")
+    try store.capture(text)
+    try check(!item(text, in: store).record.sensitive, "Recopying updates source sensitivity")
+    print(
+      "PASS sensitive clipboard previews, original paste, persistence, deduplication, undo and sync"
+    )
   }
 
   static func testCRUD(_ root: URL) throws {
