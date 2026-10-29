@@ -438,6 +438,7 @@ class KeyboardViewController: UIInputViewController, FcitxProtocol {
     Fcitx.focusOut(program, currentDocumentIdentifier())
     stopDocumentPolling()
     stopClipboardMonitoring()
+    vm.hideClipboardSuggestion()
     uninstallHostingController()
   }
 

@@ -107,6 +107,14 @@ bool isClipboardReturnAfterPasteEnabled() {
     return with_fcitx([] { return frontend->returnAfterPaste(); });
 }
 
+bool isClipboardSuggestionEnabled() {
+    return with_fcitx([] { return frontend->showClipboardSuggestions(); });
+}
+
+int getClipboardSuggestionTimeout() {
+    return with_fcitx([] { return frontend->clipboardSuggestionTimeout(); });
+}
+
 std::string filterClipboardEntry(const char *text) {
     std::string clipboardText = text;
     return with_fcitx([clipboardText] {

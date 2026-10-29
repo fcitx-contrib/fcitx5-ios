@@ -23,6 +23,11 @@ FCITX_CONFIGURATION(
     Option<int, IntConstrain> historyLimit{this, "HistoryLimit",
                                            _("Clipboard history limit"), 10,
                                            IntConstrain(0)};
+    Option<bool> showSuggestions{this, "ShowSuggestions",
+                                 _("Show clipboard suggestions"), true};
+    Option<int, IntConstrain> suggestionTimeout{
+        this, "SuggestionTimeout", _("Clipboard suggestion timeout"), 30,
+        IntConstrain(-1)};
     Option<bool> returnAfterPaste{this, "ReturnAfterPaste",
                                   _("Return after pasting"), false};
     Option<bool> removeTrackingParameters{this, "RemoveTrackingParameters",
@@ -50,6 +55,12 @@ class IosFrontend : public AddonInstance {
     }
     bool returnAfterPaste() const {
         return *config_.clipboard->returnAfterPaste;
+    }
+    bool showClipboardSuggestions() const {
+        return *config_.clipboard->showSuggestions;
+    }
+    int clipboardSuggestionTimeout() const {
+        return *config_.clipboard->suggestionTimeout;
     }
     void setMonitorPasteboard(bool enabled) {
         config_.clipboard.mutableValue()->monitorPasteboard.setValue(enabled);

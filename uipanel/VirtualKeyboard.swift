@@ -1,3 +1,4 @@
+import Fcitx
 import FcitxProtocol
 import SwiftUI
 import SwiftUtil
@@ -75,12 +76,14 @@ public class ViewModel: ObservableObject {
   @Published var canRedo = false
   @Published var clipboardEntries = [ClipboardEntry]()
   @Published var clipboardError: String?
+  @Published private(set) var clipboardSuggestionText: String?
   @Published var layer = "default"
   @Published var lock = false
 
   private var clipboardTask: Task<Void, Never>?
   private var clipboardOperationID: UInt64 = 0
   private var appliedClipboardOperationID: UInt64 = 0
+  private var clipboardSuggestion = ClipboardSuggestionState()
 
   // XXX: In floating state for iPad simulator, switching to fcitx5 causes layout shift due to unstable width.
   @Published var totalHeight: CGFloat = getDefaultTotalHeight()
@@ -217,7 +220,36 @@ public class ViewModel: ObservableObject {
   }
 
   public func addClipboardEntry(_ text: String) {
+    configureClipboardSuggestions()
+    clipboardSuggestion.capture(text)
+    clipboardSuggestionText = clipboardSuggestion.presentedText
     Task { await clipboardOperation { try clipboardStore.capture(text) } }
+  }
+
+  private func configureClipboardSuggestions() {
+    clipboardSuggestion.configure(
+      enabled: isClipboardSuggestionEnabled(), timeout: Int(getClipboardSuggestionTimeout()))
+  }
+
+  func refreshClipboardSuggestion() {
+    configureClipboardSuggestions()
+    clipboardSuggestionText = clipboardSuggestion.presentedText
+  }
+
+  public func hideClipboardSuggestion() {
+    clipboardSuggestion.hide()
+    clipboardSuggestionText = nil
+  }
+
+  func dismissClipboardSuggestion() {
+    clipboardSuggestion.dismiss()
+    clipboardSuggestionText = nil
+  }
+
+  func pasteClipboardSuggestion() {
+    guard !showMenu, let text = clipboardSuggestion.takePresentedText() else { return }
+    clipboardSuggestionText = nil
+    client.commitString(text)
   }
 
   func toggleClipboardEntryPin(_ id: UUID) {

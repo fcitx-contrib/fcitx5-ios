@@ -40,6 +40,8 @@ struct IntegerView: OptionViewProtocol {
   var body: some View {
     let minValue = Int(data["IntMin"] as? String ?? "")
     let maxValue = Int(data["IntMax"] as? String ?? "")
+    let lowerBound = minValue ?? Int.min
+    let upperBound = maxValue ?? Int.max
     let option = data["Option"] as? String ?? ""
     let stepperId = "\(option)_stepper"
     HStack {
@@ -79,24 +81,17 @@ struct IntegerView: OptionViewProtocol {
         TapGesture().onEnded {
           isFocused = true
         })
-      if minValue != nil || maxValue != nil {
-        Stepper(
-          value: $number,
-          in: (minValue ?? Int.min)...(maxValue ?? Int.max),
-          step: 1
-        ) {}
-        .labelsHidden()
-        .accessibilityIdentifier(stepperId)
-      } else {
-        Stepper {
-        } onIncrement: {
-          number += 1
-        } onDecrement: {
-          number -= 1
-        }
-        .labelsHidden()
-        .accessibilityIdentifier(stepperId)
-      }
+      // A range-based Stepper computes its total distance, which can overflow for
+      // one-sided bounds such as -1...Int.max. Check each step without subtracting bounds.
+      Stepper(
+        onIncrement: number < upperBound
+          ? { if number < upperBound { number += 1 } } : nil,
+        onDecrement: number > lowerBound
+          ? { if number > lowerBound { number -= 1 } } : nil
+      ) {}
+      .labelsHidden()
+      .accessibilityValue(String(number))
+      .accessibilityIdentifier(stepperId)
     }
     .resetContextMenu(data: data, value: $value)
   }
