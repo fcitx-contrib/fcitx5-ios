@@ -2,7 +2,7 @@ from appium.webdriver.webdriver import WebDriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from util.button import reset_item
-from util.config import read_global_config
+from util.config import read_config, read_global_config
 from util.integer import (
     decrement_stepper,
     get_integer_value,
@@ -13,6 +13,43 @@ from util.message import CHANGE_NOT_SAVED, UI_NOT_UPDATED
 from util.screen import find_element_by_id, open_global_config
 
 DEFAULT_PAGE_SIZE = "DefaultPageSize"
+SUGGESTION_TIMEOUT = "SuggestionTimeout"
+HISTORY_LIMIT = "HistoryLimit"
+
+
+def test_clipboard_integer_bounds(driver: WebDriver, app: str):
+    # SuggestionTimeout has only a lower bound of -1. Constructing a bounded
+    # Stepper with -1...Int.max used to overflow just by opening this page.
+    find_element_by_id(driver, "Clipboard").click()
+    timeout = find_element_by_id(driver, SUGGESTION_TIMEOUT)
+    assert get_integer_value(timeout) == 30
+    stepper_id = f"{SUGGESTION_TIMEOUT}_stepper"
+
+    decrement_stepper(driver, stepper_id)
+    assert get_integer_value(timeout) == 29, UI_NOT_UPDATED
+    set_integer_value(timeout, -1)
+    assert get_integer_value(timeout) == -1, UI_NOT_UPDATED
+    assert (
+        read_config(app, "conf/iosfrontend.conf")["Clipboard"][SUGGESTION_TIMEOUT]
+        == "-1"
+    )
+    assert not find_element_by_id(driver, f"{stepper_id}-Decrement").is_enabled()
+
+    increment_stepper(driver, stepper_id)
+    assert get_integer_value(timeout) == 0, UI_NOT_UPDATED
+    assert (
+        read_config(app, "conf/iosfrontend.conf")["Clipboard"][SUGGESTION_TIMEOUT]
+        == "0"
+    )
+
+    history = find_element_by_id(driver, HISTORY_LIMIT)
+    history_stepper_id = f"{HISTORY_LIMIT}_stepper"
+    set_integer_value(history, 0)
+    assert not find_element_by_id(
+        driver, f"{history_stepper_id}-Decrement"
+    ).is_enabled()
+    increment_stepper(driver, history_stepper_id)
+    assert get_integer_value(history) == 1, UI_NOT_UPDATED
 
 
 def test_integer(driver: WebDriver, app: str):

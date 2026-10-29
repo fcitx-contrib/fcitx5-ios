@@ -25,6 +25,7 @@ private struct ClipboardTests {
     let root = manager.temporaryDirectory.appendingPathComponent("clipboard-tests-\(UUID())")
     try manager.createDirectory(at: root, withIntermediateDirectories: true)
     defer { try? manager.removeItem(at: root) }
+    try testClipboardSuggestions(root)
     try testCRUD(root)
     try testHistoryLimit(root)
     try testHistoryLimitSyncAndImport(root)
@@ -61,6 +62,60 @@ private struct ClipboardTests {
     let result = try JSONDecoder().decode(
       ClipboardSyncResponse.self, from: JSONEncoder().encode(response))
     try keyboard.apply(result)
+  }
+
+  static func testClipboardSuggestions(_ root: URL) throws {
+    let start = Date(timeIntervalSince1970: 0)
+    var suggestion = ClipboardSuggestionState()
+    let fullText = String(repeating: "完整文本🐧", count: 30)
+    suggestion.capture(fullText, now: start)
+    // The capture is decades old relative to the real clock, but an already visible
+    // target must stay pasteable until an explicit reevaluation, even after timeout.
+    try check(suggestion.presentedText == fullText, "Expiry does not remove the visible target")
+    try check(suggestion.takePresentedText() == fullText, "Paste full content after timeout")
+    suggestion.refresh(now: start.addingTimeInterval(1))
+    try check(suggestion.presentedText == nil, "Pasted suggestions do not reappear")
+
+    suggestion.capture("old", now: start)
+    suggestion.hide()
+    suggestion.refresh(now: start.addingTimeInterval(29))
+    try check(suggestion.presentedText == "old", "Reopening before expiry restores the suggestion")
+    suggestion.refresh(now: start.addingTimeInterval(30))
+    try check(suggestion.presentedText == nil, "Next reevaluation removes expired suggestions")
+
+    suggestion.capture("new", now: start.addingTimeInterval(31))
+    suggestion.refresh(now: start.addingTimeInterval(32))
+    try check(suggestion.presentedText == "new", "New copies get their own timeout")
+    suggestion.dismiss()
+    suggestion.refresh(now: start.addingTimeInterval(33))
+    try check(suggestion.presentedText == nil, "Showing the toolbar dismisses the suggestion")
+
+    suggestion.configure(enabled: true, timeout: 0, now: start)
+    suggestion.capture("zero", now: start)
+    try check(suggestion.presentedText == nil, "Zero timeout does not show a suggestion")
+    suggestion.configure(enabled: true, timeout: -1, now: start)
+    suggestion.capture("forever", now: start)
+    suggestion.hide()
+    suggestion.refresh(now: start.addingTimeInterval(1_000_000))
+    try check(suggestion.presentedText == "forever", "Negative timeout does not expire")
+    suggestion.configure(enabled: false, timeout: 30, now: start)
+    try check(suggestion.presentedText == nil, "Disabling suggestions hides the target")
+    suggestion.capture("disabled", now: start)
+    suggestion.configure(enabled: true, timeout: 30, now: start)
+    try check(suggestion.presentedText == nil, "Disabled captures are not offered later")
+
+    suggestion.capture("valid", now: start)
+    suggestion.capture(" \n\t", now: start)
+    try check(suggestion.presentedText == nil, "Blank content clears the suggestion")
+
+    let store = ClipboardStore(directory: root.appendingPathComponent("suggestion-no-history"))
+    try store.setHistoryLimit(0)
+    suggestion.capture("not retained", now: start)
+    try store.capture("not retained")
+    try check(active(store).isEmpty, "Zero history limit stores no active entry")
+    try check(
+      suggestion.takePresentedText() == "not retained", "Suggestions work without retained history")
+    print("PASS clipboard suggestions, delayed expiry, full-text paste, lifecycle and zero history")
   }
 
   static func testCRUD(_ root: URL) throws {

@@ -81,6 +81,7 @@ add_custom_command(
 )
 set(CLIPBOARD_TEST_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/ClipboardTests.swift"
+    "${PROJECT_SOURCE_DIR}/common/ClipboardSuggestion.swift"
     "${PROJECT_SOURCE_DIR}/common/ClipboardStore.swift"
     "${PROJECT_SOURCE_DIR}/common/ClipboardSync.swift"
     "${PROJECT_SOURCE_DIR}/common/ClipboardTransport.swift"

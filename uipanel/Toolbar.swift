@@ -117,6 +117,7 @@ struct ToolbarButtons: View {
 struct ToolbarView: View {
   @Environment(\.colorScheme) var colorScheme
   @Environment(\.totalHeight) var totalHeight
+  @ObservedObject private var viewModel = vm
   let width: CGFloat
   var showsBackButton = false
 
@@ -130,10 +131,39 @@ struct ToolbarView: View {
             .foregroundColor(getNormalForeground(colorScheme))
             .frame(width: width / 7, height: getBarHeight(totalHeight))
         }
+      } else if viewModel.clipboardSuggestionText != nil {
+        Button {
+          viewModel.dismissClipboardSuggestion()
+        } label: {
+          Image(systemName: "xmark")
+            .foregroundColor(getNormalForeground(colorScheme))
+            .frame(width: width / 7, height: getBarHeight(totalHeight))
+        }
+        .accessibilityIdentifier("ShowToolbar")
       } else {
         Spacer().frame(width: width / 7)
       }
-      ToolbarButtons(width: width)
+      if let text = viewModel.clipboardSuggestionText {
+        Button {
+          viewModel.pasteClipboardSuggestion()
+        } label: {
+          HStack(spacing: 4) {
+            Image(systemName: "doc.on.clipboard")
+            Text(String(text.prefix(42)))
+              .lineLimit(1)
+              .truncationMode(.tail)
+          }
+          .foregroundColor(getNormalForeground(colorScheme))
+          .padding(.horizontal, 8)
+          .frame(width: width * 5 / 7, height: getBarHeight(totalHeight))
+        }
+        .accessibilityIdentifier("ClipboardSuggestion")
+        .disabled(viewModel.showMenu)
+        DismissKeyboardButton().frame(width: width / 7)
+      } else {
+        ToolbarButtons(width: width)
+      }
     }.frame(width: width)
+      .onAppear { viewModel.refreshClipboardSuggestion() }
   }
 }

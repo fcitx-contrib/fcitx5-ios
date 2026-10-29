@@ -20,6 +20,14 @@ msgid "Clipboard history limit"
 msgstr "剪贴板历史记录上限"
 
 #: iosfrontend/iosfrontend.h
+msgid "Show clipboard suggestions"
+msgstr "显示剪贴板提示"
+
+#: iosfrontend/iosfrontend.h
+msgid "Clipboard suggestion timeout"
+msgstr "剪贴板提示超时"
+
+#: iosfrontend/iosfrontend.h
 msgid "Return after pasting"
 msgstr "粘贴后返回"
 
