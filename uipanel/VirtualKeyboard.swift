@@ -1,4 +1,5 @@
 import Fcitx
+import FcitxIpc
 import FcitxProtocol
 import SwiftUI
 import SwiftUtil
@@ -23,6 +24,14 @@ weak var client: FcitxProtocol!
 @MainActor
 public func setClient(_ cli: FcitxProtocol) {
   client = cli
+  setOpenURLPermissionCheck { [weak cli] in
+    guard let cli else { return false }
+    guard cli.hasKeyboardFullAccess() else {
+      vm.showOpenURLFullAccessDialog = true
+      return false
+    }
+    return true
+  }
 }
 
 @MainActor
@@ -91,6 +100,7 @@ public class ViewModel: ObservableObject {
   @Published var frame = CGRect()
   @Published var menuItems = [MenuItem]()
   @Published var showMenu = false
+  @Published var showOpenURLFullAccessDialog = false
 
   @Published var bubbleX: CGFloat = 0
   @Published var bubbleY: CGFloat = 0
@@ -549,6 +559,7 @@ public struct VirtualKeyboardView: View {
       }.onDisappear {
         // Otherwise switch to another IM and switch back, it's still there.
         viewModel.showMenu = false
+        viewModel.showOpenURLFullAccessDialog = false
       }.onAppear {
         updateSize(geometry.size.width)
       }.onChange(of: geometry.size.width) { newWidth in
@@ -556,6 +567,15 @@ public struct VirtualKeyboardView: View {
         updateSize(newWidth)
       }
     }.frame(height: viewModel.totalHeight)
+      .overlay {
+        if viewModel.showOpenURLFullAccessDialog {
+          FullAccessDialogView(
+            width: viewModel.totalWidth, height: viewModel.totalHeight,
+            message: NSLocalizedString(
+              "Full access is required to open the main app.", comment: ""),
+            onDismiss: { viewModel.showOpenURLFullAccessDialog = false })
+        }
+      }
       .environment(\.totalHeight, viewModel.totalHeight)
   }
 

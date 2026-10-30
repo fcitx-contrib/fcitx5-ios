@@ -383,14 +383,11 @@ struct ClipboardView: View {
           onDismiss: { showClearConfirmation = false })
       }
       if showMonitorFullAccessDialog {
-        DialogView(
+        FullAccessDialogView(
           width: width,
           height: totalHeight,
           message: NSLocalizedString(
             "Full access is required to monitor the clipboard.", comment: ""),
-          detail: NSLocalizedString(
-            "In the Fcitx5 main app, tap \"Full Access\", then follow the instructions at the bottom of the page.",
-            comment: ""),
           actions: [
             DialogAction(NSLocalizedString("OK", comment: "")),
             DialogAction(NSLocalizedString("Close", comment: "")) {

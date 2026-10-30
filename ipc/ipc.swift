@@ -1,8 +1,19 @@
 import SwiftUtil
 import UIKit
 
+@MainActor
+private var openURLPermissionCheck: (() -> Bool)?
+
+/// Keyboard UI supplies the permission check and guidance; the main app needs neither.
+@MainActor
+public func setOpenURLPermissionCheck(_ check: @escaping () -> Bool) {
+  openURLPermissionCheck = check
+}
+
 public func openURL(_ urlString: String) {
   Task { @MainActor in
+    // Check before canOpenURL, which may itself fail without keyboard full access.
+    guard openURLPermissionCheck?() ?? true else { return }
     if let url = URL(string: urlString), UIApplication.shared.canOpenURL(url) {
       UIApplication.shared.open(url, options: [:], completionHandler: nil)
     }
