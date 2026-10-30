@@ -35,13 +35,13 @@ target_include_directories(KeyboardUI PUBLIC
     "${PROJECT_BINARY_DIR}/protocol"
     "${PROJECT_BINARY_DIR}/common"
 )
-target_link_libraries(KeyboardUI FcitxProtocol SwiftUtil)
+target_link_libraries(KeyboardUI FcitxProtocol SwiftUtil FcitxIpc)
 
 _swift_generate_cxx_header(
     KeyboardUI
     "${CMAKE_CURRENT_BINARY_DIR}/include/keyboardui-swift.h"
     SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/keyboardui.swift"
-    SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/common;${PROJECT_BINARY_DIR}/protocol;${PROJECT_BINARY_DIR}/common;${PROJECT_BINARY_DIR}/deps;${PROJECT_SOURCE_DIR}/deps/GRDB/Sources/GRDBSQLite"
+    SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR};${PROJECT_SOURCE_DIR}/common;${PROJECT_BINARY_DIR}/protocol;${PROJECT_BINARY_DIR}/common;${PROJECT_BINARY_DIR}/ipc;${PROJECT_BINARY_DIR}/deps;${PROJECT_SOURCE_DIR}/deps/GRDB/Sources/GRDBSQLite"
 )
 
 add_fcitx5_addon(uipanel uipanel.cpp)

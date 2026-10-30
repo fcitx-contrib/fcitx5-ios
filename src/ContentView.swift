@@ -8,6 +8,7 @@ import SwiftUtil
 private class ViewModel: ObservableObject {
   @Published var url: URL?
   @Published var inputMethods = [InputMethod]()
+  @Published var clipboardShare: ClipboardShareRequest?
 
   func refresh() {
     inputMethods = deserialize([InputMethod].self, String(getInputMethods()))
@@ -41,6 +42,10 @@ struct ContentView: View {
   @State private var icon = "info"
 
   func handleURL(_ url: URL) {
+    if url.host == "clipboard", url.path == "/share" {
+      viewModel.clipboardShare = ClipboardShareRequest(url: url)
+      return
+    }
     viewModel.url = url
     setConfig(url.absoluteString, "{}")
   }
@@ -116,6 +121,11 @@ struct ContentView: View {
           }
         }
         .padding()
+      }
+    }
+    .sheet(item: $viewModel.clipboardShare) { request in
+      ActivityView(activityItems: [request.text]) { _ in
+        viewModel.clipboardShare = nil
       }
     }
     .toast(isPresenting: $showToast, duration: duration) {
