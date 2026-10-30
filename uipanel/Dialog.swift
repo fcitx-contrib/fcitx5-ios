@@ -96,3 +96,20 @@ struct DialogView: View {
     .frame(width: width, height: height)
   }
 }
+
+struct FullAccessDialogView: View {
+  let width: CGFloat
+  let height: CGFloat
+  let message: String
+  var actions = [DialogAction(NSLocalizedString("OK", comment: ""))]
+  let onDismiss: () -> Void
+
+  var body: some View {
+    DialogView(
+      width: width, height: height, message: message,
+      detail: NSLocalizedString(
+        "In the Fcitx5 main app, tap \"Full Access\", then follow the instructions at the bottom of the page.",
+        comment: ""),
+      actions: actions, onDismiss: onDismiss)
+  }
+}
