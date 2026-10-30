@@ -1,4 +1,5 @@
 import Fcitx
+import FcitxIpc
 import SwiftUI
 import SwiftUtil
 import UIKit
@@ -189,6 +190,9 @@ private struct ClipboardEntryView: View {
                   ? NSLocalizedString("Unpin", comment: "")
                   : NSLocalizedString("Pin", comment: ""),
                 action: { vm.toggleClipboardEntryPin(entry.id) }),
+              MenuItem(
+                text: NSLocalizedString("Share", comment: ""),
+                action: { openURL(ClipboardShareRequest(text: entry.text).url.absoluteString) }),
               MenuItem(
                 text: NSLocalizedString("Delete", comment: ""),
                 action: { onDelete(entry.id) }),

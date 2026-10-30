@@ -23,6 +23,7 @@ add_executable(${BUNDLE_NAME} MACOSX_BUNDLE
     AppDelegate.swift
     SceneDelegate.swift
     DataManager.swift
+    ActivityView.swift
     BackupArchive.swift
     DatabaseBackup.swift
     ${CONFIG_UI_FILES}

@@ -26,6 +26,7 @@ private struct ClipboardTests {
     try manager.createDirectory(at: root, withIntermediateDirectories: true)
     defer { try? manager.removeItem(at: root) }
     try testClipboardSuggestions(root)
+    try testClipboardSharing()
     try testSensitiveClipboard(root)
     try testCRUD(root)
     try testHistoryLimit(root)
@@ -117,6 +118,28 @@ private struct ClipboardTests {
     try check(
       suggestion.takePresentedText() == "not retained", "Suggestions work without retained history")
     print("PASS clipboard suggestions, delayed expiry, full-text paste, lifecycle and zero history")
+  }
+
+  static func testClipboardSharing() throws {
+    for text in [
+      "", "ordinary clipboard text", "中文🐧\n&text=another? +#%/=: \"quoted\"",
+      String(repeating: "多行文本🐧\n", count: 1000),
+    ] {
+      let request = ClipboardShareRequest(text: text)
+      try check(
+        ClipboardShareRequest(url: request.url)?.text == text,
+        "Share URLs preserve the full text, including query delimiters and Unicode")
+    }
+    for address in [
+      "https://clipboard/share?text=wrong", "fcitx://config/share?text=wrong",
+      "fcitx://clipboard/edit?text=wrong", "fcitx://clipboard/share",
+      "fcitx://clipboard/share?text",
+    ] {
+      try check(
+        ClipboardShareRequest(url: URL(string: address)!) == nil,
+        "Only clipboard share URLs containing a text value are accepted")
+    }
+    print("PASS clipboard share URL encoding, full text and route validation")
   }
 
   static func testSensitiveClipboard(_ root: URL) throws {
