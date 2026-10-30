@@ -1,4 +1,4 @@
-add_library(SwiftUtil util.swift logging.swift locale.swift ClipboardStore.swift ClipboardSync.swift ClipboardTransport.swift ClipboardSuggestion.swift ClipboardShare.swift)
+add_library(SwiftUtil util.swift logging.swift locale.swift ClipboardStore.swift ClipboardSync.swift ClipboardTransport.swift ClipboardSuggestion.swift ClipboardShare.swift ClipboardEdit.swift)
 set_target_properties(SwiftUtil PROPERTIES Swift_MODULE_NAME SwiftUtil)
 target_link_libraries(SwiftUtil PUBLIC GRDB)
 

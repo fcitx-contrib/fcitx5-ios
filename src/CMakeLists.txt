@@ -19,6 +19,7 @@ add_executable(${BUNDLE_NAME} MACOSX_BUNDLE
     ConfigView.swift
     SyncConfigView.swift
     ClipboardSyncServer.swift
+    ClipboardEditView.swift
     App.swift
     AppDelegate.swift
     SceneDelegate.swift

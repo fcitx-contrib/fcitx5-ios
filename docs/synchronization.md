@@ -1,6 +1,6 @@
 # Synchronization without App Group
 
-This is an implementation guide for AI agents extending synchronization between the main app and keyboard extensions, especially future bidirectional datasets. It describes the working-tree implementation as of 2026-10-27, not a claim that every behavior below has shipped. Read the linked code before changing it, and update this document when the protocol changes.
+This is an implementation guide for AI agents extending synchronization between the main app and keyboard extensions, especially future bidirectional datasets. It describes the working-tree implementation as of 2026-10-30, not a claim that every behavior below has shipped. Read the linked code before changing it, and update this document when the protocol changes.
 
 The clipboard is the first bidirectional dataset. Its transport and merge code are reusable, but there is not yet a generic synchronization framework. Configuration-file downloads remain a separate, mostly one-way mechanism.
 
@@ -43,6 +43,8 @@ For UI freshness, the supported workflow assumes one active keyboard and does no
 | Reusable asynchronous HTTP client and repeat-until-converged loop | [common/ClipboardTransport.swift](../common/ClipboardTransport.swift) |
 | Clipboard HTTP decode/merge/encode adapter | [src/ClipboardSyncServer.swift](../src/ClipboardSyncServer.swift) |
 | Main server lifecycle, endpoint registration, file enumeration/download, and completion reporting | [src/SyncConfigView.swift](../src/SyncConfigView.swift) |
+| Clipboard edit URL payload and transactional main-side save | [common/ClipboardEdit.swift](../common/ClipboardEdit.swift) |
+| Focused clipboard editor and save-to-sync navigation | [src/ClipboardEditView.swift](../src/ClipboardEditView.swift), [src/ContentView.swift](../src/ContentView.swift) |
 | Keyboard file-download workflow and invocation of bidirectional synchronization | [keyboard/SyncConfig.swift](../keyboard/SyncConfig.swift) |
 | Keyboard entry into private-mode synchronization and Full Access check | [keyboard/KeyboardViewController.swift](../keyboard/KeyboardViewController.swift) |
 | Serialized clipboard UI operations and the explicit clear/resync button | [uipanel/VirtualKeyboard.swift](../uipanel/VirtualKeyboard.swift), [uipanel/Sync.swift](../uipanel/Sync.swift) |
@@ -141,6 +143,16 @@ The frontend's `[Clipboard] HistoryLimit` setting defaults to 10 and limits acti
 
 Undo reactivates appropriate local data and retains pin state; an old undo must not restore an identity removed by import. If matching active text was captured after deletion, undo must not create another active copy.
 
+### Main-app clipboard editing
+
+The keyboard's Edit action opens `fcitx://clipboard/edit` through the shared Full Access check in `ipc.swift`. The query includes the stable entity UUID as `id` and the original `text`, plus timestamp, pin, sensitivity, and type metadata. Local numeric SQLite IDs are not cross-process identities. The main editor starts with the passed text and focuses its text view automatically. Cancel does not write anything.
+
+`ClipboardStore.edit` saves in one database transaction. Shared mode requires an existing live UUID and updates only its text, preserving identity, pin, sensitivity, and ordering. Missing or deleted entries are rejected. Blank edits and edits that would duplicate another active text are also rejected without modifying the database.
+
+In private mode, main may never have received the selected entry. If no matching live record exists, saving inserts the edited record under the source UUID using the passed metadata. If main already has the original text under a different UUID, it edits main's canonical record and retains main's metadata. It also inserts a deleted copy under the source UUID: otherwise the first sync would see the keyboard's old text as a new contribution and restore it. These tombstones use the existing schema and normal merge/apply protocol; do not add a database-file download or a second synchronization channel for editing.
+
+Saving unchanged text only closes the editor, without writing the database or starting synchronization. After a changed shared save the editor closes. After a changed private save it closes and automatically navigates to `SyncConfigView`, which runs the existing file and clipboard synchronization workflow. Main's edit wins conflicts with the old keyboard snapshot; other keyboards receive it on their next sync. This does not change the database-generation limitation below.
+
 ### Authoritative archive import
 
 `BackupArchive` normalizes a staged database through SQLite so committed WAL content is included; Android's disposable SHM index is rebuilt locally. It then calls `ClipboardStore.importDatabase` to replace live clipboard rows in a transaction. Do not replace the live inode, especially when App Group makes it shared with running extensions.
@@ -181,7 +193,7 @@ Use the clipboard as a reference for transaction and retry structure, not as a d
 3. Separate persistence, pure or transaction-scoped merge logic, and the HTTP adapter/client. Prefer the existing GRDB typed records and query APIs for SQLite; do not build a second handwritten-SQL storage layer or put networking inside a SwiftUI view.
 4. Register a dataset-specific endpoint with the existing `ServerManager`, and invoke a reusable transport from the keyboard workflow before `/done`. Do not create another server or a peer-to-peer path without a requirement for it. Recheck App Group routing, Full Access, path/payload validation, and malformed-request behavior; localhost binding is not by itself a client-authentication mechanism.
 5. Serialize exchanges per dataset/store and define interaction with cancellation, reset, imports, and writes during HTTP. Persist acknowledgements and applied state atomically. If future datasets must commit together, design an explicit cross-dataset protocol; sequential calls alone are not atomic.
-6. Reuse the same API for future "open main app to edit, then sync back" navigation. That UI/navigation feature has not been implemented by the clipboard work and should not be simulated by replacing a keyboard's database file.
+6. Reuse the existing clipboard edit/save and merge/apply APIs for "open main app to edit, then sync back" navigation. Preserve source metadata for unsynchronized records and account for independent UUIDs when deduplicating original text. Do not simulate editing by replacing a keyboard's database file.
 7. Preserve module ownership. Shared implementations are statically linked once into the existing `FcitxRuntime`, while executables consume module interfaces without linking duplicate Swift classes. Do not add frameworks just to share a sync helper. Host tests compile selected common sources directly; this is why the app-side adapters use documented `#if canImport(SwiftUtil)` imports.
 8. Add regression tests and update this document and the source map together. Do not copy the current database-loss assumption into a new dataset as if it were a desired contract.
 
