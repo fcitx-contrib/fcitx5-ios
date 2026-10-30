@@ -191,6 +191,9 @@ private struct ClipboardEntryView: View {
                   : NSLocalizedString("Pin", comment: ""),
                 action: { vm.toggleClipboardEntryPin(entry.id) }),
               MenuItem(
+                text: NSLocalizedString("Edit", comment: ""),
+                action: { openURL(ClipboardEditRequest(entry: entry).url.absoluteString) }),
+              MenuItem(
                 text: NSLocalizedString("Share", comment: ""),
                 action: { openURL(ClipboardShareRequest(text: entry.text).url.absoluteString) }),
               MenuItem(

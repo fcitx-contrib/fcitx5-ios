@@ -9,6 +9,7 @@ private class ViewModel: ObservableObject {
   @Published var url: URL?
   @Published var inputMethods = [InputMethod]()
   @Published var clipboardShare: ClipboardShareRequest?
+  @Published var clipboardEdit: ClipboardEditRequest?
 
   func refresh() {
     inputMethods = deserialize([InputMethod].self, String(getInputMethods()))
@@ -31,6 +32,20 @@ private class ViewModel: ObservableObject {
   }
 }
 
+private struct ClipboardEditSheetView: View {
+  // Observe requests inside the sheet; its presentation closure can retain the first item.
+  @ObservedObject var viewModel: ViewModel
+  let onSaved: () -> Void
+
+  var body: some View {
+    if let request = viewModel.clipboardEdit {
+      NavigationStack {
+        ClipboardEditView(request: request, onSaved: onSaved)
+      }
+    }
+  }
+}
+
 struct ContentView: View {
   @ObservedObject private var viewModel = ViewModel()
 
@@ -40,8 +55,13 @@ struct ContentView: View {
   @State private var duration = 3.0
   @State private var message = ""
   @State private var icon = "info"
+  @State private var showClipboardSync = false
 
   func handleURL(_ url: URL) {
+    if url.host == "clipboard", url.path == "/edit" {
+      viewModel.clipboardEdit = ClipboardEditRequest(url: url)
+      return
+    }
     if url.host == "clipboard", url.path == "/share" {
       viewModel.clipboardShare = ClipboardShareRequest(url: url)
       return
@@ -51,7 +71,7 @@ struct ContentView: View {
   }
 
   var body: some View {
-    NavigationView {
+    NavigationStack {
       List {
         Section(header: InputMethodsSectionHeaderView(enabledInputMethods: $viewModel.inputMethods))
         {
@@ -99,6 +119,9 @@ struct ContentView: View {
         }
       }
       .navigationTitle(NSLocalizedString("Fcitx5", comment: ""))
+      .navigationDestination(isPresented: $showClipboardSync) {
+        SyncConfigView()
+      }
       .overlay(alignment: .bottomTrailing) {
         HStack(spacing: 8) {
           Button {
@@ -126,6 +149,12 @@ struct ContentView: View {
     .sheet(item: $viewModel.clipboardShare) { request in
       ActivityView(activityItems: [request.text]) { _ in
         viewModel.clipboardShare = nil
+      }
+    }
+    .sheet(item: $viewModel.clipboardEdit) { _ in
+      ClipboardEditSheetView(viewModel: viewModel) {
+        viewModel.clipboardEdit = nil
+        showClipboardSync = !appGroupAvailable
       }
     }
     .toast(isPresenting: $showToast, duration: duration) {

@@ -27,6 +27,8 @@ private struct ClipboardTests {
     defer { try? manager.removeItem(at: root) }
     try testClipboardSuggestions(root)
     try testClipboardSharing()
+    try testClipboardEditing(root)
+    try await testClipboardEditingHTTP(root)
     try testSensitiveClipboard(root)
     try testCRUD(root)
     try testHistoryLimit(root)
@@ -140,6 +142,120 @@ private struct ClipboardTests {
         "Only clipboard share URLs containing a text value are accepted")
     }
     print("PASS clipboard share URL encoding, full text and route validation")
+  }
+
+  static func testClipboardEditing(_ root: URL) throws {
+    let directory = root.appendingPathComponent("edit-shared")
+    let keyboard = ClipboardStore(directory: directory)
+    let main = ClipboardStore(directory: directory)
+    let original = "原文🐧\n&text=another? +#%/=: \"quoted\""
+    try keyboard.capture(original, sensitive: true)
+    let entry = try item(original, in: keyboard)
+    try keyboard.togglePin(entry.id)
+    let request = ClipboardEditRequest(entry: try item(original, in: keyboard))
+    let decoded = ClipboardEditRequest(url: request.url)!
+    try check(
+      decoded.id == request.id && decoded.entry.record.hasSameContent(as: request.entry.record),
+      "Edit URLs preserve the stable UUID, original text and all portable metadata")
+    for address in [
+      "fcitx://clipboard/edit?text=missing-id", "fcitx://clipboard/edit?id=invalid&text=text",
+      "fcitx://clipboard/edit?id=\(entry.id)",
+      "fcitx://clipboard/edit?id=\(entry.id)&text=text&pinned=invalid",
+      "fcitx://clipboard/edit?id=\(entry.id)&text=text&timestamp=invalid",
+      "https://clipboard/edit?id=\(entry.id)&text=text",
+    ] {
+      try check(ClipboardEditRequest(url: URL(string: address)!) == nil, "Reject invalid edit URLs")
+    }
+    try main.edit(decoded, text: "edited", allowInsert: false)
+    let edited = try item("edited", in: keyboard)
+    try check(
+      edited.id == entry.id && edited.record.id == entry.record.id && edited.record.pinned
+        && edited.record.sensitive && edited.record.timestamp == request.entry.record.timestamp,
+      "Shared edits retain identity, pin, sensitivity and ordering and are visible to the keyboard")
+    try main.capture("duplicate")
+    do {
+      try main.edit(decoded, text: "duplicate", allowInsert: false)
+      throw CheckFailure(message: "Editing must not introduce duplicate text")
+    } catch ClipboardStore.EditFailure.duplicateText {}
+    do {
+      try main.edit(decoded, text: " \n\t", allowInsert: false)
+      throw CheckFailure(message: "Editing must reject blank text")
+    } catch ClipboardStore.EditFailure.emptyText {}
+    try check(
+      active(main).count == 2 && item("edited", in: main).id == entry.id,
+      "Rejected edits leave the original record and other entries unchanged")
+    _ = try main.delete(entry.id)
+    do {
+      try main.edit(decoded, text: "resurrected", allowInsert: false)
+      throw CheckFailure(message: "A stale editor must not resurrect a deleted record")
+    } catch ClipboardStore.EditFailure.missingEntry {}
+    let absent = ClipboardStore(directory: root.appendingPathComponent("edit-missing"))
+    do {
+      try absent.edit(decoded, text: "missing", allowInsert: false)
+      throw CheckFailure(message: "Shared edits must not recreate missing identities")
+    } catch ClipboardStore.EditFailure.missingEntry {}
+
+    let privateMain = ClipboardStore(directory: root.appendingPathComponent("edit-private-main"))
+    let privateKeyboard = ClipboardStore(
+      directory: root.appendingPathComponent("edit-private-keyboard"))
+    try privateKeyboard.capture("unsynced", sensitive: true)
+    let sourceID = try item("unsynced", in: privateKeyboard).id
+    try privateKeyboard.togglePin(sourceID)
+    let source = ClipboardEditRequest(entry: try item("unsynced", in: privateKeyboard))
+    _ = try privateKeyboard.prepareSync()  // An earlier request may still be pending.
+    try privateMain.edit(source, text: "edited before first sync", allowInsert: true)
+    try sync(privateKeyboard, privateMain)
+    let restored = try item("edited before first sync", in: privateKeyboard)
+    try check(
+      restored.id == sourceID && restored.record.pinned && restored.record.sensitive,
+      "Private edits of unsynced entries retain metadata and reach the source keyboard")
+    try check(active(privateMain).count == 1, "First sync does not restore the original text")
+    try privateKeyboard.togglePin(sourceID)
+    try privateMain.edit(
+      ClipboardEditRequest(entry: restored), text: "main wins", allowInsert: true)
+    try sync(privateKeyboard, privateMain)
+    try check(item("main wins", in: privateKeyboard).record.pinned, "Main edits win sync conflicts")
+    print("PASS clipboard edit URLs, shared saves, validation and unsynced private edits")
+  }
+
+  static func testClipboardEditingHTTP(_ root: URL) async throws {
+    let main = ClipboardStore(directory: root.appendingPathComponent("edit-http-main"))
+    let keyboard = ClipboardStore(directory: root.appendingPathComponent("edit-http-keyboard"))
+    let peer = ClipboardStore(directory: root.appendingPathComponent("edit-http-peer"))
+    try main.capture("same original")
+    let mainID = try item("same original", in: main).id
+    try main.togglePin(mainID)
+    try sync(peer, main)
+    try keyboard.capture("same original", sensitive: true)
+    let source = ClipboardEditRequest(entry: try item("same original", in: keyboard))
+    try main.edit(source, text: "canonical edit", allowInsert: true)
+    try check(item("canonical edit", in: main).id == mainID, "Retain main's canonical identity")
+    let server = HttpServer()
+    server.listenAddressIPv4 = "127.0.0.1"
+    let attempts = HTTPAttempt()
+    server.POST["/clipboard/sync"] = { request in
+      let response = ClipboardSyncServer.handle(request, store: main)
+      return attempts.next() == 1 ? .raw(503, "Lost response", nil, nil) : response
+    }
+    try server.start(0, forceIPv4: true)
+    defer { server.stop() }
+    let url = URL(string: "http://127.0.0.1:\(try server.port())/clipboard/sync")!
+    do {
+      try await ClipboardTransport.synchronize(store: keyboard, endpoint: url)
+      throw CheckFailure(message: "Lost response must not report successful edit synchronization")
+    } catch ClipboardTransport.Failure.serverRejected(503) {}
+    try await ClipboardTransport.synchronize(store: keyboard, endpoint: url)
+    let edited = try item("canonical edit", in: keyboard)
+    try check(
+      edited.id == mainID && edited.record.pinned && !edited.record.sensitive,
+      "Main metadata wins a first-sync text conflict, including after an HTTP retry")
+    try check(active(keyboard).count == 1, "The source UUID tombstone prevents old text returning")
+    try sync(peer, main)
+    try check(
+      active(peer).count == 1 && item("canonical edit", in: peer).id == mainID,
+      "Other previously synchronized keyboards receive the edit")
+    try check(!keyboard.hasPendingChanges(), "Edited private stores converge")
+    print("PASS private clipboard edits through HTTP, canonical identities, retries and peers")
   }
 
   static func testSensitiveClipboard(_ root: URL) throws {
