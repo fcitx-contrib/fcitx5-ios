@@ -43,6 +43,9 @@ add_custom_command(
 set(BACKUP_TEST "${CMAKE_CURRENT_BINARY_DIR}/BackupTests")
 set(BACKUP_TEST_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/BackupTests.swift"
+    "${CMAKE_CURRENT_SOURCE_DIR}/FileSyncTests.swift"
+    "${PROJECT_SOURCE_DIR}/common/util.swift"
+    "${PROJECT_SOURCE_DIR}/common/logging.swift"
     "${PROJECT_SOURCE_DIR}/src/DatabaseBackup.swift"
     "${PROJECT_SOURCE_DIR}/src/BackupArchive.swift"
     "${PROJECT_SOURCE_DIR}/common/ClipboardStore.swift"

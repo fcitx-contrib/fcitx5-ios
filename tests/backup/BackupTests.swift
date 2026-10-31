@@ -53,6 +53,7 @@ private struct BackupTests {
     try testReplacement(root: root)
     try testFailurePreservesDatabase(root: root)
     try testLegacyArchives(root: root)
+    try testFileSync(root: root)
     try testPathTraversal(root: root)
     try testNoDatabaseDirectoryEntry(root: root)
     try testUncommittedTransactions(root: root)

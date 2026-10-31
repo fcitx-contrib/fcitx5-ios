@@ -1,3 +1,5 @@
+import Fcitx
+import FcitxIpc
 import SwiftUI
 import SwiftUtil
 
@@ -15,7 +17,10 @@ struct Fcitx5App: App {
       }.onChange(of: scenePhase) { newPhase in
         if newPhase == .active {
           FCITX_INFO("App is active")
-          syncDocumentsToAppGroup()
+          if syncDocumentsToAppGroup() {
+            reload()
+            requestReload()
+          }
         }
       }
     }
