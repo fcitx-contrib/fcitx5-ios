@@ -29,6 +29,10 @@ The clipboard is the first bidirectional dataset. Its transport and merge code a
 
 The existing `useAppGroup` switch in `common/util.swift` can simulate private-storage mode on the simulator. Restore it after an experiment. Full Access is separately required for the keyboard's local-network requests; lack of App Group does not remove that requirement. See [full-access.md](full-access.md).
 
+Configuration and data use the same relative paths in both modes: `Documents/config/` and `Documents/data/`, including `Documents/data/rime/`, `Documents/data/inputmethod/`, and `Documents/data/table/`. With App Group available, the main app copies its `Documents/data/` and `Documents/config/` into the corresponding App Group directories at startup, before initializing the profile and starting fcitx, and when the app becomes active. Existing source files overwrite differing destination files; destination-only files are preserved, so removing a file from Documents does not delete it from App Group. Missing source directories are skipped. Without App Group, this copy is skipped because the runtime already uses the process's own Documents directory; keyboard file synchronization retains these relative paths through the HTTP workflow below.
+
+After a successful Documents-to-App-Group copy that changes file contents, returning to the foreground reloads the main fcitx instance and calls `requestReload()` to create per-keyboard reload markers. A keyboard consumes its marker and reloads on its next appearance; this does not notify an already visible keyboard immediately. At cold launch, the copy runs before fcitx starts, so the main instance reads the copied files directly and only keyboard reloads are requested afterward. Unchanged copies, missing source directories, and failed copies do not trigger reloads. The file-copy helper reports success separately from whether any file was actually copied; a successful unchanged copy is not a reason to reload.
+
 There is no direct keyboard-to-keyboard exchange. If A synchronizes and then B contributes new data, A receives B's contribution only when A synchronizes again.
 
 For UI freshness, the supported workflow assumes one active keyboard and does not require observing main-app edits while the clipboard page remains open. Refresh on keyboard appearance, after local clipboard operations, and after synchronization; do not add periodic database polling for that unsupported case. This UI assumption does not remove the need for transactional access to the shared database or imply that iOS immediately terminates every inactive extension process.
@@ -38,6 +42,7 @@ For UI freshness, the supported workflow assumes one active keyboard and does no
 | Responsibility | Entry point |
 |---|---|
 | Private/group storage selection and HTTP address constants | [common/util.swift](../common/util.swift) |
+| Main Documents-to-App-Group configuration/data copy | [src/AppDelegate.swift](../src/AppDelegate.swift), [src/App.swift](../src/App.swift) |
 | SQLite schema, CRUD, identities, live import, and reset | [common/ClipboardStore.swift](../common/ClipboardStore.swift) |
 | Request preparation, main-side merge, response application, and convergence check | [common/ClipboardSync.swift](../common/ClipboardSync.swift) |
 | Reusable asynchronous HTTP client and repeat-until-converged loop | [common/ClipboardTransport.swift](../common/ClipboardTransport.swift) |

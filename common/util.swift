@@ -65,6 +65,12 @@ public func md5Hash(_ url: URL) -> String {
 
 // Remove if different type, then copy if different content.
 public func sync(_ src: URL, _ dst: URL) -> Bool {
+  var changed = false
+  return sync(src, dst, changed: &changed)
+}
+
+// Report successful file copies separately from success, which also includes unchanged files.
+public func sync(_ src: URL, _ dst: URL, changed: inout Bool) -> Bool {
   if !src.exists() {
     return false
   }
@@ -75,7 +81,10 @@ public func sync(_ src: URL, _ dst: URL) -> Bool {
     try? FileManager.default.createDirectory(at: dst, withIntermediateDirectories: true)
     var success = true
     for fileName in (try? FileManager.default.contentsOfDirectory(atPath: src.localPath())) ?? [] {
-      if !sync(src.appendingPathComponent(fileName), dst.appendingPathComponent(fileName)) {
+      if !sync(
+        src.appendingPathComponent(fileName), dst.appendingPathComponent(fileName),
+        changed: &changed)
+      {
         success = false
       }
     }
@@ -94,6 +103,7 @@ public func sync(_ src: URL, _ dst: URL) -> Bool {
   }
   do {
     try FileManager.default.copyItem(at: src, to: dst)
+    changed = true
     return true
   } catch {
     return false
