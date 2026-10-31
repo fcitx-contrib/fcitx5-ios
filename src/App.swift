@@ -15,8 +15,7 @@ struct Fcitx5App: App {
       }.onChange(of: scenePhase) { newPhase in
         if newPhase == .active {
           FCITX_INFO("App is active")
-          let _ = sync(
-            documents.appendingPathComponent("rime"), appGroupData.appendingPathComponent("rime"))
+          syncDocumentsToAppGroup()
         }
       }
     }
