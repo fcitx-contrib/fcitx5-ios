@@ -127,7 +127,7 @@ struct BackupArchive {
 
   func importData(
     from sourceURL: URL, source: ImportSource,
-    beforeImportFiles: (([URL]) throws -> Void)? = nil
+    beforeImportFile: ((URL) throws -> Void)? = nil
   ) throws {
     try Task.checkCancellation()
     let archive = try Archive(url: sourceURL, accessMode: .read)
@@ -164,18 +164,17 @@ struct BackupArchive {
       source == .fcitx5
       ? [("external/config/", configDirectory), ("external/data/", dataDirectory)]
       : [(Self.hamsterRimePrefix, dataDirectory.appendingPathComponent("rime"))]
-    var importedFiles = [URL]()
+    // Validate every mapped path before extracting or invalidating any file.
     for entry in archive {
       for (prefix, root) in mappings where entry.path.hasPrefix(prefix) {
-        let target = try Self.destinationURL(
+        _ = try Self.destinationURL(
           root: root, relativePath: String(entry.path.dropFirst(prefix.count)))
-        if entry.type == .file { importedFiles.append(target) }
       }
     }
-    try beforeImportFiles?(importedFiles)
     for entry in archive {
       for (prefix, root) in mappings where entry.path.hasPrefix(prefix) {
-        try extract(entry, from: archive, root: root, prefix: prefix)
+        try extract(
+          entry, from: archive, root: root, prefix: prefix, beforeImportFile: beforeImportFile)
       }
     }
     if manager.fileExists(atPath: normalized.path) {
@@ -295,7 +294,10 @@ struct BackupArchive {
       with: path, type: .directory, uncompressedSize: Int64(0), provider: { _, _ in Data() })
   }
 
-  private func extract(_ entry: Entry, from archive: Archive, root: URL, prefix: String) throws {
+  private func extract(
+    _ entry: Entry, from archive: Archive, root: URL, prefix: String,
+    beforeImportFile: ((URL) throws -> Void)? = nil
+  ) throws {
     try Task.checkCancellation()
     let relativePath = String(entry.path.dropFirst(prefix.count))
     let destination = try Self.destinationURL(root: root, relativePath: relativePath)
@@ -310,6 +312,7 @@ struct BackupArchive {
       try manager.createDirectory(at: destination, withIntermediateDirectories: true)
     case .file:
       guard destination != root else { throw InvalidZipError() }
+      try beforeImportFile?(destination)
       try manager.createDirectory(
         at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
       if manager.fileExists(atPath: destination.path) {

@@ -25,15 +25,15 @@ final class DocumentsSync: @unchecked Sendable {
   func importData(using archive: BackupArchive, from url: URL, source: ImportSource) throws {
     lock.lock()
     defer { lock.unlock() }
-    try archive.importData(from: url, source: source) { files in
+    try archive.importData(from: url, source: source) { file in
       guard self.documents != self.destination else { return }
-      // Invalidate before extraction so even an identical re-import is authoritative.
-      // Persist this first: a failed copy must remain eligible for a later retry.
+      // Invalidate only the file whose extraction is starting. Unreached files keep
+      // their baselines after an error, while identical extracted files remain authoritative.
       var checksums = try self.loadChecksums()
-      for file in files {
-        checksums.removeValue(forKey: try self.relativePath(file))
+      if checksums.removeValue(forKey: try self.relativePath(file)) != nil {
+        // Persist before touching the file so failed copies remain eligible for retry.
+        try self.saveChecksums(checksums)
       }
-      try self.saveChecksums(checksums)
     }
     if documents != destination {
       _ = try synchronizeFiles()

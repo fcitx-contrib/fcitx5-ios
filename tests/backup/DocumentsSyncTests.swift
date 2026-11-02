@@ -24,10 +24,12 @@ func testDocumentsSync(root: URL) throws {
   func read(_ url: URL) throws -> String {
     try String(contentsOf: url, encoding: .utf8)
   }
-  func zip(_ name: String, entries: [(String, String)]) throws -> URL {
+  func zip(_ name: String, entries: [(String, String)], databaseArchive: URL? = nil) throws -> URL {
     let url = base.appendingPathComponent(name)
-    let archive = try Archive(url: url, accessMode: .create)
-    for (path, text) in [("metadata.json", "{}")] + entries {
+    if let databaseArchive { try manager.copyItem(at: databaseArchive, to: url) }
+    let archive = try Archive(url: url, accessMode: databaseArchive == nil ? .create : .update)
+    let metadata = databaseArchive == nil ? [("metadata.json", "{}")] : []
+    for (path, text) in metadata + entries {
       let data = Data(text.utf8)
       try archive.addEntry(
         with: path, type: .file, uncompressedSize: Int64(data.count),
@@ -141,6 +143,60 @@ func testDocumentsSync(root: URL) throws {
   try require(
     !manager.fileExists(atPath: documents.appendingPathComponent("databases").path),
     "Do not copy the shared database into Documents")
+
+  for extractionFailure in [true, false] {
+    let failureRoot = base.appendingPathComponent("import-failure-\(extractionFailure)")
+    let failureDocs = failureRoot.appendingPathComponent("Documents")
+    let failureGroup = failureRoot.appendingPathComponent("AppGroup")
+    let failureState = failureRoot.appendingPathComponent("state.json")
+    func failureSync() -> DocumentsSync {
+      DocumentsSync(documents: failureDocs, destination: failureGroup, stateURL: failureState)
+    }
+    let processed = "config/processed.conf"
+    let later = "config/later.conf"
+    for path in [processed, later] {
+      try write("original", failureDocs.appendingPathComponent(path))
+    }
+    try failureSync().synchronize()
+    for path in [processed, later] {
+      try write("runtime edit", failureGroup.appendingPathComponent(path))
+    }
+    var entries = [("external/" + processed, "original")]
+    if extractionFailure {
+      try write("not a directory", failureDocs.appendingPathComponent("config/blocker"))
+      entries.append(("external/config/blocker/failed.conf", "new contents"))
+    } else {
+      // Database validation fails after all configuration files have been extracted.
+      try write("not a directory", failureGroup.appendingPathComponent("databases"))
+    }
+    entries.append(("external/" + later, "original"))
+    let failedZip = try zip(
+      "import-failure-\(extractionFailure).zip", entries: entries,
+      databaseArchive: extractionFailure ? nil : databaseZip)
+    let failureImporter = BackupArchive(
+      configDirectory: failureDocs.appendingPathComponent("config"),
+      dataDirectory: failureDocs.appendingPathComponent("data"),
+      databasesDirectory: failureGroup.appendingPathComponent("databases"))
+    var importFailed = false
+    do {
+      try failureSync().importData(using: failureImporter, from: failedZip, source: .fcitx5)
+    } catch { importFailed = true }
+    try require(importFailed, "Expected an import failure")
+    let checksums = try JSONDecoder().decode(
+      [String: String].self, from: Data(contentsOf: failureState))
+    try require(checksums[processed] == nil, "An identical extracted file must stay invalidated")
+    try require(
+      (checksums[later] != nil) == extractionFailure,
+      "Keep baselines only for files whose extraction never started")
+    try failureSync().synchronize()
+    try require(
+      try read(failureGroup.appendingPathComponent(processed)) == "original",
+      "Retry the identical file that was already extracted")
+    try require(
+      try read(failureGroup.appendingPathComponent(later))
+        == (extractionFailure ? "runtime edit" : "original"),
+      "Preserve unextracted runtime edits; retry extracted files after a database failure")
+  }
 
   // A failed authoritative copy remains pending even if the source hash is unchanged.
   let blocked = group.appendingPathComponent("config/conf")
