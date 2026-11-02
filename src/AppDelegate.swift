@@ -3,19 +3,19 @@ import FcitxIpc
 import SwiftUtil
 import UIKit
 
+let documentsSync = DocumentsSync(
+  documents: documents, destination: appGroup,
+  stateURL: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+    .appendingPathComponent("documents-sync.json"))
+
 func syncDocumentsToAppGroup() -> Bool {
   guard appGroupAvailable else { return false }
-  var changed = false
-  var success = true
-  for directory in ["data", "config"] {
-    let source = documents.appendingPathComponent(directory)
-    guard FileManager.default.fileExists(atPath: source.path) else { continue }
-    if !sync(source, appGroup.appendingPathComponent(directory), changed: &changed) {
-      success = false
-      FCITX_ERROR("Failed to sync Documents/\(directory) to App Group")
-    }
+  do {
+    return try documentsSync.synchronize()
+  } catch {
+    FCITX_ERROR("Failed to sync Documents to App Group: \(error)")
+    return false
   }
-  return success && changed
 }
 
 private func syncLocale(_ locale: String) {

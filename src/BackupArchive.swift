@@ -125,7 +125,10 @@ struct BackupArchive {
     success = true
   }
 
-  func importData(from sourceURL: URL, source: ImportSource) throws {
+  func importData(
+    from sourceURL: URL, source: ImportSource,
+    beforeImportFiles: (([URL]) throws -> Void)? = nil
+  ) throws {
     try Task.checkCancellation()
     let archive = try Archive(url: sourceURL, accessMode: .read)
     guard Self.validateImportArchive(archive, source: source) else {
@@ -161,6 +164,15 @@ struct BackupArchive {
       source == .fcitx5
       ? [("external/config/", configDirectory), ("external/data/", dataDirectory)]
       : [(Self.hamsterRimePrefix, dataDirectory.appendingPathComponent("rime"))]
+    var importedFiles = [URL]()
+    for entry in archive {
+      for (prefix, root) in mappings where entry.path.hasPrefix(prefix) {
+        let target = try Self.destinationURL(
+          root: root, relativePath: String(entry.path.dropFirst(prefix.count)))
+        if entry.type == .file { importedFiles.append(target) }
+      }
+    }
+    try beforeImportFiles?(importedFiles)
     for entry in archive {
       for (prefix, root) in mappings where entry.path.hasPrefix(prefix) {
         try extract(entry, from: archive, root: root, prefix: prefix)

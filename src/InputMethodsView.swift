@@ -77,5 +77,8 @@ struct AddInputMethodsView: View {
     }
     .navigationTitle(NSLocalizedString("Add input methods", comment: ""))
     .navigationBarTitleDisplayMode(.inline)
+    .onAppear {
+      viewModel.inputMethods = availableInputMethods()
+    }
   }
 }

@@ -1,4 +1,5 @@
 import AlertToast
+import Fcitx
 import FcitxIpc
 import SwiftUI
 import SwiftUtil
@@ -13,6 +14,12 @@ private struct ExportedArchive: Identifiable {
 private let backupArchive = BackupArchive(
   configDirectory: appGroupConfig,
   dataDirectory: appGroupData,
+  databasesDirectory: clipboardDatabases,
+  clipboardStore: clipboardStore)
+
+private let importBackupArchive = BackupArchive(
+  configDirectory: documents.appendingPathComponent("config"),
+  dataDirectory: documents.appendingPathComponent("data"),
   databasesDirectory: clipboardDatabases,
   clipboardStore: clipboardStore)
 
@@ -31,7 +38,7 @@ private func importArchive(from sourceURL: URL, source: ImportSource) throws {
     }
   }
 
-  try backupArchive.importData(from: sourceURL, source: source)
+  try documentsSync.importData(using: importBackupArchive, from: sourceURL, source: source)
 }
 
 struct DataManagerView: View {
@@ -103,6 +110,7 @@ struct DataManagerView: View {
         try Task.checkCancellation()
         await MainActor.run {
           importing = false
+          reload()
           requestReload()
           displayToast(NSLocalizedString("Import succeeded", comment: ""), icon: "success")
         }

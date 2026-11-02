@@ -63,53 +63,6 @@ public func md5Hash(_ url: URL) -> String {
   return digest.map { String(format: "%02hhx", $0) }.joined()
 }
 
-// Remove if different type, then copy if different content.
-public func sync(_ src: URL, _ dst: URL) -> Bool {
-  var changed = false
-  return sync(src, dst, changed: &changed)
-}
-
-// Report successful file copies separately from success, which also includes unchanged files.
-public func sync(_ src: URL, _ dst: URL, changed: inout Bool) -> Bool {
-  if !src.exists() {
-    return false
-  }
-  if dst.exists() && dst.isDirectory != src.isDirectory {
-    try? FileManager.default.removeItem(at: dst)
-  }
-  if src.isDirectory {
-    try? FileManager.default.createDirectory(at: dst, withIntermediateDirectories: true)
-    var success = true
-    for fileName in (try? FileManager.default.contentsOfDirectory(atPath: src.localPath())) ?? [] {
-      if !sync(
-        src.appendingPathComponent(fileName), dst.appendingPathComponent(fileName),
-        changed: &changed)
-      {
-        success = false
-      }
-    }
-    return success
-  }
-  if dst.exists() {
-    let srcHash = md5Hash(src)
-    let dstHash = md5Hash(dst)
-    if srcHash == dstHash {
-      return true
-    }
-    try? FileManager.default.removeItem(at: dst)
-  } else if !dst.deletingLastPathComponent().exists() {
-    try? FileManager.default.createDirectory(
-      at: dst.deletingLastPathComponent(), withIntermediateDirectories: true)
-  }
-  do {
-    try FileManager.default.copyItem(at: src, to: dst)
-    changed = true
-    return true
-  } catch {
-    return false
-  }
-}
-
 public func mkdirP(_ path: String) {
   do {
     try FileManager.default.createDirectory(
