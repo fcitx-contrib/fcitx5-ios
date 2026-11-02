@@ -17,9 +17,14 @@ struct Fcitx5App: App {
       }.onChange(of: scenePhase) { newPhase in
         if newPhase == .active {
           FCITX_INFO("App is active")
-          if syncDocumentsToAppGroup() {
-            reload()
-            requestReload()
+          Task.detached(priority: .userInitiated) {
+            let changed = syncDocumentsToAppGroup()
+            await MainActor.run {
+              if changed {
+                reload()
+                requestReload()
+              }
+            }
           }
         }
       }
