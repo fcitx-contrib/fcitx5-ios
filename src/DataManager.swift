@@ -104,30 +104,26 @@ struct DataManagerView: View {
 
   private func importData(from url: URL, source: ImportSource) {
     importing = true
-    importTask = Task.detached(priority: .userInitiated) {
+    importTask = Task { @MainActor in
       do {
-        try importArchive(from: url, source: source)
-        try Task.checkCancellation()
-        await MainActor.run {
-          importing = false
+        try await configurationSync.perform {
+          waitForFcitx()
+          try importArchive(from: url, source: source)
           reload()
-          requestReload()
-          displayToast(NSLocalizedString("Import succeeded", comment: ""), icon: "success")
+          waitForFcitx()
+          return true
         }
+        try Task.checkCancellation()
+        importing = false
+        displayToast(NSLocalizedString("Import succeeded", comment: ""), icon: "success")
       } catch is CancellationError {
-        await MainActor.run {
-          importing = false
-        }
+        importing = false
       } catch is InvalidZipError {
-        await MainActor.run {
-          importing = false
-          displayToast(NSLocalizedString("Invalid zip", comment: ""), icon: "error")
-        }
+        importing = false
+        displayToast(NSLocalizedString("Invalid zip", comment: ""), icon: "error")
       } catch {
-        await MainActor.run {
-          importing = false
-          displayToast(NSLocalizedString("Import failed", comment: ""), icon: "error")
-        }
+        importing = false
+        displayToast(NSLocalizedString("Import failed", comment: ""), icon: "error")
       }
     }
   }

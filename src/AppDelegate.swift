@@ -8,6 +8,29 @@ let documentsSync = DocumentsSync(
   stateURL: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
     .appendingPathComponent("documents-sync.json"))
 
+@MainActor
+let configurationSync = ConfigurationSync(onReload: { requestReload() })
+
+@MainActor
+func synchronizeForegroundConfiguration() {
+  guard appGroupAvailable else { return }
+  let operation = configurationSync.start {
+    // Finish edits queued before the UI was paused, then keep edits paused through reload.
+    waitForFcitx()
+    let changed = try documentsSync.synchronize()
+    if changed {
+      reload()
+      waitForFcitx()
+    }
+    return changed
+  }
+  Task {
+    do { _ = try await operation.value } catch {
+      FCITX_ERROR("Failed to synchronize foreground configuration: \(error)")
+    }
+  }
+}
+
 func syncDocumentsToAppGroup() -> Bool {
   guard appGroupAvailable else { return false }
   do {

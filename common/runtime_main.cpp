@@ -17,6 +17,10 @@ void startFcitx(const char *appBundlePath, const char *xdgDataDirs,
     setupFcitx(appBundlePath, xdgDataDirs, appGroupPath, true);
 }
 
+void waitForFcitx() {
+    with_fcitx([] {});
+}
+
 void setInputMethods(const char *s) {
     std::string json = s;
     dispatcher->schedule([=] {

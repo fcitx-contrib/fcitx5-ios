@@ -1,26 +1,42 @@
 import AlertToast
+import Combine
 import Fcitx
 import FcitxIpc
 import NotifySwift
 import SwiftUI
 import SwiftUtil
 
+@MainActor
 private class ViewModel: ObservableObject {
+  private var refreshSubscription: AnyCancellable?
+
+  init() {
+    refreshSubscription = configurationSync.didFinish.sink { [weak self] in self?.loadFromRuntime()
+    }
+  }
+
   @Published var url: URL?
   @Published var inputMethods = [InputMethod]()
   @Published var clipboardShare: ClipboardShareRequest?
   @Published var clipboardEdit: ClipboardEditRequest?
 
   func refresh() {
+    guard !configurationSync.isSynchronizing else { return }
+    loadFromRuntime()
+  }
+
+  private func loadFromRuntime() {
     inputMethods = deserialize([InputMethod].self, String(getInputMethods()))
   }
 
   func removeInputMethods(at offsets: IndexSet) {
+    guard !configurationSync.isSynchronizing else { return }
     inputMethods.remove(atOffsets: offsets)
     save()
   }
 
   func orderInputMethods(at offsets: IndexSet, to destination: Int) {
+    guard !configurationSync.isSynchronizing else { return }
     inputMethods.move(fromOffsets: offsets, toOffset: destination)
     save()
   }
@@ -47,7 +63,8 @@ private struct ClipboardEditSheetView: View {
 }
 
 struct ContentView: View {
-  @ObservedObject private var viewModel = ViewModel()
+  @StateObject private var viewModel = ViewModel()
+  @ObservedObject private var syncState = configurationSync
 
   // AlertToast fields
   @State private var showLoadingToast = false
@@ -67,7 +84,7 @@ struct ContentView: View {
       return
     }
     viewModel.url = url
-    setConfig(url.absoluteString, "{}")
+    configurationSync.whenReady { setConfig(url.absoluteString, "{}") }
   }
 
   var body: some View {
@@ -144,6 +161,12 @@ struct ContentView: View {
           }
         }
         .padding()
+      }
+    }
+    .disabled(syncState.isSynchronizing)
+    .overlay {
+      if syncState.isSynchronizing {
+        ProgressView().accessibilityIdentifier("ConfigurationSyncProgress")
       }
     }
     .sheet(item: $viewModel.clipboardShare) { request in
