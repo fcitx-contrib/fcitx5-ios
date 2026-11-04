@@ -10,7 +10,8 @@ struct ConfigView: View {
   let title: String
   let uri: String
 
-  @ObservedObject private var manager = ConfigManager()
+  @StateObject private var manager = ConfigManager()
+  @ObservedObject private var syncState = configurationSync
 
   var body: some View {
     let isPunctuationMap = uri == "fcitx://config/addon/punctuation/punctuationmap/zh_CN"
@@ -25,8 +26,9 @@ struct ConfigView: View {
             value: Binding(
               get: { (manager.value as? [String: Any])?[option] ?? "" },
               set: { newValue in
-                setConfig(uri, option, newValue)
-                manager.value = mergeChild(manager.value, option, newValue)
+                if setConfig(uri, option, newValue) {
+                  manager.value = mergeChild(manager.value, option, newValue)
+                }
               }
             ),
             expandGroup: uri == globalConfigUri)
@@ -43,6 +45,7 @@ struct ConfigView: View {
     }
     .navigationTitle(title)
     .navigationBarTitleDisplayMode(.inline)
+    .disabled(syncState.isSynchronizing)
     .toolbar {
       // Punctuation map already has List-level reset button, which can update List UI.
       if !isPunctuationMap {

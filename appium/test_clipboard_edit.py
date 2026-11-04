@@ -2,6 +2,7 @@ from urllib.parse import quote, urlencode
 
 from appium.webdriver.webdriver import WebDriver
 from conftest import BUNDLE_ID
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from util.screen import find_element_by_id
 
@@ -27,3 +28,25 @@ def test_switch_open_clipboard_editor(driver: WebDriver, app: str) -> None:
                 find_element_by_id(driver, EDIT_TEXT).get_attribute("value") == expected
             )
         )
+
+
+def test_open_clipboard_share(driver: WebDriver, app: str) -> None:
+    for text in ("First share request", "Second share request"):
+        driver.activate_app("com.apple.MobileSMS")
+        query = urlencode({"text": text}, quote_via=quote)
+        driver.execute_script(
+            "mobile: deepLink",
+            {"url": f"fcitx://clipboard/share?{query}", "bundleId": BUNDLE_ID},
+        )
+        WebDriverWait(driver, 10).until(
+            lambda _, expected=text: (
+                find_element_by_id(driver, "LP.CaptionBar.BottomCaption").get_attribute(
+                    "label"
+                )
+                == expected
+            )
+        )
+        # Inspect the preview without invoking a share target or copying its text.
+        close = find_element_by_id(driver, "header.closeButton")
+        close.click()
+        WebDriverWait(driver, 10).until(EC.staleness_of(close))

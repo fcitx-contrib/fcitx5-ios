@@ -27,6 +27,8 @@ add_executable(${BUNDLE_NAME} MACOSX_BUNDLE
     ActivityView.swift
     BackupArchive.swift
     DatabaseBackup.swift
+    DocumentsSync.swift
+    ConfigurationSync.swift
     ${CONFIG_UI_FILES}
 )
 
