@@ -63,7 +63,8 @@ private struct ClipboardEditSheetView: View {
 }
 
 struct ContentView: View {
-  @StateObject private var viewModel = ViewModel()
+  // SceneDelegate retains this view for URL routing; its hosted copy must share the model.
+  @ObservedObject private var viewModel = ViewModel()
   @ObservedObject private var syncState = configurationSync
 
   // AlertToast fields
