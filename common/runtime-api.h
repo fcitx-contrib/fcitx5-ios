@@ -26,6 +26,8 @@ bool isClipboardSuggestionEnabled();
 int getClipboardSuggestionTimeout();
 std::string filterClipboardEntry(const char *text);
 void reload();
+// Wait for previously queued runtime operations. Call from a background thread.
+void waitForFcitx();
 void toggle();
 
 void setCurrentInputMethod(const char *inputMethod);

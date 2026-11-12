@@ -3,19 +3,42 @@ import FcitxIpc
 import SwiftUtil
 import UIKit
 
-func syncDocumentsToAppGroup() -> Bool {
-  guard appGroupAvailable else { return false }
-  var changed = false
-  var success = true
-  for directory in ["data", "config"] {
-    let source = documents.appendingPathComponent(directory)
-    guard FileManager.default.fileExists(atPath: source.path) else { continue }
-    if !sync(source, appGroup.appendingPathComponent(directory), changed: &changed) {
-      success = false
-      FCITX_ERROR("Failed to sync Documents/\(directory) to App Group")
+let documentsSync = DocumentsSync(
+  documents: documents, destination: appGroup,
+  stateURL: FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+    .appendingPathComponent("documents-sync.json"))
+
+@MainActor
+let configurationSync = ConfigurationSync(onReload: { requestReload() })
+
+@MainActor
+func synchronizeForegroundConfiguration() {
+  guard appGroupAvailable else { return }
+  let operation = configurationSync.start {
+    // Finish edits queued before the UI was paused, then keep edits paused through reload.
+    waitForFcitx()
+    let changed = try documentsSync.synchronize()
+    if changed {
+      reload()
+      waitForFcitx()
+    }
+    return changed
+  }
+  Task {
+    do { _ = try await operation.value } catch {
+      FCITX_ERROR("Failed to synchronize foreground configuration: \(error)")
     }
   }
-  return success && changed
+}
+
+func syncDocumentsToAppGroup() -> Bool {
+  guard appGroupAvailable else { return false }
+  do {
+    return try documentsSync.synchronize()
+  } catch {
+    FCITX_ERROR("Failed to sync Documents to App Group: \(error)")
+    return false
+  }
 }
 
 private func syncLocale(_ locale: String) {

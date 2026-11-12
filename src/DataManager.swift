@@ -1,4 +1,5 @@
 import AlertToast
+import Fcitx
 import FcitxIpc
 import SwiftUI
 import SwiftUtil
@@ -13,6 +14,12 @@ private struct ExportedArchive: Identifiable {
 private let backupArchive = BackupArchive(
   configDirectory: appGroupConfig,
   dataDirectory: appGroupData,
+  databasesDirectory: clipboardDatabases,
+  clipboardStore: clipboardStore)
+
+private let importBackupArchive = BackupArchive(
+  configDirectory: documents.appendingPathComponent("config"),
+  dataDirectory: documents.appendingPathComponent("data"),
   databasesDirectory: clipboardDatabases,
   clipboardStore: clipboardStore)
 
@@ -31,7 +38,7 @@ private func importArchive(from sourceURL: URL, source: ImportSource) throws {
     }
   }
 
-  try backupArchive.importData(from: sourceURL, source: source)
+  try documentsSync.importData(using: importBackupArchive, from: sourceURL, source: source)
 }
 
 struct DataManagerView: View {
@@ -97,29 +104,26 @@ struct DataManagerView: View {
 
   private func importData(from url: URL, source: ImportSource) {
     importing = true
-    importTask = Task.detached(priority: .userInitiated) {
+    importTask = Task { @MainActor in
       do {
-        try importArchive(from: url, source: source)
+        try await configurationSync.perform {
+          waitForFcitx()
+          try importArchive(from: url, source: source)
+          reload()
+          waitForFcitx()
+          return true
+        }
         try Task.checkCancellation()
-        await MainActor.run {
-          importing = false
-          requestReload()
-          displayToast(NSLocalizedString("Import succeeded", comment: ""), icon: "success")
-        }
+        importing = false
+        displayToast(NSLocalizedString("Import succeeded", comment: ""), icon: "success")
       } catch is CancellationError {
-        await MainActor.run {
-          importing = false
-        }
+        importing = false
       } catch is InvalidZipError {
-        await MainActor.run {
-          importing = false
-          displayToast(NSLocalizedString("Invalid zip", comment: ""), icon: "error")
-        }
+        importing = false
+        displayToast(NSLocalizedString("Invalid zip", comment: ""), icon: "error")
       } catch {
-        await MainActor.run {
-          importing = false
-          displayToast(NSLocalizedString("Import failed", comment: ""), icon: "error")
-        }
+        importing = false
+        displayToast(NSLocalizedString("Import failed", comment: ""), icon: "error")
       }
     }
   }

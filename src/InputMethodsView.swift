@@ -1,4 +1,5 @@
 import AlertToast
+import Combine
 import Fcitx
 import FcitxIpc
 import SwiftUI
@@ -26,13 +27,31 @@ func availableInputMethods() -> [InputMethod] {
   return allInputMethods.filter { !enabledInputMethods.contains($0.name) }
 }
 
+@MainActor
 private class ViewModel: ObservableObject {
-  @Published var inputMethods = availableInputMethods()
+  @Published var inputMethods = [InputMethod]()
+  private var refreshSubscription: AnyCancellable?
+
+  init() {
+    refresh()
+    refreshSubscription = configurationSync.didFinish.sink { [weak self] in self?.loadFromRuntime()
+    }
+  }
+
+  func refresh() {
+    guard !configurationSync.isSynchronizing else { return }
+    loadFromRuntime()
+  }
+
+  private func loadFromRuntime() {
+    inputMethods = availableInputMethods()
+  }
 }
 
 struct AddInputMethodsView: View {
   @Binding var enabledInputMethods: [InputMethod]
-  @ObservedObject private var viewModel = ViewModel()
+  @StateObject private var viewModel = ViewModel()
+  @ObservedObject private var syncState = configurationSync
 
   // AlertToast fields
   @State private var showToast = false
@@ -48,6 +67,13 @@ struct AddInputMethodsView: View {
         List {
           ForEach(viewModel.inputMethods, id: \.name) { inputMethod in
             Button {
+              guard !configurationSync.isSynchronizing else { return }
+              // Use the current runtime profile rather than a possibly older view binding.
+              enabledInputMethods = deserialize([InputMethod].self, String(getInputMethods()))
+              guard !enabledInputMethods.contains(where: { $0.name == inputMethod.name }) else {
+                viewModel.refresh()
+                return
+              }
               viewModel.inputMethods.removeAll { $0.name == inputMethod.name }
               enabledInputMethods.append(inputMethod)
               setInputMethods(
@@ -77,5 +103,9 @@ struct AddInputMethodsView: View {
     }
     .navigationTitle(NSLocalizedString("Add input methods", comment: ""))
     .navigationBarTitleDisplayMode(.inline)
+    .disabled(syncState.isSynchronizing)
+    .onAppear {
+      viewModel.refresh()
+    }
   }
 }

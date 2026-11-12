@@ -1,3 +1,4 @@
+import Combine
 import Fcitx
 import FcitxIpc
 import SwiftUI
@@ -14,16 +15,20 @@ func getConfig(_ uri: String) -> [String: Any] {
   return json
 }
 
-func setConfig(_ uri: String, _ option: String, _ value: Any) {
+@MainActor
+@discardableResult
+func setConfig(_ uri: String, _ option: String, _ value: Any) -> Bool {
+  guard !configurationSync.isSynchronizing else { return false }
   let object = option.isEmpty ? value : [option: value]
   guard JSONSerialization.isValidJSONObject(object),
     let data = try? JSONSerialization.data(withJSONObject: object),
     let jsonString = String(data: data, encoding: .utf8)
   else {
-    return
+    return false
   }
   Fcitx.setConfig(uri, jsonString)
   requestReload()
+  return true
 }
 
 func extractValue(_ config: [String: Any], reset: Bool) -> Any {
@@ -47,6 +52,13 @@ func extractValue(_ config: [String: Any], reset: Bool) -> Any {
 
 @MainActor
 class ConfigManager: ObservableObject {
+  private var refreshSubscription: AnyCancellable?
+
+  init() {
+    refreshSubscription = configurationSync.didFinish.sink { [weak self] in self?.loadFromRuntime()
+    }
+  }
+
   @Published var uri = "" {
     didSet {
       reload()
@@ -58,8 +70,7 @@ class ConfigManager: ObservableObject {
   @Published var error: String?
 
   private func save(_ value: Any) {
-    self.value = value
-    setConfig(uri, "", value)
+    if setConfig(uri, "", value) { self.value = value }
   }
 
   func set(_ value: Any) {
@@ -71,6 +82,11 @@ class ConfigManager: ObservableObject {
   }
 
   func reload() {
+    guard !configurationSync.isSynchronizing else { return }
+    loadFromRuntime()
+  }
+
+  private func loadFromRuntime() {
     if uri.isEmpty {
       return
     }

@@ -125,7 +125,10 @@ struct BackupArchive {
     success = true
   }
 
-  func importData(from sourceURL: URL, source: ImportSource) throws {
+  func importData(
+    from sourceURL: URL, source: ImportSource,
+    beforeImportFile: ((URL) throws -> Void)? = nil
+  ) throws {
     try Task.checkCancellation()
     let archive = try Archive(url: sourceURL, accessMode: .read)
     guard Self.validateImportArchive(archive, source: source) else {
@@ -161,9 +164,17 @@ struct BackupArchive {
       source == .fcitx5
       ? [("external/config/", configDirectory), ("external/data/", dataDirectory)]
       : [(Self.hamsterRimePrefix, dataDirectory.appendingPathComponent("rime"))]
+    // Validate every mapped path before extracting or invalidating any file.
     for entry in archive {
       for (prefix, root) in mappings where entry.path.hasPrefix(prefix) {
-        try extract(entry, from: archive, root: root, prefix: prefix)
+        _ = try Self.destinationURL(
+          root: root, relativePath: String(entry.path.dropFirst(prefix.count)))
+      }
+    }
+    for entry in archive {
+      for (prefix, root) in mappings where entry.path.hasPrefix(prefix) {
+        try extract(
+          entry, from: archive, root: root, prefix: prefix, beforeImportFile: beforeImportFile)
       }
     }
     if manager.fileExists(atPath: normalized.path) {
@@ -283,7 +294,10 @@ struct BackupArchive {
       with: path, type: .directory, uncompressedSize: Int64(0), provider: { _, _ in Data() })
   }
 
-  private func extract(_ entry: Entry, from archive: Archive, root: URL, prefix: String) throws {
+  private func extract(
+    _ entry: Entry, from archive: Archive, root: URL, prefix: String,
+    beforeImportFile: ((URL) throws -> Void)? = nil
+  ) throws {
     try Task.checkCancellation()
     let relativePath = String(entry.path.dropFirst(prefix.count))
     let destination = try Self.destinationURL(root: root, relativePath: relativePath)
@@ -298,6 +312,7 @@ struct BackupArchive {
       try manager.createDirectory(at: destination, withIntermediateDirectories: true)
     case .file:
       guard destination != root else { throw InvalidZipError() }
+      try beforeImportFile?(destination)
       try manager.createDirectory(
         at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
       if manager.fileExists(atPath: destination.path) {
