@@ -8,6 +8,7 @@ struct GestureAction {
   var onDoubleTap: (() -> Void)? = nil
   var onLongPress: ((Int) -> Void)? = nil
   var onSwipe: ((SwipeDirection) -> Void)? = nil
+  var onSlideStart: (() -> Void)? = nil
   var onSlide: ((Int) -> Void)? = nil
   var onRelease: (() -> Void)? = nil
 }
@@ -111,7 +112,7 @@ struct KeyModifier: ViewModifier {
     if processedByAnotherKeyPress() {
       return
     }
-    if isPressed && !didTriggerLongPress && !didMoveFarEnough {
+    if isPressed && !didTriggerLongPress && !didMoveFarEnough && !slideActivated {
       cancelOrderedKeyPress()
       didTriggerLongPress = true
       if longPressIndex >= 0 && longPressIndex < longPressItems.count {
@@ -201,6 +202,8 @@ struct KeyModifier: ViewModifier {
         if abs(dx) >= threshold, let start = startLocation {
           slideActivated = true
           lastLocation = start.x + (dx > 0 ? threshold : -threshold)
+          // Sliding takes over immediately, even before the first nonzero step.
+          action.onSlideStart?()
         }
       }
       if slideActivated {

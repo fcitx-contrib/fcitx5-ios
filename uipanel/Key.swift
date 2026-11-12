@@ -181,11 +181,16 @@ struct BackspaceView: View {
   var radius: CGFloat? = nil
 
   @State private var deleteTimer: Timer? = nil
+  @State private var deleteSession: UUID? = nil
 
   func startDelete() {
     stopDelete()
+    let session = UUID()
+    deleteSession = session
     deleteTimer = Timer.scheduledTimer(withTimeInterval: keyRepeatInterval, repeats: true) { _ in
       Task { @MainActor in
+        // Ignore repeats queued before sliding, release, or a new press stopped this session.
+        guard deleteSession == session else { return }
         vm.resetLayerIfNotLocked()
         client.keyPressed("", "Backspace")
       }
@@ -193,6 +198,7 @@ struct BackspaceView: View {
   }
 
   func stopDelete() {
+    deleteSession = nil
     deleteTimer?.invalidate()
     deleteTimer = nil
   }
@@ -218,6 +224,9 @@ struct BackspaceView: View {
           },
           onLongPress: { _ in
             startDelete()
+          },
+          onSlideStart: {
+            stopDelete()
           },
           onSlide: { step in
             vm.slideBackspace(step)
