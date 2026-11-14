@@ -88,6 +88,7 @@ public class ViewModel: ObservableObject {
   @Published private(set) var clipboardSuggestionText: String?
   @Published var layer = "default"
   @Published var lock = false
+  var keyPressTracker = KeyPressTracker()
 
   private var clipboardTask: Task<Void, Never>?
   private var clipboardOperationID: UInt64 = 0

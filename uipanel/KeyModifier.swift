@@ -41,7 +41,7 @@ struct KeyModifier: ViewModifier {
   let moveSize: CGFloat = 30
 
   @State private var touchId = 0
-  @State private var lastTouchTime: Date?
+  @State private var keyId = UUID()
   @State private var isPressed = false
   @State private var isTouchAccepted = false
   @State private var isTouchStarted = false
@@ -95,15 +95,6 @@ struct KeyModifier: ViewModifier {
     return false
   }
 
-  private func isDoubleTap(_ touchTime: Date) -> Bool {
-    if action.onDoubleTap != nil, let t = lastTouchTime,
-      touchTime.timeIntervalSince(t) < 0.3
-    {
-      return true
-    }
-    return false
-  }
-
   private func onTimer(_ currentTouchId: Int) {
     if touchId != currentTouchId {
       // Called from a previous touch.
@@ -151,11 +142,11 @@ struct KeyModifier: ViewModifier {
       bubbleLabel, [], 0, 0, bubbleFontSize)
 
     vm.flushOrderedKeyPresses()
-    if isDoubleTap(touchTime) {
-      lastTouchTime = nil
+    if vm.keyPressTracker.press(
+      keyId, at: touchTime, supportsDoubleTap: action.onDoubleTap != nil)
+    {
       action.onDoubleTap?()
     } else {  // Single tap
-      lastTouchTime = touchTime
       if let onOrderedKeyPress = action.onOrderedKeyPress {  // Normal keys
         orderedKeyPressId = vm.beginOrderedKeyPress(onOrderedKeyPress())
       } else {  // Shift

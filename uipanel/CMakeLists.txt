@@ -9,6 +9,7 @@ add_library(KeyboardUI STATIC
     Bubble.swift
     Shadow.swift
     KeyModifier.swift
+    KeyPressTracker.swift
     Keyboard.swift
     Candidate.swift
     WrapLayout.swift
